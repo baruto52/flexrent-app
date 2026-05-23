@@ -2,14 +2,11 @@
 
 import {
   useEffect,
-  useState,
   useRef,
+  useState,
 } from "react";
 
-import {
-  useParams,
-  useRouter,
-} from "next/navigation";
+import { useParams } from "next/navigation";
 
 import { supabase } from "@/lib/supabase";
 
@@ -23,12 +20,14 @@ type Message = {
 
 export default function ChatPage() {
 
-  const params = useParams();
+  const params =
+    useParams();
 
-  const router = useRouter();
-
-  const receiverId =
+  const otherUserId =
     params.id as string;
+
+  const messagesEndRef =
+    useRef<HTMLDivElement>(null);
 
   const [messages, setMessages] =
     useState<Message[]>([]);
@@ -39,20 +38,20 @@ export default function ChatPage() {
   const [currentUserId, setCurrentUserId] =
     useState("");
 
-  const [userName, setUserName] =
-    useState("User");
-
-  const [avatar, setAvatar] =
-    useState("/avatar.png");
-
-  const messagesEndRef =
-    useRef<HTMLDivElement>(null);
+  const [profile, setProfile] =
+    useState<any>(null);
 
   useEffect(() => {
 
     init();
 
   }, []);
+
+  useEffect(() => {
+
+    scrollToBottom();
+
+  }, [messages]);
 
   async function init() {
 
@@ -63,59 +62,53 @@ export default function ChatPage() {
 
     if (!session) return;
 
-    setCurrentUserId(
-      session.user.id
-    );
+    const userId =
+      session.user.id;
 
-    loadUser();
+    setCurrentUserId(
+      userId
+    );
 
     loadMessages(
-      session.user.id
+      userId
     );
 
-    listenRealtime(
-      session.user.id
+    markMessagesAsRead(
+      userId
+    );
+
+    loadProfile();
+
+    listenMessages(
+      userId
     );
   }
 
-  async function loadUser() {
+  async function loadProfile() {
 
     const { data } =
       await supabase
         .from("profiles")
-        .select(
-          "full_name, avatar_url"
-        )
+        .select("*")
         .eq(
           "id",
-          receiverId
+          otherUserId
         )
         .single();
 
-    if (data) {
-
-      setUserName(
-        data.full_name ||
-          "User"
-      );
-
-      setAvatar(
-        data.avatar_url ||
-          "/avatar.png"
-      );
-    }
+    setProfile(data);
   }
 
   async function loadMessages(
     userId: string
   ) {
 
-    const { data, error } =
+    const { data } =
       await supabase
         .from("messages")
         .select("*")
         .or(
-          `and(sender_id.eq.${userId},receiver_id.eq.${receiverId}),and(sender_id.eq.${receiverId},receiver_id.eq.${userId})`
+          `and(sender_id.eq.${userId},receiver_id.eq.${otherUserId}),and(sender_id.eq.${otherUserId},receiver_id.eq.${userId})`
         )
         .order(
           "created_at",
@@ -124,22 +117,39 @@ export default function ChatPage() {
           }
         );
 
-    if (!error) {
-
-      setMessages(data || []);
-
-      scrollBottom();
-    }
+    if (data)
+      setMessages(data);
   }
 
-  function listenRealtime(
+  async function markMessagesAsRead(
     userId: string
   ) {
 
-    supabase
-      .channel(
-        `chat-${receiverId}`
+    await supabase
+      .from("messages")
+      .update({
+        is_read: true,
+      })
+      .eq(
+        "sender_id",
+        otherUserId
       )
+      .eq(
+        "receiver_id",
+        userId
+      );
+  }
+
+  function listenMessages(
+    userId: string
+  ) {
+
+    const channel =
+      supabase.channel(
+        `chat-${userId}-${otherUserId}`
+      );
+
+    channel
       .on(
         "postgres_changes",
         {
@@ -152,17 +162,21 @@ export default function ChatPage() {
           const msg =
             payload.new as Message;
 
-          const valid =
+          const isRelevant =
             (
-              msg.sender_id === userId &&
-              msg.receiver_id === receiverId
+              msg.sender_id ===
+                userId &&
+              msg.receiver_id ===
+                otherUserId
             ) ||
             (
-              msg.sender_id === receiverId &&
-              msg.receiver_id === userId
+              msg.sender_id ===
+                otherUserId &&
+              msg.receiver_id ===
+                userId
             );
 
-          if (valid) {
+          if (isRelevant) {
 
             setMessages(
               (prev) => [
@@ -170,8 +184,6 @@ export default function ChatPage() {
                 msg,
               ]
             );
-
-            scrollBottom();
           }
         }
       )
@@ -189,7 +201,7 @@ export default function ChatPage() {
         sender_id:
           currentUserId,
         receiver_id:
-          receiverId,
+          otherUserId,
         message:
           newMessage,
       });
@@ -197,121 +209,150 @@ export default function ChatPage() {
     setNewMessage("");
   }
 
-  async function deleteChat() {
+  function scrollToBottom() {
 
-    const confirmDelete =
-      confirm(
-        "Chat wirklich löschen?"
-      );
-
-    if (!confirmDelete)
-      return;
-
-    await supabase
-      .from("messages")
-      .delete()
-      .or(
-        `and(sender_id.eq.${currentUserId},receiver_id.eq.${receiverId}),and(sender_id.eq.${receiverId},receiver_id.eq.${currentUserId})`
-      );
-
-    router.push(
-      "/messages"
-    );
-  }
-
-  function scrollBottom() {
-
-    setTimeout(() => {
-
-      messagesEndRef.current?.
-        scrollIntoView({
-          behavior: "smooth",
-        });
-
-    }, 100);
+    messagesEndRef.current?.scrollIntoView({
+      behavior: "smooth",
+    });
   }
 
   return (
 
-    <div className="flex flex-col h-screen bg-gray-50">
+    <div className="h-screen flex flex-col bg-[#f5f5f5]">
 
-      <div className="bg-white border-b p-5 flex items-center justify-between">
+      <div className="bg-white border-b px-6 py-4 flex items-center gap-4">
 
-        <div className="flex items-center gap-4">
+        <img
+          src={
+            profile?.avatar_url ||
+            "/avatar.png"
+          }
+          className="w-14 h-14 rounded-full object-cover"
+        />
 
-          <img
-            src={avatar}
-            className="w-14 h-14 rounded-full object-cover"
-          />
+        <div>
 
-          <div>
+          <h1 className="font-bold text-xl">
 
-            <h2 className="font-bold text-xl">
+            {profile?.full_name ||
+              "User"}
 
-              {userName}
+          </h1>
 
-            </h2>
+          <p className="text-green-500 text-sm">
 
-            <p className="text-green-500 text-sm">
+            Online
 
-              Online
-
-            </p>
-
-          </div>
+          </p>
 
         </div>
 
-        <button
-          onClick={deleteChat}
-          className="bg-red-500 text-white px-5 py-2 rounded-xl"
-        >
-
-          Chat löschen
-
-        </button>
-
       </div>
 
-      <div className="flex-1 overflow-y-auto p-6 space-y-4">
+      <div className="flex-1 overflow-y-auto px-6 py-6 space-y-4">
 
         {messages.map(
           (msg) => {
 
-          const mine =
-            msg.sender_id ===
-            currentUserId;
+            const isMine =
+              msg.sender_id ===
+              currentUserId;
 
-          return (
-
-            <div
-              key={msg.id}
-              className={`flex ${
-                mine
-                  ? "justify-end"
-                  : "justify-start"
-              }`}
-            >
+            return (
 
               <div
-                className={`max-w-[70%] px-5 py-3 rounded-3xl ${
-                  mine
-                    ? "bg-green-500 text-white"
-                    : "bg-white border"
+                key={msg.id}
+                className={`flex ${
+                  isMine
+                    ? "justify-end"
+                    : "justify-start"
                 }`}
               >
 
-                {msg.message}
+                <div
+                  className={`max-w-[350px] px-5 py-3 rounded-3xl shadow-sm ${
+                    isMine
+                      ? "bg-green-500 text-white"
+                      : "bg-white text-black"
+                  }`}
+                >
+
+                  <div className="flex items-center gap-3">
+
+                    <span>
+
+                      {msg.message}
+
+                    </span>
+
+                    {isMine && (
+
+                      <button
+                        onClick={async () => {
+
+                          await supabase
+                            .from(
+                              "messages"
+                            )
+                            .delete()
+                            .eq(
+                              "id",
+                              msg.id
+                            );
+
+                          setMessages(
+                            (
+                              prev
+                            ) =>
+                              prev.filter(
+                                (
+                                  m
+                                ) =>
+                                  m.id !==
+                                  msg.id
+                              )
+                          );
+                        }}
+                        className="text-xs opacity-70 hover:opacity-100"
+                      >
+
+                        ✕
+
+                      </button>
+                    )}
+
+                  </div>
+
+                  <div
+                    className={`text-[11px] mt-2 ${
+                      isMine
+                        ? "text-green-100"
+                        : "text-gray-400"
+                    }`}
+                  >
+
+                    {new Date(
+                      msg.created_at
+                    ).toLocaleTimeString(
+                      [],
+                      {
+                        hour:
+                          "2-digit",
+                        minute:
+                          "2-digit",
+                      }
+                    )}
+
+                  </div>
+
+                </div>
 
               </div>
+            );
+          }
+        )}
 
-            </div>
-          );
-        })}
-
-        <div
-          ref={messagesEndRef}
-        />
+        <div ref={messagesEndRef} />
 
       </div>
 
@@ -325,12 +366,12 @@ export default function ChatPage() {
             )
           }
           placeholder="Nachricht schreiben..."
-          className="flex-1 border rounded-2xl px-5 py-4"
+          className="flex-1 border rounded-2xl px-5 py-4 outline-none"
         />
 
         <button
           onClick={sendMessage}
-          className="bg-green-500 text-white px-8 rounded-2xl"
+          className="bg-green-500 hover:bg-green-600 text-white px-8 rounded-2xl font-semibold"
         >
 
           Senden

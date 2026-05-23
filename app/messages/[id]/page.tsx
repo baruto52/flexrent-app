@@ -1,8 +1,15 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import {
+  useEffect,
+  useState,
+  useRef,
+} from "react";
 
-import { useParams } from "next/navigation";
+import {
+  useParams,
+  useRouter,
+} from "next/navigation";
 
 import { supabase } from "@/lib/supabase";
 
@@ -18,6 +25,8 @@ export default function ChatPage() {
 
   const params = useParams();
 
+  const router = useRouter();
+
   const receiverId =
     params.id as string;
 
@@ -29,6 +38,12 @@ export default function ChatPage() {
 
   const [currentUserId, setCurrentUserId] =
     useState("");
+
+  const [userName, setUserName] =
+    useState("User");
+
+  const [avatar, setAvatar] =
+    useState("/avatar.png");
 
   const messagesEndRef =
     useRef<HTMLDivElement>(null);
@@ -52,6 +67,8 @@ export default function ChatPage() {
       session.user.id
     );
 
+    loadUser();
+
     loadMessages(
       session.user.id
     );
@@ -59,6 +76,34 @@ export default function ChatPage() {
     listenRealtime(
       session.user.id
     );
+  }
+
+  async function loadUser() {
+
+    const { data } =
+      await supabase
+        .from("profiles")
+        .select(
+          "full_name, avatar_url"
+        )
+        .eq(
+          "id",
+          receiverId
+        )
+        .single();
+
+    if (data) {
+
+      setUserName(
+        data.full_name ||
+          "User"
+      );
+
+      setAvatar(
+        data.avatar_url ||
+          "/avatar.png"
+      );
+    }
   }
 
   async function loadMessages(
@@ -79,16 +124,12 @@ export default function ChatPage() {
           }
         );
 
-    if (error) {
+    if (!error) {
 
-      console.log(error);
+      setMessages(data || []);
 
-      return;
+      scrollBottom();
     }
-
-    setMessages(data || []);
-
-    scrollBottom();
   }
 
   function listenRealtime(
@@ -142,22 +183,40 @@ export default function ChatPage() {
     if (!newMessage.trim())
       return;
 
-    const { error } =
-      await supabase
-        .from("messages")
-        .insert({
-          sender_id:
-            currentUserId,
-          receiver_id:
-            receiverId,
-          message:
-            newMessage,
-        });
+    await supabase
+      .from("messages")
+      .insert({
+        sender_id:
+          currentUserId,
+        receiver_id:
+          receiverId,
+        message:
+          newMessage,
+      });
 
-    if (!error) {
+    setNewMessage("");
+  }
 
-      setNewMessage("");
-    }
+  async function deleteChat() {
+
+    const confirmDelete =
+      confirm(
+        "Chat wirklich löschen?"
+      );
+
+    if (!confirmDelete)
+      return;
+
+    await supabase
+      .from("messages")
+      .delete()
+      .or(
+        `and(sender_id.eq.${currentUserId},receiver_id.eq.${receiverId}),and(sender_id.eq.${receiverId},receiver_id.eq.${currentUserId})`
+      );
+
+    router.push(
+      "/messages"
+    );
   }
 
   function scrollBottom() {
@@ -176,25 +235,41 @@ export default function ChatPage() {
 
     <div className="flex flex-col h-screen bg-gray-50">
 
-      <div className="bg-white border-b p-5 flex items-center gap-4">
+      <div className="bg-white border-b p-5 flex items-center justify-between">
 
-        <div className="w-14 h-14 rounded-full bg-gray-300" />
+        <div className="flex items-center gap-4">
 
-        <div>
+          <img
+            src={avatar}
+            className="w-14 h-14 rounded-full object-cover"
+          />
 
-          <h2 className="font-bold text-xl">
+          <div>
 
-            Chat
+            <h2 className="font-bold text-xl">
 
-          </h2>
+              {userName}
 
-          <p className="text-green-500 text-sm">
+            </h2>
 
-            Online
+            <p className="text-green-500 text-sm">
 
-          </p>
+              Online
+
+            </p>
+
+          </div>
 
         </div>
+
+        <button
+          onClick={deleteChat}
+          className="bg-red-500 text-white px-5 py-2 rounded-xl"
+        >
+
+          Chat löschen
+
+        </button>
 
       </div>
 

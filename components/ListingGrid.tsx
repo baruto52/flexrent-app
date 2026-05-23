@@ -5,21 +5,14 @@ import {
   useState,
 } from "react";
 
-import Link from "next/link";
-
-import {
-
-  MapPin,
-
-  Sparkles,
-
-} from "lucide-react";
+import { Sparkles }
+from "lucide-react";
 
 import { supabase }
 from "@/lib/supabase";
 
-import FavoriteButton
-from "@/components/FavoriteButton";
+import ListingCard
+from "@/components/ListingCard";
 
 type Listing = {
 
@@ -68,8 +61,6 @@ export default function ListingGrid({
   const [debouncedSearch, setDebouncedSearch] =
     useState(search);
 
-  /* DEBOUNCE */
-
   useEffect(() => {
 
     const timeout =
@@ -85,8 +76,6 @@ export default function ListingGrid({
       clearTimeout(timeout);
 
   }, [search]);
-
-  /* LOAD */
 
   useEffect(() => {
 
@@ -122,8 +111,6 @@ export default function ListingGrid({
             }
           );
 
-      /* SEARCH */
-
       if (
         debouncedSearch.trim()
       ) {
@@ -139,8 +126,6 @@ export default function ListingGrid({
           );
       }
 
-      /* CATEGORY */
-
       if (
 
         category &&
@@ -154,8 +139,6 @@ export default function ListingGrid({
             category
           );
       }
-
-      /* PRICE */
 
       if (
         maxPrice &&
@@ -214,9 +197,10 @@ export default function ListingGrid({
       <div
         className="
           grid
-          md:grid-cols-2
-          lg:grid-cols-3
-          gap-8
+          grid-cols-1
+          sm:grid-cols-2
+          xl:grid-cols-3
+          gap-5
         "
       >
 
@@ -227,7 +211,7 @@ export default function ListingGrid({
               key={item}
               className="
                 bg-white
-                rounded-[36px]
+                rounded-[30px]
                 overflow-hidden
                 animate-pulse
               "
@@ -235,17 +219,26 @@ export default function ListingGrid({
 
               <div
                 className="
-                  h-72
+                  h-60
                   bg-gray-200
                 "
               />
 
-              <div className="p-6">
+              <div className="p-5">
 
                 <div
                   className="
-                    h-8
+                    h-6
                     bg-gray-200
+                    rounded-xl
+                    mb-3
+                  "
+                />
+
+                <div
+                  className="
+                    h-4
+                    bg-gray-100
                     rounded-xl
                     mb-4
                   "
@@ -253,16 +246,7 @@ export default function ListingGrid({
 
                 <div
                   className="
-                    h-5
-                    bg-gray-100
-                    rounded-xl
-                    mb-6
-                  "
-                />
-
-                <div
-                  className="
-                    h-20
+                    h-14
                     bg-gray-100
                     rounded-2xl
                   "
@@ -289,8 +273,9 @@ export default function ListingGrid({
       <div
         className="
           bg-white
-          rounded-[40px]
-          p-20
+          rounded-[32px]
+          p-10
+          md:p-20
           text-center
           shadow-sm
         "
@@ -298,8 +283,8 @@ export default function ListingGrid({
 
         <div
           className="
-            w-24
-            h-24
+            w-20
+            h-20
             rounded-full
             bg-[#16d64d]
             text-white
@@ -307,21 +292,22 @@ export default function ListingGrid({
             items-center
             justify-center
             mx-auto
-            mb-8
+            mb-6
           "
         >
 
           <Sparkles
-            size={42}
+            size={36}
           />
 
         </div>
 
         <h2
           className="
-            text-5xl
+            text-3xl
+            md:text-5xl
             font-black
-            mb-5
+            mb-4
           "
         >
           Keine Listings gefunden
@@ -330,10 +316,11 @@ export default function ListingGrid({
         <p
           className="
             text-gray-500
-            text-2xl
+            text-lg
+            md:text-2xl
             max-w-2xl
             mx-auto
-            leading-10
+            leading-relaxed
           "
         >
           Versuche andere Suchbegriffe
@@ -350,216 +337,20 @@ export default function ListingGrid({
     <div
       className="
         grid
-        md:grid-cols-2
-        lg:grid-cols-3
-        gap-8
+        grid-cols-1
+        sm:grid-cols-2
+        xl:grid-cols-3
+        gap-5
       "
     >
 
       {listings.map(
         (listing) => (
 
-          <Link
+          <ListingCard
             key={listing.id}
-            href={`/listing/${listing.id}`}
-            className="
-              bg-white
-              rounded-[36px]
-              overflow-hidden
-              shadow-sm
-              hover:shadow-2xl
-              transition-all
-              duration-300
-              hover:-translate-y-2
-              group
-              relative
-            "
-          >
-
-            {/* IMAGE */}
-
-            <div
-              className="
-                relative
-                h-72
-                overflow-hidden
-              "
-            >
-
-              <img
-  src={
-    Array.isArray(listing.images)
-      ? listing.images[0]
-      : typeof listing.images === "string"
-      ? JSON.parse(listing.images || "[]")[0]
-      : "https://placehold.co/1200x900/png"
-  }
-  alt={listing.title}
-  className="
-    w-full
-    h-full
-    object-cover
-    group-hover:scale-105
-    transition
-    duration-500
-  "
-/>
-
-              {/* CATEGORY */}
-
-              <div
-                className="
-                  absolute
-                  top-5
-                  left-5
-                  px-4
-                  py-2
-                  rounded-full
-                  bg-black/70
-                  text-white
-                  text-sm
-                  font-bold
-                  backdrop-blur
-                  z-10
-                "
-              >
-
-                {
-                  listing.category ||
-
-                  "Listing"
-                }
-
-              </div>
-
-              {/* FAVORITE */}
-
-              <FavoriteButton
-                listingId={listing.id}
-              />
-
-            </div>
-
-            {/* CONTENT */}
-
-            <div className="p-7">
-
-              <h2
-                className="
-                  text-3xl
-                  font-black
-                  mb-4
-                  line-clamp-1
-                "
-              >
-                {
-                  listing.title
-                }
-              </h2>
-
-              {/* LOCATION */}
-
-              <div
-                className="
-                  flex
-                  items-center
-                  gap-2
-                  text-gray-500
-                  mb-5
-                "
-              >
-
-                <MapPin
-                  size={18}
-                />
-
-                <span className="line-clamp-1">
-
-                  {
-                    listing.location
-                  }
-
-                </span>
-
-              </div>
-
-              {/* DESCRIPTION */}
-
-              <p
-                className="
-                  text-gray-600
-                  leading-8
-                  line-clamp-2
-                  mb-8
-                "
-              >
-
-                {
-                  listing.description
-                }
-
-              </p>
-
-              {/* BOTTOM */}
-
-              <div
-                className="
-                  flex
-                  items-center
-                  justify-between
-                "
-              >
-
-                <div>
-
-                  <p className="text-gray-500 mb-1">
-                    Preis
-                  </p>
-
-                  <h3
-                    className="
-                      text-5xl
-                      font-black
-                    "
-                  >
-
-                    €
-                    {
-                      listing.price
-                    }
-
-                  </h3>
-
-                </div>
-
-                <div
-                  className="
-                    h-14
-                    px-6
-                    rounded-2xl
-                    bg-black
-                    text-white
-                    flex
-                    items-center
-                    justify-center
-                    gap-3
-                    font-bold
-                  "
-                >
-
-                  <Sparkles
-                    size={18}
-                  />
-
-                  Öffnen
-
-                </div>
-
-              </div>
-
-            </div>
-
-          </Link>
+            listing={listing}
+          />
 
         )
       )}

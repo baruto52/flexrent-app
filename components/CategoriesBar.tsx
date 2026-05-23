@@ -1,25 +1,23 @@
 "use client";
 
 import {
-  Car,
   Wrench,
+  Car,
   Warehouse,
+  Box,
+  Truck,
   Bike,
-  Laptop,
-  Home,
-  Dumbbell,
-  Briefcase,
-  Package,
-  Gamepad2,
-  Tent,
-  Calendar,
+  Hammer,
+  Monitor,
+  Grid,
+  Building2,
 } from "lucide-react";
 
 const categories = [
 
   {
     title: "Alle",
-    icon: Package,
+    icon: Grid,
   },
 
   {
@@ -28,53 +26,58 @@ const categories = [
   },
 
   {
-    title: "Fahrzeuge",
+    title: "Parkplätze",
     icon: Car,
   },
 
   {
-    title: "Lager",
+    title: "Garagen",
     icon: Warehouse,
   },
 
   {
-    title: "Bikes",
+    title: "Keller",
+    icon: Box,
+  },
+
+  {
+    title: "Lagerräume",
+    icon: Building2,
+  },
+
+  {
+    title: "Transporter",
+    icon: Truck,
+  },
+
+  {
+    title: "Anhänger",
+    icon: Truck,
+  },
+
+  {
+    title: "Maschinen",
+    icon: Hammer,
+  },
+
+  {
+    title: "Fahrzeuge",
     icon: Bike,
   },
 
   {
+    title: "Baumaschinen",
+    icon: Hammer,
+  },
+
+  {
     title: "Elektronik",
-    icon: Laptop,
+    icon: Monitor,
   },
 
   {
-    title: "Immobilien",
-    icon: Home,
-  },
-
-  {
-    title: "Sport",
-    icon: Dumbbell,
-  },
-
-  {
-    title: "Business",
-    icon: Briefcase,
-  },
-
-  {
-    title: "Gaming",
-    icon: Gamepad2,
-  },
-
-  {
-    title: "Camping",
-    icon: Tent,
-  },
-
-  {
-    title: "Events",
-    icon: Calendar,
+    title: "Sonstiges",
+    icon: Grid,
   },
 ];
 
@@ -102,10 +105,12 @@ export default function CategoriesBar({
       <div
         className="
           flex
-          gap-5
+          gap-4
           overflow-x-auto
           scrollbar-hide
           pb-3
+          snap-x
+          snap-mandatory
         "
       >
 
@@ -129,9 +134,10 @@ export default function CategoriesBar({
                   )
                 }
                 className={`
-                  min-w-[150px]
-                  h-[150px]
-                  rounded-[34px]
+                  snap-start
+                  min-w-[120px]
+                  h-[120px]
+                  rounded-[30px]
                   border
                   shadow-sm
                   transition-all
@@ -140,9 +146,9 @@ export default function CategoriesBar({
                   flex-col
                   items-center
                   justify-center
-                  gap-5
-                  hover:-translate-y-2
-                  hover:shadow-2xl
+                  gap-3
+                  hover:-translate-y-1
+                  hover:shadow-xl
                   ${
                     active
                       ? "bg-[#16d64d] text-white border-[#16d64d]"
@@ -153,9 +159,9 @@ export default function CategoriesBar({
 
                 <div
                   className={`
-                    w-20
-                    h-20
-                    rounded-[26px]
+                    w-16
+                    h-16
+                    rounded-[22px]
                     flex
                     items-center
                     justify-center
@@ -168,7 +174,7 @@ export default function CategoriesBar({
                 >
 
                   <Icon
-                    size={34}
+                    size={28}
                     className={
                       active
                         ? "text-white"
@@ -181,7 +187,9 @@ export default function CategoriesBar({
                 <span
                   className="
                     font-black
-                    text-lg
+                    text-sm
+                    text-center
+                    px-2
                   "
                 >
                   {item.title}

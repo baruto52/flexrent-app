@@ -163,8 +163,6 @@ export default function Navbar() {
     userId: string
   ) {
 
-    /* NOTIFICATIONS */
-
     const notificationChannel =
       supabase.channel(
         `navbar-notifications-${userId}`
@@ -201,8 +199,6 @@ export default function Navbar() {
     );
 
     notificationChannel.subscribe();
-
-    /* MESSAGES */
 
     const messageChannel =
       supabase.channel(
@@ -277,7 +273,7 @@ export default function Navbar() {
           sticky
           top-0
           z-50
-          bg-white/80
+          bg-white/85
           backdrop-blur-xl
           border-b
           border-gray-100
@@ -290,7 +286,6 @@ export default function Navbar() {
             mx-auto
             px-4
             h-20
-            md:h-24
             flex
             items-center
             justify-between
@@ -355,7 +350,6 @@ export default function Navbar() {
               flex
               items-center
               gap-2
-              md:gap-4
             "
           >
 
@@ -392,8 +386,6 @@ export default function Navbar() {
                 relative
                 w-12
                 h-12
-                md:w-14
-                md:h-14
                 rounded-2xl
                 bg-gray-100
                 flex
@@ -414,8 +406,6 @@ export default function Navbar() {
                 relative
                 w-12
                 h-12
-                md:w-14
-                md:h-14
                 rounded-2xl
                 bg-gray-100
                 flex
@@ -465,8 +455,6 @@ export default function Navbar() {
                 relative
                 w-12
                 h-12
-                md:w-14
-                md:h-14
                 rounded-2xl
                 bg-gray-100
                 flex
@@ -512,24 +500,56 @@ export default function Navbar() {
 
             {user && (
 
-              <Link
-                href="/profile"
+              <div
                 className="
                   hidden
                   md:flex
-                  w-14
-                  h-14
-                  rounded-2xl
-                  bg-black
-                  text-white
                   items-center
-                  justify-center
+                  gap-3
                 "
               >
 
-                <User size={20} />
+                <Link
+                  href="/profile"
+                  className="
+                    w-12
+                    h-12
+                    rounded-2xl
+                    bg-black
+                    text-white
+                    flex
+                    items-center
+                    justify-center
+                  "
+                >
 
-              </Link>
+                  <User size={20} />
+
+                </Link>
+
+                <button
+                  onClick={logout}
+                  className="
+                    h-12
+                    px-5
+                    rounded-2xl
+                    bg-red-500
+                    text-white
+                    font-bold
+                    flex
+                    items-center
+                    justify-center
+                    gap-2
+                  "
+                >
+
+                  <LogOut size={18} />
+
+                  Logout
+
+                </button>
+
+              </div>
 
             )}
 
@@ -542,8 +562,8 @@ export default function Navbar() {
                 className="
                   hidden
                   md:flex
-                  h-14
-                  px-6
+                  h-12
+                  px-5
                   rounded-2xl
                   bg-black
                   text-white
@@ -602,7 +622,8 @@ export default function Navbar() {
           <div
             className="
               lg:hidden
-              bg-white
+              bg-white/95
+              backdrop-blur-xl
               border-t
               border-gray-100
               px-4
@@ -669,16 +690,6 @@ export default function Navbar() {
               </Link>
 
               <Link
-                href="/notifications"
-                onClick={closeMenu}
-                className="font-bold"
-              >
-
-                Notifications
-
-              </Link>
-
-              <Link
                 href="/profile"
                 onClick={closeMenu}
                 className="font-bold"
@@ -725,10 +736,11 @@ export default function Navbar() {
           left-0
           right-0
           z-50
-          bg-white
+          bg-white/95
+          backdrop-blur-xl
           border-t
           border-gray-200
-          h-20
+          h-16
           flex
           items-center
           justify-around
@@ -738,7 +750,17 @@ export default function Navbar() {
 
         <Link
           href="/"
-          className="flex flex-col items-center text-xs"
+          className={`
+            flex
+            flex-col
+            items-center
+            text-xs
+            ${
+              pathname === "/"
+                ? "text-[#16d64d] font-black"
+                : "text-gray-500"
+            }
+          `}
         >
 
           🏠
@@ -751,7 +773,17 @@ export default function Navbar() {
 
         <Link
           href="/favorites"
-          className="flex flex-col items-center text-xs"
+          className={`
+            flex
+            flex-col
+            items-center
+            text-xs
+            ${
+              pathname === "/favorites"
+                ? "text-[#16d64d] font-black"
+                : "text-gray-500"
+            }
+          `}
         >
 
           ❤️
@@ -765,9 +797,9 @@ export default function Navbar() {
         <Link
           href="/create"
           className="
-            -mt-10
-            w-16
-            h-16
+            -mt-8
+            w-14
+            h-14
             rounded-full
             bg-[#16d64d]
             text-white
@@ -785,7 +817,17 @@ export default function Navbar() {
 
         <Link
           href="/messages"
-          className="flex flex-col items-center text-xs"
+          className={`
+            flex
+            flex-col
+            items-center
+            text-xs
+            ${
+              pathname === "/messages"
+                ? "text-[#16d64d] font-black"
+                : "text-gray-500"
+            }
+          `}
         >
 
           💬
@@ -798,7 +840,17 @@ export default function Navbar() {
 
         <Link
           href="/profile"
-          className="flex flex-col items-center text-xs"
+          className={`
+            flex
+            flex-col
+            items-center
+            text-xs
+            ${
+              pathname === "/profile"
+                ? "text-[#16d64d] font-black"
+                : "text-gray-500"
+            }
+          `}
         >
 
           👤

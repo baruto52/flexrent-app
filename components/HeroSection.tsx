@@ -6,7 +6,7 @@ export default function HeroSection() {
 
   return (
 
-    <section className="px-4 md:px-6 pt-4 md:pt-6 pb-8 md:pb-10 overflow-hidden">
+    <section className="px-4 md:px-6 pt-4 md:pt-6 pb-6 md:pb-10 overflow-hidden">
 
       <div
         className="
@@ -25,14 +25,22 @@ export default function HeroSection() {
           flex-col
           lg:flex-row
           items-center
-          min-h-[520px]
+          min-h-[420px]
           md:min-h-[620px]
         "
       >
 
         {/* LEFT */}
 
-        <div className="w-full lg:w-1/2 z-10">
+        <div
+          className="
+            w-full
+            lg:w-1/2
+            pr-0
+            lg:pr-10
+            z-10
+          "
+        >
 
           {/* BADGE */}
 
@@ -47,7 +55,7 @@ export default function HeroSection() {
               bg-white/10
               text-white
               font-bold
-              mb-6
+              mb-5
               text-sm
               md:text-base
             "
@@ -61,8 +69,8 @@ export default function HeroSection() {
 
           <h1
             className="
-              text-[52px]
-              sm:text-[64px]
+              text-5xl
+              sm:text-6xl
               md:text-7xl
               lg:text-8xl
               leading-[0.95]
@@ -97,7 +105,7 @@ export default function HeroSection() {
               text-white/90
               text-lg
               md:text-2xl
-              mt-6
+              mt-5
               md:mt-8
               max-w-2xl
               leading-relaxed
@@ -109,7 +117,8 @@ export default function HeroSection() {
             von Werkzeugen,
             Lagerräumen,
             Fahrzeugen,
-            Parkplätzen und vielen
+            Garagen,
+            Stellplätzen und vielen
             weiteren Dingen
             in deiner Nähe.
 
@@ -146,6 +155,9 @@ export default function HeroSection() {
                 md:text-lg
                 w-full
                 sm:w-auto
+                shadow-lg
+                hover:scale-[1.02]
+                transition-all
               "
             >
 
@@ -171,6 +183,9 @@ export default function HeroSection() {
                 md:text-lg
                 w-full
                 sm:w-auto
+                backdrop-blur-md
+                hover:bg-white/10
+                transition-all
               "
             >
 
@@ -202,7 +217,7 @@ export default function HeroSection() {
             src="/hero-product.png"
             alt=""
             className="
-              w-[90%]
+              w-[88%]
               object-contain
               drop-shadow-2xl
             "

@@ -10,8 +10,13 @@ import Link from "next/link";
 import Image from "next/image";
 
 import {
+
   Heart,
+
   MapPin,
+
+  Star,
+
 } from "lucide-react";
 
 import { supabase }
@@ -40,126 +45,109 @@ export default function ListingCard({
 
   }, []);
 
-  const init =
-    async () => {
+  async function init() {
 
-      const {
-        data: { session },
-      } =
-        await supabase.auth.getSession();
+    const {
+      data: { session },
+    } =
+      await supabase.auth.getSession();
 
-      if (!session) return;
+    if (!session)
+      return;
 
-      setUser(
-        session.user
-      );
+    setUser(
+      session.user
+    );
 
-      checkFavorite(
-        session.user.id
-      );
-    };
+    checkFavorite(
+      session.user.id
+    );
+  }
 
-  const checkFavorite =
-    async (
-      userId: string
-    ) => {
+  async function checkFavorite(
+    userId: string
+  ) {
 
-      const { data } =
-        await supabase
-          .from("favorites")
-          .select("*")
-          .eq(
-            "user_id",
-            userId
-          )
-          .eq(
-            "listing_id",
-            listing.id
-          )
-          .single();
+    const { data } =
+      await supabase
+        .from("favorites")
+        .select("*")
+        .eq(
+          "user_id",
+          userId
+        )
+        .eq(
+          "listing_id",
+          listing.id
+        )
+        .single();
 
-      if (data) {
+    if (data) {
 
-        setFavorite(true);
-      }
-    };
+      setFavorite(true);
+    }
+  }
 
-  const toggleFavorite =
-    async (
-      e: any
-    ) => {
+  async function toggleFavorite(
+    e: any
+  ) {
 
-      e.preventDefault();
+    e.preventDefault();
 
-      if (!user) {
+    if (!user) {
 
-        window.location.href =
-          "/login";
+      window.location.href =
+        "/login";
 
-        return;
-      }
+      return;
+    }
 
-      if (favorite) {
+    if (favorite) {
 
-        await supabase
-          .from("favorites")
-          .delete()
-          .eq(
-            "user_id",
-            user.id
-          )
-          .eq(
-            "listing_id",
-            listing.id
-          );
+      await supabase
+        .from("favorites")
+        .delete()
+        .eq(
+          "user_id",
+          user.id
+        )
+        .eq(
+          "listing_id",
+          listing.id
+        );
 
-        setFavorite(false);
+      setFavorite(false);
 
-      } else {
+    } else {
 
-        await supabase
-          .from("favorites")
-          .insert({
+      await supabase
+        .from("favorites")
+        .insert({
 
-            user_id:
-              user.id,
+          user_id:
+            user.id,
 
-            listing_id:
-              listing.id,
-          });
+          listing_id:
+            listing.id,
+        });
 
-        /* NOTIFICATION */
-
-        await supabase
-          .from("notifications")
-          .insert({
-
-            user_id:
-              listing.user_id,
-
-            title:
-              "Neuer Favorit",
-
-            description:
-              `${listing.title} wurde gespeichert.`,
-          });
-
-        setFavorite(true);
-      }
-    };
+      setFavorite(true);
+    }
+  }
 
   return (
+
     <Link
       href={`/listing/${listing.id}`}
       className="
         bg-white
-        rounded-[36px]
+        rounded-[30px]
         overflow-hidden
         shadow-sm
         hover:shadow-2xl
         transition-all
         duration-300
-        hover:-translate-y-2
+        hover:-translate-y-1
         group
       "
     >
@@ -169,28 +157,32 @@ export default function ListingCard({
       <div
         className="
           relative
-          h-72
+          h-60
           overflow-hidden
         "
       >
 
         <Image
-  src={
-    Array.isArray(listing.images)
-      ? listing.images[0]
-      : typeof listing.images === "string"
-      ? JSON.parse(listing.images || "[]")[0]
-      : "/placeholder.jpg"
-  }
-  alt={listing.title}
-  fill
-  className="
-    object-cover
-    group-hover:scale-105
-    transition
-    duration-500
-  "
-/>
+          src={
+            Array.isArray(
+              listing.images
+            )
+              ? listing.images[0]
+              : typeof listing.images === "string"
+              ? JSON.parse(
+                  listing.images || "[]"
+                )[0]
+              : "/placeholder.jpg"
+          }
+          alt={listing.title}
+          fill
+          className="
+            object-cover
+            group-hover:scale-105
+            transition
+            duration-500
+          "
+        />
 
         {/* FAVORITE */}
 
@@ -200,21 +192,23 @@ export default function ListingCard({
           }
           className="
             absolute
-            top-5
-            right-5
-            w-12
-            h-12
+            top-4
+            right-4
+            w-11
+            h-11
             rounded-full
             bg-white/90
             backdrop-blur
             flex
             items-center
             justify-center
+            shadow-lg
+            z-10
           "
         >
 
           <Heart
-            size={22}
+            size={20}
             fill={
               favorite
                 ? "red"
@@ -234,21 +228,23 @@ export default function ListingCard({
         <div
           className="
             absolute
-            top-5
-            left-5
+            top-4
+            left-4
             px-4
             py-2
             rounded-full
             bg-black/70
             text-white
-            text-sm
+            text-xs
             font-bold
             backdrop-blur
+            z-10
           "
         >
 
           {
             listing.category ||
+
             "Listing"
           }
 
@@ -258,17 +254,21 @@ export default function ListingCard({
 
       {/* CONTENT */}
 
-      <div className="p-7">
+      <div className="p-5">
+
+        {/* TITLE */}
 
         <h2
           className="
-            text-3xl
+            text-2xl
             font-black
-            mb-4
             line-clamp-1
+            mb-2
           "
         >
+
           {listing.title}
+
         </h2>
 
         {/* LOCATION */}
@@ -279,13 +279,12 @@ export default function ListingCard({
             items-center
             gap-2
             text-gray-500
-            mb-5
+            text-sm
+            mb-3
           "
         >
 
-          <MapPin
-            size={18}
-          />
+          <MapPin size={15} />
 
           <span className="line-clamp-1">
 
@@ -300,9 +299,10 @@ export default function ListingCard({
         <p
           className="
             text-gray-600
-            leading-8
+            text-sm
+            leading-6
             line-clamp-2
-            mb-8
+            mb-5
           "
         >
 
@@ -315,45 +315,66 @@ export default function ListingCard({
         <div
           className="
             flex
-            items-center
+            items-end
             justify-between
           "
         >
 
+          {/* PRICE */}
+
           <div>
 
-            <p className="text-gray-500 mb-1">
-              Preis
+            <p
+              className="
+                text-gray-400
+                text-sm
+                mb-1
+              "
+            >
+
+              Preis pro Tag
+
             </p>
 
             <h3
               className="
-                text-5xl
+                text-3xl
                 font-black
               "
             >
 
               €
+
               {listing.price}
 
             </h3>
 
           </div>
 
+          {/* RATING */}
+
           <div
             className="
-              h-14
-              px-6
-              rounded-2xl
-              bg-black
-              text-white
               flex
               items-center
-              justify-center
+              gap-1
+              bg-[#16d64d]/10
+              text-[#16d64d]
+              px-3
+              py-2
+              rounded-2xl
               font-bold
+              text-sm
             "
           >
-            Öffnen
+
+            <Star
+              size={15}
+              fill="#16d64d"
+            />
+
+            4.9
+
           </div>
 
         </div>

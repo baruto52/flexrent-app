@@ -18,6 +18,7 @@ import Footer from "@/components/Footer";
 import ReviewsSection from "@/components/ReviewsSection";
 import ImageGallery from "@/components/ImageGallery";
 import BookingCalendar from "@/components/BookingCalendar";
+import ListingMap from "@/components/ListingMap";
 
 import {
   MessageCircle,
@@ -432,9 +433,9 @@ export default function ListingPage() {
 
       <Navbar />
 
-      <div className="max-w-7xl mx-auto px-6 py-10">
+      <div className="max-w-7xl mx-auto px-4 md:px-6 py-6 md:py-10">
 
-        <div className="grid lg:grid-cols-2 gap-10">
+        <div className="grid lg:grid-cols-2 gap-8 md:gap-10">
 
           {/* LEFT */}
 
@@ -448,19 +449,19 @@ export default function ListingPage() {
 
           {/* RIGHT */}
 
-          <div className="bg-white rounded-[40px] p-10 shadow-sm h-fit lg:sticky lg:top-28">
+          <div className="bg-white rounded-[32px] md:rounded-[40px] p-6 md:p-10 shadow-sm h-fit lg:sticky lg:top-28">
 
             <div className="flex items-start justify-between gap-5 mb-6">
 
               <div>
 
-                <h1 className="text-5xl font-black mb-5">
+                <h1 className="text-4xl md:text-5xl font-black mb-5 leading-tight">
 
                   {listing.title}
 
                 </h1>
 
-                <div className="flex items-center gap-3 text-gray-500 text-lg mb-5">
+                <div className="flex items-center gap-3 text-gray-500 text-base md:text-lg mb-5">
 
                   <MapPin size={20} />
 
@@ -482,7 +483,7 @@ export default function ListingPage() {
                 className="text-yellow-400 fill-yellow-400"
               />
 
-              <span className="font-black text-xl">
+              <span className="font-black text-lg md:text-xl">
 
                 {averageRating} Bewertung
 
@@ -498,7 +499,7 @@ export default function ListingPage() {
 
               </p>
 
-              <h2 className="text-6xl font-black">
+              <h2 className="text-5xl md:text-6xl font-black">
 
                 €{listing.price}
 
@@ -506,7 +507,7 @@ export default function ListingPage() {
 
             </div>
 
-            <p className="text-gray-700 leading-9 text-lg mb-10">
+            <p className="text-gray-700 leading-8 text-base md:text-lg mb-10">
 
               {
                 listing.description ||
@@ -519,10 +520,10 @@ export default function ListingPage() {
 
               <Link
                 href={`/user/${owner.id}`}
-                className="flex items-center gap-5 bg-[#f5f7fb] rounded-[32px] p-6 mb-8"
+                className="flex items-center gap-5 bg-[#f5f7fb] rounded-[28px] p-5 md:p-6 mb-8"
               >
 
-                <div className="relative w-20 h-20 rounded-full overflow-hidden bg-gray-100">
+                <div className="relative w-16 h-16 md:w-20 md:h-20 rounded-full overflow-hidden bg-gray-100">
 
                   <Image
                     src={
@@ -539,7 +540,7 @@ export default function ListingPage() {
 
                 <div>
 
-                  <h3 className="text-2xl font-black mb-2">
+                  <h3 className="text-xl md:text-2xl font-black mb-1">
 
                     {
                       owner.full_name ||
@@ -548,7 +549,7 @@ export default function ListingPage() {
 
                   </h3>
 
-                  <p className="text-gray-500">
+                  <p className="text-gray-500 text-sm md:text-base">
 
                     Profil ansehen
 
@@ -559,8 +560,6 @@ export default function ListingPage() {
               </Link>
 
             )}
-
-            {/* CALENDAR */}
 
             <div className="mb-8">
 
@@ -573,8 +572,6 @@ export default function ListingPage() {
               />
 
             </div>
-
-            {/* TOTAL */}
 
             {totalDays > 0 && (
 
@@ -616,14 +613,12 @@ export default function ListingPage() {
 
             )}
 
-            {/* ACTIONS */}
-
             <div className="space-y-4">
 
               <button
                 onClick={handleCheckout}
                 disabled={checkoutLoading}
-                className="w-full h-16 rounded-2xl bg-[#16d64d] text-white text-xl font-black"
+                className="w-full h-14 md:h-16 rounded-2xl bg-[#16d64d] text-white text-lg md:text-xl font-black"
               >
 
                 Jetzt buchen
@@ -632,7 +627,7 @@ export default function ListingPage() {
 
               <button
                 onClick={handleMessage}
-                className="w-full h-16 rounded-2xl border border-gray-200 flex items-center justify-center gap-3 text-lg font-bold"
+                className="w-full h-14 md:h-16 rounded-2xl border border-gray-200 flex items-center justify-center gap-3 text-base md:text-lg font-bold"
               >
 
                 <MessageCircle size={22} />
@@ -646,6 +641,38 @@ export default function ListingPage() {
           </div>
 
         </div>
+
+        {/* MAP */}
+
+        <div className="mt-16">
+
+          <h2
+            className="
+              text-3xl
+              md:text-4xl
+              font-black
+              mb-6
+            "
+          >
+
+            Standort
+
+          </h2>
+
+          <ListingMap
+            lat={
+              listing.latitude ||
+              52.52
+            }
+            lng={
+              listing.longitude ||
+              13.405
+            }
+          />
+
+        </div>
+
+        {/* REVIEWS */}
 
         <div className="mt-16">
 

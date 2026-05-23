@@ -10,14 +10,12 @@ import {
 } from "next/navigation";
 
 import Navbar from "@/components/Navbar";
-
 import Footer from "@/components/Footer";
+import LocationPicker from "@/components/LocationPicker";
 
 import {
 
   Upload,
-
-  MapPin,
 
   Trash2,
 
@@ -30,25 +28,27 @@ from "@/lib/supabase";
 
 const categories = [
 
-  "Fahrzeuge",
-
   "Werkzeuge",
 
-  "Elektronik",
+  "Parkplätze",
 
-  "Immobilien",
+  "Garagen",
 
-  "Events",
+  "Keller",
+
+  "Lagerräume",
+
+  "Transporter",
+
+  "Anhänger",
 
   "Maschinen",
 
-  "Camping",
+  "Fahrzeuge",
 
-  "Gaming",
+  "Baumaschinen",
 
-  "Business",
-
-  "Sport",
+  "Elektronik",
 
   "Sonstiges",
 ];
@@ -73,11 +73,11 @@ export default function CreatePage() {
   const [location, setLocation] =
     useState("");
 
-  const [latitude, setLatitude] =
-    useState<number | null>(null);
+  const [lat, setLat] =
+    useState(52.52);
 
-  const [longitude, setLongitude] =
-    useState<number | null>(null);
+  const [lng, setLng] =
+    useState(13.405);
 
   const [category, setCategory] =
     useState("");
@@ -97,11 +97,11 @@ export default function CreatePage() {
 
       (position) => {
 
-        setLatitude(
+        setLat(
           position.coords.latitude
         );
 
-        setLongitude(
+        setLng(
           position.coords.longitude
         );
       },
@@ -293,9 +293,9 @@ export default function CreatePage() {
 
               location,
 
-              latitude,
+              latitude: lat,
 
-              longitude,
+              longitude: lng,
 
               category,
 
@@ -335,6 +335,7 @@ export default function CreatePage() {
     };
 
   return (
+
     <main className="min-h-screen bg-[#f5f7fb]">
 
       <Navbar />
@@ -345,7 +346,8 @@ export default function CreatePage() {
           className="
             bg-white
             rounded-[40px]
-            p-10
+            p-6
+            md:p-10
             shadow-sm
           "
         >
@@ -387,7 +389,7 @@ export default function CreatePage() {
 
                 <h1
                   className="
-                    text-5xl
+                    text-4xl
                     md:text-6xl
                     font-black
                   "
@@ -398,7 +400,8 @@ export default function CreatePage() {
                 <p
                   className="
                     text-gray-500
-                    text-xl
+                    text-lg
+                    md:text-xl
                     mt-3
                   "
                 >
@@ -438,7 +441,7 @@ export default function CreatePage() {
                     e.target.value
                   )
                 }
-                placeholder="BMW M4 Competition"
+                placeholder="Makita Bohrmaschine"
                 disabled={loading}
                 className="
                   w-full
@@ -449,7 +452,6 @@ export default function CreatePage() {
                   px-5
                   text-lg
                   outline-none
-                  disabled:opacity-50
                 "
               />
 
@@ -488,7 +490,6 @@ export default function CreatePage() {
                   p-5
                   text-lg
                   outline-none
-                  disabled:opacity-50
                 "
               />
 
@@ -525,7 +526,7 @@ export default function CreatePage() {
                       e.target.value
                     )
                   }
-                  placeholder="250"
+                  placeholder="25"
                   disabled={loading}
                   className="
                     w-full
@@ -536,7 +537,6 @@ export default function CreatePage() {
                     px-5
                     text-lg
                     outline-none
-                    disabled:opacity-50
                   "
                 />
 
@@ -573,7 +573,6 @@ export default function CreatePage() {
                     text-lg
                     outline-none
                     bg-white
-                    disabled:opacity-50
                   "
                 >
 
@@ -599,7 +598,7 @@ export default function CreatePage() {
 
             </div>
 
-            {/* LOCATION */}
+            {/* LOCATION PICKER */}
 
             <div>
 
@@ -608,50 +607,18 @@ export default function CreatePage() {
                   block
                   font-black
                   text-lg
-                  mb-3
+                  mb-4
                 "
               >
                 Standort
               </label>
 
-              <div className="relative">
-
-                <MapPin
-                  size={22}
-                  className="
-                    absolute
-                    left-5
-                    top-1/2
-                    -translate-y-1/2
-                    text-gray-400
-                  "
-                />
-
-                <input
-                  type="text"
-                  value={location}
-                  onChange={(e) =>
-                    setLocation(
-                      e.target.value
-                    )
-                  }
-                  placeholder="Berlin"
-                  disabled={loading}
-                  className="
-                    w-full
-                    h-16
-                    rounded-2xl
-                    border
-                    border-gray-200
-                    pl-14
-                    pr-5
-                    text-lg
-                    outline-none
-                    disabled:opacity-50
-                  "
-                />
-
-              </div>
+              <LocationPicker
+                location={location}
+                setLocation={setLocation}
+                setLat={setLat}
+                setLng={setLng}
+              />
 
             </div>
 
@@ -697,7 +664,6 @@ export default function CreatePage() {
                         border
                         font-bold
                         transition
-                        disabled:opacity-50
                         ${
                           category === item
                             ? "bg-[#16d64d] text-white border-[#16d64d]"
@@ -738,7 +704,8 @@ export default function CreatePage() {
                   border-dashed
                   border-gray-300
                   rounded-[36px]
-                  p-14
+                  p-10
+                  md:p-14
                   flex
                   flex-col
                   items-center
@@ -772,7 +739,8 @@ export default function CreatePage() {
 
                 <h3
                   className="
-                    text-4xl
+                    text-3xl
+                    md:text-4xl
                     font-black
                     mb-3
                   "
@@ -783,7 +751,8 @@ export default function CreatePage() {
                 <p
                   className="
                     text-gray-500
-                    text-xl
+                    text-lg
+                    md:text-xl
                   "
                 >
                   Maximal 10 Bilder
@@ -826,7 +795,8 @@ export default function CreatePage() {
                       key={index}
                       className="
                         relative
-                        h-48
+                        h-40
+                        md:h-48
                         rounded-3xl
                         overflow-hidden
                       "
@@ -895,8 +865,6 @@ export default function CreatePage() {
                 text-xl
                 font-black
                 hover:scale-[1.01]
-                disabled:opacity-50
-                disabled:cursor-not-allowed
                 transition
               "
             >

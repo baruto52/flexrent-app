@@ -7,6 +7,7 @@ type Props = {
   endDate: Date | null;
   setStartDate: any;
   setEndDate: any;
+  excludedDates?: Date[];
 };
 
 export default function BookingCalendar({
@@ -18,6 +19,8 @@ export default function BookingCalendar({
   setStartDate,
 
   setEndDate,
+
+  excludedDates = [],
 
 }: Props) {
 
@@ -39,6 +42,7 @@ export default function BookingCalendar({
             setStartDate(date)
           }
           minDate={new Date()}
+          excludeDates={excludedDates}
           className="
             w-full
             h-14
@@ -67,6 +71,7 @@ export default function BookingCalendar({
             startDate ||
             new Date()
           }
+          excludeDates={excludedDates}
           className="
             w-full
             h-14

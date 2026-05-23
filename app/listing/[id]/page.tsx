@@ -63,6 +63,9 @@ export default function ListingPage() {
   const [endDate, setEndDate] =
     useState<Date | null>(null);
 
+  const [excludedDates, setExcludedDates] =
+    useState<Date[]>([]);
+
   const totalDays =
     startDate && endDate
 
@@ -104,6 +107,8 @@ export default function ListingPage() {
       }
 
       await fetchListing();
+
+      await loadBlockedDates();
 
     } catch (error) {
 
@@ -211,6 +216,57 @@ export default function ListingPage() {
 
       setAverageRating("0.0");
     }
+  }
+
+  async function loadBlockedDates() {
+
+    const { data } =
+      await supabase
+        .from("bookings")
+        .select("*")
+        .eq(
+          "listing_id",
+          listingId
+        )
+        .neq(
+          "status",
+          "cancelled"
+        );
+
+    if (!data) return;
+
+    const dates: Date[] = [];
+
+    data.forEach((booking) => {
+
+      const start =
+        new Date(
+          booking.start_date
+        );
+
+      const end =
+        new Date(
+          booking.end_date
+        );
+
+      const current =
+        new Date(start);
+
+      while (
+        current <= end
+      ) {
+
+        dates.push(
+          new Date(current)
+        );
+
+        current.setDate(
+          current.getDate() + 1
+        );
+      }
+    });
+
+    setExcludedDates(dates);
   }
 
   async function handleCheckout() {
@@ -513,6 +569,7 @@ export default function ListingPage() {
                 endDate={endDate}
                 setStartDate={setStartDate}
                 setEndDate={setEndDate}
+                excludedDates={excludedDates}
               />
 
             </div>

@@ -1,130 +1,50 @@
 "use client";
 
-import {
-  useEffect,
-  useState,
-} from "react";
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
 
-import {
-  useParams,
-  useRouter,
-} from "next/navigation";
+type Conversation = {
+  id: string;
+  sender_id: string;
+  receiver_id: string;
+  message: string;
+  created_at: string;
+  sender_name?: string;
+  sender_avatar?: string;
+};
 
-import Navbar
-from "@/components/Navbar";
-
-import { supabase }
-from "@/lib/supabase";
-
-import ConversationSidebar
-from "@/components/ConversationSidebar";
-
-import ChatArea
-from "@/components/ChatArea";
-
-export default function ChatPage() {
-
-  const params =
-    useParams();
-
-  const router =
-    useRouter();
-
-  const receiverId =
-    params.id as string;
-
-  const [message, setMessage] =
-    useState("");
-
-  const [messages, setMessages] =
-    useState<any[]>([]);
+export default function MessagesPage() {
 
   const [conversations, setConversations] =
-    useState<any[]>([]);
-
-  const [currentUser, setCurrentUser] =
-    useState<any>(null);
-
-  const [receiver, setReceiver] =
-    useState<any>(null);
+    useState<Conversation[]>([]);
 
   const [loading, setLoading] =
     useState(true);
 
-  const [sending, setSending] =
-    useState(false);
-
   useEffect(() => {
 
-    init();
+    loadConversations();
 
   }, []);
 
-  async function init() {
+  async function loadConversations() {
 
     const {
       data: { session },
-    } =
-      await supabase.auth.getSession();
+    } = await supabase.auth.getSession();
 
-    if (!session) {
+    if (!session) return;
 
-      router.push("/login");
+    const currentUserId =
+      session.user.id;
 
-      return;
-    }
-
-    setCurrentUser(
-      session.user
-    );
-
-    await Promise.all([
-
-      loadReceiver(),
-
-      loadMessages(
-        session.user.id
-      ),
-
-      loadConversations(
-        session.user.id
-      ),
-    ]);
-
-    subscribeMessages(
-      session.user.id
-    );
-  }
-
-  async function loadReceiver() {
-
-    const {
-      data,
-    } =
-      await supabase
-        .from("profiles")
-        .select("*")
-        .eq(
-          "id",
-          receiverId
-        )
-        .maybeSingle();
-
-    setReceiver(data);
-  }
-
-  async function loadConversations(
-    userId: string
-  ) {
-
-    const {
-      data,
-    } =
+    const { data, error } =
       await supabase
         .from("messages")
         .select("*")
         .or(
-          `sender_id.eq.${userId},receiver_id.eq.${userId}`
+          `sender_id.eq.${currentUserId},receiver_id.eq.${currentUserId}`
         )
         .order(
           "created_at",
@@ -133,216 +53,73 @@ export default function ChatPage() {
           }
         );
 
-    if (!data)
-      return;
+    if (error) {
 
-    const map =
+      console.log(error);
+
+      return;
+    }
+
+    const uniqueChats =
       new Map();
 
-    for (const msg of data) {
+    for (const msg of data || []) {
 
       const otherUserId =
-
-        msg.sender_id === userId
-
+        msg.sender_id === currentUserId
           ? msg.receiver_id
-
           : msg.sender_id;
 
       if (
-        map.has(
+        !uniqueChats.has(
           otherUserId
         )
-      ) continue;
+      ) {
 
-      const {
-        data: profile,
-      } =
-        await supabase
+        const {
+          data: profile,
+        } = await supabase
           .from("profiles")
-          .select("*")
+          .select(
+            "full_name, avatar_url"
+          )
           .eq(
             "id",
             otherUserId
           )
-          .maybeSingle();
+          .single();
 
-      map.set(
-        otherUserId,
-        {
-
-          userId:
-            otherUserId,
-
-          profile,
-
-          latestMessage:
-            msg.message,
-
-          createdAt:
-            msg.created_at,
-        }
-      );
+        uniqueChats.set(
+          otherUserId,
+          {
+            ...msg,
+            sender_name:
+              profile?.full_name ||
+              "User",
+            sender_avatar:
+              profile?.avatar_url ||
+              "/avatar.png",
+          }
+        );
+      }
     }
 
     setConversations(
       Array.from(
-        map.values()
+        uniqueChats.values()
       )
     );
-  }
-
-  async function loadMessages(
-    currentUserId: string
-  ) {
-
-    const { data } =
-      await supabase
-        .from("messages")
-        .select("*")
-        .or(
-          `
-          and(sender_id.eq.${currentUserId},receiver_id.eq.${receiverId}),
-          and(sender_id.eq.${receiverId},receiver_id.eq.${currentUserId})
-          `
-        )
-        .order(
-          "created_at",
-          {
-            ascending: true,
-          }
-        );
-
-    setMessages(data || []);
 
     setLoading(false);
-  }
-
-  function subscribeMessages(
-    currentUserId: string
-  ) {
-
-    const channel =
-      supabase
-        .channel(
-          `chat-${currentUserId}-${receiverId}`
-        )
-        .on(
-
-          "postgres_changes",
-
-          {
-
-            event: "INSERT",
-
-            schema: "public",
-
-            table: "messages",
-          },
-
-          (payload) => {
-
-            const newMessage =
-              payload.new as any;
-
-            const valid =
-
-              (
-                newMessage.sender_id ===
-                currentUserId &&
-
-                newMessage.receiver_id ===
-                receiverId
-              ) ||
-
-              (
-                newMessage.sender_id ===
-                receiverId &&
-
-                newMessage.receiver_id ===
-                currentUserId
-              );
-
-            if (!valid)
-              return;
-
-            setMessages(
-              (prev) => [
-
-                ...prev,
-
-                newMessage,
-              ]
-            );
-          }
-        )
-        .subscribe();
-
-    return () => {
-
-      supabase.removeChannel(
-        channel
-      );
-    };
-  }
-
-  async function sendMessage() {
-
-    if (
-      !message.trim()
-    ) return;
-
-    if (!currentUser)
-      return;
-
-    try {
-
-      setSending(true);
-
-      await supabase
-        .from("messages")
-        .insert({
-
-          sender_id:
-            currentUser.id,
-
-          receiver_id:
-            receiverId,
-
-          message:
-            message.trim(),
-
-          listing_id: null,
-        });
-
-      setMessage("");
-
-    } catch (error) {
-
-      console.log(error);
-
-    } finally {
-
-      setSending(false);
-    }
   }
 
   if (loading) {
 
     return (
 
-      <div
-        className="
-          min-h-screen
-          flex
-          items-center
-          justify-center
-          text-3xl
-          font-black
-        "
-      >
+      <div className="p-10">
 
-        Chat wird geladen...
+        Lade Nachrichten...
 
       </div>
 
@@ -351,77 +128,82 @@ export default function ChatPage() {
 
   return (
 
-    <main className="h-screen bg-[#f5f7fb] overflow-hidden">
+    <div className="max-w-3xl mx-auto p-6">
 
-      <Navbar />
+      <h1 className="text-4xl font-bold mb-2">
 
-      <div
-        className="
-          h-[calc(100vh-96px)]
-          flex
-        "
-      >
+        Nachrichten
 
-        {/* SIDEBAR */}
+      </h1>
 
-        <div
-          className="
-            hidden
-            lg:block
-          "
-        >
+      <p className="text-gray-500 mb-8">
 
-          <ConversationSidebar
-            conversations={
-              conversations
-            }
-            activeId={
-              receiverId
-            }
-          />
+        Deine Unterhaltungen
 
-        </div>
+      </p>
 
-        {/* CHAT */}
+      <div className="space-y-4">
 
-        <ChatArea
+        {conversations.map(
+          (chat) => {
 
-          receiver={
-            receiver
-          }
+          const otherUserId =
+            chat.sender_id;
 
-          messages={
-            messages
-          }
+          return (
 
-          currentUser={
-            currentUser
-          }
+            <Link
+              key={chat.id}
+              href={`/messages/${otherUserId}`}
+            >
 
-          message={
-            message
-          }
+              <div className="bg-white border rounded-3xl p-5 hover:shadow-lg transition cursor-pointer flex items-center justify-between">
 
-          setMessage={
-            setMessage
-          }
+                <div className="flex items-center gap-4">
 
-          sendMessage={
-            sendMessage
-          }
+                  <img
+                    src={
+                      chat.sender_avatar
+                    }
+                    className="w-16 h-16 rounded-full object-cover"
+                  />
 
-          sending={
-            sending
-          }
+                  <div>
 
-          router={
-            router
-          }
+                    <h2 className="font-bold text-xl">
 
-        />
+                      {
+                        chat.sender_name
+                      }
+
+                    </h2>
+
+                    <p className="text-gray-500">
+
+                      {chat.message}
+
+                    </p>
+
+                  </div>
+
+                </div>
+
+                <div className="text-sm text-gray-400">
+
+                  {new Date(
+                    chat.created_at
+                  ).toLocaleDateString()}
+
+                </div>
+
+              </div>
+
+            </Link>
+          );
+        })}
 
       </div>
 
-    </main>
+    </div>
   );
 }

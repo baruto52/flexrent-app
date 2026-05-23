@@ -2,7 +2,6 @@
 
 import {
   useEffect,
-  useRef,
   useState,
 } from "react";
 
@@ -14,14 +13,14 @@ import {
 import Navbar
 from "@/components/Navbar";
 
-import {
-  ArrowLeft,
-  Send,
-  ShieldCheck,
-} from "lucide-react";
-
 import { supabase }
 from "@/lib/supabase";
+
+import ConversationSidebar
+from "@/components/ConversationSidebar";
+
+import ChatArea
+from "@/components/ChatArea";
 
 export default function ChatPage() {
 
@@ -34,13 +33,13 @@ export default function ChatPage() {
   const receiverId =
     params.id as string;
 
-  const messagesEndRef =
-    useRef<HTMLDivElement>(null);
-
   const [message, setMessage] =
     useState("");
 
   const [messages, setMessages] =
+    useState<any[]>([]);
+
+  const [conversations, setConversations] =
     useState<any[]>([]);
 
   const [currentUser, setCurrentUser] =
@@ -60,12 +59,6 @@ export default function ChatPage() {
     init();
 
   }, []);
-
-  useEffect(() => {
-
-    scrollBottom();
-
-  }, [messages]);
 
   async function init() {
 
@@ -92,20 +85,15 @@ export default function ChatPage() {
       loadMessages(
         session.user.id
       ),
+
+      loadConversations(
+        session.user.id
+      ),
     ]);
 
     subscribeMessages(
       session.user.id
     );
-  }
-
-  function scrollBottom() {
-
-    messagesEndRef.current
-      ?.scrollIntoView({
-
-        behavior: "smooth",
-      });
   }
 
   async function loadReceiver() {
@@ -123,6 +111,85 @@ export default function ChatPage() {
         .maybeSingle();
 
     setReceiver(data);
+  }
+
+  async function loadConversations(
+    userId: string
+  ) {
+
+    const {
+      data,
+    } =
+      await supabase
+        .from("messages")
+        .select("*")
+        .or(
+          `sender_id.eq.${userId},receiver_id.eq.${userId}`
+        )
+        .order(
+          "created_at",
+          {
+            ascending: false,
+          }
+        );
+
+    if (!data)
+      return;
+
+    const map =
+      new Map();
+
+    for (const msg of data) {
+
+      const otherUserId =
+
+        msg.sender_id === userId
+
+          ? msg.receiver_id
+
+          : msg.sender_id;
+
+      if (
+        map.has(
+          otherUserId
+        )
+      ) continue;
+
+      const {
+        data: profile,
+      } =
+        await supabase
+          .from("profiles")
+          .select("*")
+          .eq(
+            "id",
+            otherUserId
+          )
+          .maybeSingle();
+
+      map.set(
+        otherUserId,
+        {
+
+          userId:
+            otherUserId,
+
+          profile,
+
+          latestMessage:
+            msg.message,
+
+          createdAt:
+            msg.created_at,
+        }
+      );
+    }
+
+    setConversations(
+      Array.from(
+        map.values()
+      )
+    );
   }
 
   async function loadMessages(
@@ -270,11 +337,13 @@ export default function ChatPage() {
           flex
           items-center
           justify-center
-          text-2xl
+          text-3xl
           font-black
         "
       >
+
         Chat wird geladen...
+
       </div>
 
     );
@@ -282,288 +351,74 @@ export default function ChatPage() {
 
   return (
 
-    <main className="min-h-screen bg-[#f5f7fb]">
+    <main className="h-screen bg-[#f5f7fb] overflow-hidden">
 
       <Navbar />
 
       <div
         className="
-          max-w-5xl
-          mx-auto
           h-[calc(100vh-96px)]
           flex
-          flex-col
         "
       >
 
-        <div
-          className="
-            h-24
-            bg-white
-            border-b
-            border-gray-100
-            px-6
-            flex
-            items-center
-            justify-between
-            shadow-sm
-          "
-        >
-
-          <div
-            className="
-              flex
-              items-center
-              gap-5
-            "
-          >
-
-            <button
-              onClick={() =>
-                router.back()
-              }
-              className="
-                w-14
-                h-14
-                rounded-2xl
-                bg-gray-100
-                flex
-                items-center
-                justify-center
-              "
-            >
-
-              <ArrowLeft
-                size={24}
-              />
-
-            </button>
-
-            <div
-              className="
-                flex
-                items-center
-                gap-4
-              "
-            >
-
-              <div
-                className="
-                  w-14
-                  h-14
-                  rounded-full
-                  overflow-hidden
-                  bg-gray-100
-                "
-              >
-
-                <img
-                  src={
-                    receiver?.avatar_url ||
-
-                    "https://placehold.co/300x300/png"
-                  }
-                  alt="User"
-                  className="
-                    w-full
-                    h-full
-                    object-cover
-                  "
-                />
-
-              </div>
-
-              <div>
-
-                <h1
-                  className="
-                    text-2xl
-                    font-black
-                  "
-                >
-
-                  {
-                    receiver?.full_name ||
-
-                    "Chat"
-                  }
-
-                </h1>
-
-                <div
-                  className="
-                    flex
-                    items-center
-                    gap-2
-                    text-[#16d64d]
-                    font-bold
-                  "
-                >
-
-                  <ShieldCheck
-                    size={18}
-                  />
-
-                  Verifiziert
-
-                </div>
-
-              </div>
-
-            </div>
-
-          </div>
-
-        </div>
+        {/* SIDEBAR */}
 
         <div
           className="
-            flex-1
-            overflow-y-auto
-            px-6
-            py-8
-            space-y-5
+            hidden
+            lg:block
           "
         >
 
-          {messages.map(
-            (msg) => {
-
-              const own =
-                msg.sender_id ===
-                currentUser?.id;
-
-              return (
-
-                <div
-                  key={msg.id}
-                  className={`
-                    flex
-                    ${
-                      own
-
-                        ? "justify-end"
-
-                        : "justify-start"
-                    }
-                  `}
-                >
-
-                  <div
-                    className={`
-                      max-w-[75%]
-                      px-6
-                      py-4
-                      rounded-[28px]
-                      text-lg
-                      shadow-sm
-                      ${
-                        own
-
-                          ? "bg-[#16d64d] text-white"
-
-                          : "bg-white"
-                      }
-                    `}
-                  >
-
-                    <p>
-
-                      {msg.message}
-
-                    </p>
-
-                  </div>
-
-                </div>
-
-              );
+          <ConversationSidebar
+            conversations={
+              conversations
             }
-          )}
-
-          <div
-            ref={
-              messagesEndRef
+            activeId={
+              receiverId
             }
           />
 
         </div>
 
-        <div
-          className="
-            bg-white
-            border-t
-            border-gray-100
-            p-6
-          "
-        >
+        {/* CHAT */}
 
-          <div
-            className="
-              flex
-              gap-4
-            "
-          >
+        <ChatArea
 
-            <input
-              value={message}
-              onChange={(e) =>
-                setMessage(
-                  e.target.value
-                )
-              }
-              onKeyDown={(e) => {
+          receiver={
+            receiver
+          }
 
-                if (
-                  e.key === "Enter"
-                ) {
+          messages={
+            messages
+          }
 
-                  sendMessage();
-                }
-              }}
-              placeholder="Nachricht schreiben..."
-              className="
-                flex-1
-                h-16
-                px-6
-                rounded-2xl
-                border
-                border-gray-200
-                outline-none
-                text-lg
-              "
-            />
+          currentUser={
+            currentUser
+          }
 
-            <button
-              onClick={
-                sendMessage
-              }
-              disabled={
-                sending
-              }
-              className="
-                w-16
-                h-16
-                rounded-2xl
-                bg-[#16d64d]
-                text-white
-                flex
-                items-center
-                justify-center
-                shadow-lg
-                disabled:opacity-50
-              "
-            >
+          message={
+            message
+          }
 
-              <Send
-                size={24}
-              />
+          setMessage={
+            setMessage
+          }
 
-            </button>
+          sendMessage={
+            sendMessage
+          }
 
-          </div>
+          sending={
+            sending
+          }
 
-        </div>
+          router={
+            router
+          }
+
+        />
 
       </div>
 

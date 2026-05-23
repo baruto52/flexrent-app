@@ -30,7 +30,7 @@ export default function LoginPage() {
     await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: "http://localhost:3000/",
+        redirectTo: process.env.NEXT_PUBLIC_SITE_URL,
       },
     });
   };
@@ -40,7 +40,7 @@ export default function LoginPage() {
     await supabase.auth.signInWithOAuth({
       provider: "apple",
       options: {
-        redirectTo: "http://localhost:3000/",
+        redirectTo: process.env.NEXT_PUBLIC_SITE_URL,
       },
     });
   };
@@ -50,7 +50,7 @@ export default function LoginPage() {
     await supabase.auth.signInWithOAuth({
       provider: "facebook",
       options: {
-        redirectTo: "http://localhost:3000/",
+        redirectTo: process.env.NEXT_PUBLIC_SITE_URL,
       },
     });
   };

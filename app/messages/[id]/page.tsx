@@ -1,58 +1,37 @@
 "use client";
 
-import {
-  useEffect,
-  useState,
-} from "react";
+import { useEffect, useState, useRef } from "react";
 
-import {
-  useParams,
-  useRouter,
-} from "next/navigation";
+import { useParams } from "next/navigation";
 
-import Navbar
-from "@/components/Navbar";
+import { supabase } from "@/lib/supabase";
 
-import { supabase }
-from "@/lib/supabase";
-
-import ConversationSidebar
-from "@/components/ConversationSidebar";
-
-import ChatArea
-from "@/components/ChatArea";
+type Message = {
+  id: string;
+  sender_id: string;
+  receiver_id: string;
+  message: string;
+  created_at: string;
+};
 
 export default function ChatPage() {
 
-  const params =
-    useParams();
-
-  const router =
-    useRouter();
+  const params = useParams();
 
   const receiverId =
     params.id as string;
 
-  const [message, setMessage] =
+  const [messages, setMessages] =
+    useState<Message[]>([]);
+
+  const [newMessage, setNewMessage] =
     useState("");
 
-  const [messages, setMessages] =
-    useState<any[]>([]);
+  const [currentUserId, setCurrentUserId] =
+    useState("");
 
-  const [conversations, setConversations] =
-    useState<any[]>([]);
-
-  const [currentUser, setCurrentUser] =
-    useState<any>(null);
-
-  const [receiver, setReceiver] =
-    useState<any>(null);
-
-  const [loading, setLoading] =
-    useState(true);
-
-  const [sending, setSending] =
-    useState(false);
+  const messagesEndRef =
+    useRef<HTMLDivElement>(null);
 
   useEffect(() => {
 
@@ -67,144 +46,31 @@ export default function ChatPage() {
     } =
       await supabase.auth.getSession();
 
-    if (!session) {
+    if (!session) return;
 
-      router.push("/login");
-
-      return;
-    }
-
-    setCurrentUser(
-      session.user
+    setCurrentUserId(
+      session.user.id
     );
 
-    await Promise.all([
+    loadMessages(
+      session.user.id
+    );
 
-      loadReceiver(),
-
-      loadMessages(
-        session.user.id
-      ),
-
-      loadConversations(
-        session.user.id
-      ),
-    ]);
-
-    subscribeMessages(
+    listenRealtime(
       session.user.id
     );
   }
 
-  async function loadReceiver() {
-
-    const {
-      data,
-    } =
-      await supabase
-        .from("profiles")
-        .select("*")
-        .eq(
-          "id",
-          receiverId
-        )
-        .maybeSingle();
-
-    setReceiver(data);
-  }
-
-  async function loadConversations(
+  async function loadMessages(
     userId: string
   ) {
 
-    const {
-      data,
-    } =
+    const { data, error } =
       await supabase
         .from("messages")
         .select("*")
         .or(
-          `sender_id.eq.${userId},receiver_id.eq.${userId}`
-        )
-        .order(
-          "created_at",
-          {
-            ascending: false,
-          }
-        );
-
-    if (!data)
-      return;
-
-    const map =
-      new Map();
-
-    for (const msg of data) {
-
-      const otherUserId =
-
-        msg.sender_id === userId
-
-          ? msg.receiver_id
-
-          : msg.sender_id;
-
-      if (
-        map.has(
-          otherUserId
-        )
-      ) continue;
-
-      const {
-        data: profile,
-      } =
-        await supabase
-          .from("profiles")
-          .select("*")
-          .eq(
-            "id",
-            otherUserId
-          )
-          .maybeSingle();
-
-      map.set(
-        otherUserId,
-        {
-
-          userId:
-            otherUserId,
-
-          profile,
-
-          latestMessage:
-            msg.message,
-
-          createdAt:
-            msg.created_at,
-        }
-      );
-    }
-
-    setConversations(
-      Array.from(
-        map.values()
-      )
-    );
-  }
-
-  async function loadMessages(
-    currentUserId: string
-  ) {
-
-    const { data } =
-      await supabase
-        .from("messages")
-        .select("*")
-        .or(
-          `
-          and(sender_id.eq.${currentUserId},receiver_id.eq.${receiverId}),
-          and(sender_id.eq.${receiverId},receiver_id.eq.${currentUserId})
-          `
+          `and(sender_id.eq.${userId},receiver_id.eq.${receiverId}),and(sender_id.eq.${receiverId},receiver_id.eq.${userId})`
         )
         .order(
           "created_at",
@@ -213,215 +79,191 @@ export default function ChatPage() {
           }
         );
 
+    if (error) {
+
+      console.log(error);
+
+      return;
+    }
+
     setMessages(data || []);
 
-    setLoading(false);
+    scrollBottom();
   }
 
-  function subscribeMessages(
-    currentUserId: string
+  function listenRealtime(
+    userId: string
   ) {
 
-    const channel =
-      supabase
-        .channel(
-          `chat-${currentUserId}-${receiverId}`
-        )
-        .on(
+    supabase
+      .channel(
+        `chat-${receiverId}`
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "messages",
+        },
+        (payload) => {
 
-          "postgres_changes",
+          const msg =
+            payload.new as Message;
 
-          {
+          const valid =
+            (
+              msg.sender_id === userId &&
+              msg.receiver_id === receiverId
+            ) ||
+            (
+              msg.sender_id === receiverId &&
+              msg.receiver_id === userId
+            );
 
-            event: "INSERT",
-
-            schema: "public",
-
-            table: "messages",
-          },
-
-          (payload) => {
-
-            const newMessage =
-              payload.new as any;
-
-            const valid =
-
-              (
-                newMessage.sender_id ===
-                currentUserId &&
-
-                newMessage.receiver_id ===
-                receiverId
-              ) ||
-
-              (
-                newMessage.sender_id ===
-                receiverId &&
-
-                newMessage.receiver_id ===
-                currentUserId
-              );
-
-            if (!valid)
-              return;
+          if (valid) {
 
             setMessages(
               (prev) => [
-
                 ...prev,
-
-                newMessage,
+                msg,
               ]
             );
+
+            scrollBottom();
           }
-        )
-        .subscribe();
-
-    return () => {
-
-      supabase.removeChannel(
-        channel
-      );
-    };
+        }
+      )
+      .subscribe();
   }
 
   async function sendMessage() {
 
-    if (
-      !message.trim()
-    ) return;
-
-    if (!currentUser)
+    if (!newMessage.trim())
       return;
 
-    try {
-
-      setSending(true);
-
+    const { error } =
       await supabase
         .from("messages")
         .insert({
-
           sender_id:
-            currentUser.id,
-
+            currentUserId,
           receiver_id:
             receiverId,
-
           message:
-            message.trim(),
-
-          listing_id: null,
+            newMessage,
         });
 
-      setMessage("");
+    if (!error) {
 
-    } catch (error) {
-
-      console.log(error);
-
-    } finally {
-
-      setSending(false);
+      setNewMessage("");
     }
   }
 
-  if (loading) {
+  function scrollBottom() {
 
-    return (
+    setTimeout(() => {
 
-      <div
-        className="
-          min-h-screen
-          flex
-          items-center
-          justify-center
-          text-3xl
-          font-black
-        "
-      >
+      messagesEndRef.current?.
+        scrollIntoView({
+          behavior: "smooth",
+        });
 
-        Chat wird geladen...
-
-      </div>
-
-    );
+    }, 100);
   }
 
   return (
 
-    <main className="h-screen bg-[#f5f7fb] overflow-hidden">
+    <div className="flex flex-col h-screen bg-gray-50">
 
-      <Navbar />
+      <div className="bg-white border-b p-5 flex items-center gap-4">
 
-      <div
-        className="
-          h-[calc(100vh-96px)]
-          flex
-        "
-      >
+        <div className="w-14 h-14 rounded-full bg-gray-300" />
 
-        {/* SIDEBAR */}
+        <div>
 
-        <div
-          className="
-            hidden
-            lg:block
-          "
-        >
+          <h2 className="font-bold text-xl">
 
-          <ConversationSidebar
-            conversations={
-              conversations
-            }
-            activeId={
-              receiverId
-            }
-          />
+            Chat
+
+          </h2>
+
+          <p className="text-green-500 text-sm">
+
+            Online
+
+          </p>
 
         </div>
 
-        {/* CHAT */}
+      </div>
 
-        <ChatArea
+      <div className="flex-1 overflow-y-auto p-6 space-y-4">
 
-          receiver={
-            receiver
-          }
+        {messages.map(
+          (msg) => {
 
-          messages={
-            messages
-          }
+          const mine =
+            msg.sender_id ===
+            currentUserId;
 
-          currentUser={
-            currentUser
-          }
+          return (
 
-          message={
-            message
-          }
+            <div
+              key={msg.id}
+              className={`flex ${
+                mine
+                  ? "justify-end"
+                  : "justify-start"
+              }`}
+            >
 
-          setMessage={
-            setMessage
-          }
+              <div
+                className={`max-w-[70%] px-5 py-3 rounded-3xl ${
+                  mine
+                    ? "bg-green-500 text-white"
+                    : "bg-white border"
+                }`}
+              >
 
-          sendMessage={
-            sendMessage
-          }
+                {msg.message}
 
-          sending={
-            sending
-          }
+              </div>
 
-          router={
-            router
-          }
+            </div>
+          );
+        })}
 
+        <div
+          ref={messagesEndRef}
         />
 
       </div>
 
-    </main>
+      <div className="bg-white border-t p-4 flex gap-3">
+
+        <input
+          value={newMessage}
+          onChange={(e) =>
+            setNewMessage(
+              e.target.value
+            )
+          }
+          placeholder="Nachricht schreiben..."
+          className="flex-1 border rounded-2xl px-5 py-4"
+        />
+
+        <button
+          onClick={sendMessage}
+          className="bg-green-500 text-white px-8 rounded-2xl"
+        >
+
+          Senden
+
+        </button>
+
+      </div>
+
+    </div>
   );
 }

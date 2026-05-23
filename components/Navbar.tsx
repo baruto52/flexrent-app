@@ -21,6 +21,8 @@ import {
 
   LogOut,
 
+  Map,
+
   Menu,
 
   Plus,
@@ -329,6 +331,10 @@ export default function Navbar() {
               Favoriten
             </Link>
 
+            <Link href="/map">
+              Karte
+            </Link>
+
             <Link href="/bookings">
               Buchungen
             </Link>
@@ -395,6 +401,26 @@ export default function Navbar() {
             >
 
               <Heart size={20} />
+
+            </Link>
+
+            {/* MAP */}
+
+            <Link
+              href="/map"
+              className="
+                relative
+                w-12
+                h-12
+                rounded-2xl
+                bg-gray-100
+                flex
+                items-center
+                justify-center
+              "
+            >
+
+              <Map size={20} />
 
             </Link>
 
@@ -660,6 +686,16 @@ export default function Navbar() {
               </Link>
 
               <Link
+                href="/map"
+                onClick={closeMenu}
+                className="font-bold"
+              >
+
+                Karte
+
+              </Link>
+
+              <Link
                 href="/bookings"
                 onClick={closeMenu}
                 className="font-bold"
@@ -790,6 +826,29 @@ export default function Navbar() {
 
           <span>
             Favoriten
+          </span>
+
+        </Link>
+
+        <Link
+          href="/map"
+          className={`
+            flex
+            flex-col
+            items-center
+            text-xs
+            ${
+              pathname === "/map"
+                ? "text-[#16d64d] font-black"
+                : "text-gray-500"
+            }
+          `}
+        >
+
+          🗺️
+
+          <span>
+            Karte
           </span>
 
         </Link>

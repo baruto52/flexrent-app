@@ -31,6 +31,9 @@ import {
 
 } from "lucide-react";
 
+import toast
+from "react-hot-toast";
+
 import { supabase }
 from "@/lib/supabase";
 
@@ -53,7 +56,24 @@ export default function Navbar() {
 
   useEffect(() => {
 
-    init();
+    let cleanup:
+      (() => void) | undefined;
+
+    init().then(
+      (cleanupFn) => {
+
+        cleanup =
+          cleanupFn;
+      }
+    );
+
+    return () => {
+
+      if (cleanup) {
+
+        cleanup();
+      }
+    };
 
   }, []);
 
@@ -71,11 +91,18 @@ export default function Navbar() {
       session.user
     );
 
-    loadNotifications(
-      session.user.id
-    );
+    await Promise.all([
 
-    loadMessages(
+      loadNotifications(
+        session.user.id
+      ),
+
+      loadMessages(
+        session.user.id
+      ),
+    ]);
+
+    return listenRealtime(
       session.user.id
     );
   }
@@ -130,6 +157,100 @@ export default function Navbar() {
     setMessages(
       count || 0
     );
+  }
+
+  function listenRealtime(
+    userId: string
+  ) {
+
+    /* NOTIFICATIONS */
+
+    const notificationChannel =
+      supabase.channel(
+        `navbar-notifications-${userId}`
+      );
+
+    notificationChannel.on(
+
+      "postgres_changes",
+
+      {
+
+        event: "*",
+
+        schema: "public",
+
+        table:
+          "notifications",
+
+        filter:
+          `user_id=eq.${userId}`,
+      },
+
+      () => {
+
+        loadNotifications(
+          userId
+        );
+
+        toast.success(
+          "Neue Benachrichtigung"
+        );
+      }
+
+    );
+
+    notificationChannel.subscribe();
+
+    /* MESSAGES */
+
+    const messageChannel =
+      supabase.channel(
+        `navbar-messages-${userId}`
+      );
+
+    messageChannel.on(
+
+      "postgres_changes",
+
+      {
+
+        event: "INSERT",
+
+        schema: "public",
+
+        table:
+          "messages",
+
+        filter:
+          `receiver_id=eq.${userId}`,
+      },
+
+      () => {
+
+        loadMessages(
+          userId
+        );
+
+        toast.success(
+          "Neue Nachricht erhalten"
+        );
+      }
+
+    );
+
+    messageChannel.subscribe();
+
+    return () => {
+
+      supabase.removeChannel(
+        notificationChannel
+      );
+
+      supabase.removeChannel(
+        messageChannel
+      );
+    };
   }
 
   async function logout() {
@@ -263,7 +384,7 @@ export default function Navbar() {
 
             </Link>
 
-            {/* ICONS */}
+            {/* FAVORITES */}
 
             <Link
               href="/favorites"
@@ -284,6 +405,8 @@ export default function Navbar() {
               <Heart size={20} />
 
             </Link>
+
+            {/* NOTIFICATIONS */}
 
             <Link
               href="/notifications"
@@ -324,13 +447,17 @@ export default function Navbar() {
                   "
                 >
 
-                  {notifications}
+                  {notifications > 99
+                    ? "99+"
+                    : notifications}
 
                 </div>
 
               )}
 
             </Link>
+
+            {/* MESSAGES */}
 
             <Link
               href="/messages"
@@ -371,7 +498,9 @@ export default function Navbar() {
                   "
                 >
 
-                  {messages}
+                  {messages > 99
+                    ? "99+"
+                    : messages}
 
                 </div>
 
@@ -399,6 +528,32 @@ export default function Navbar() {
               >
 
                 <User size={20} />
+
+              </Link>
+
+            )}
+
+            {/* LOGIN */}
+
+            {!user && (
+
+              <Link
+                href="/login"
+                className="
+                  hidden
+                  md:flex
+                  h-14
+                  px-6
+                  rounded-2xl
+                  bg-black
+                  text-white
+                  items-center
+                  justify-center
+                  font-bold
+                "
+              >
+
+                Login
 
               </Link>
 
@@ -533,20 +688,24 @@ export default function Navbar() {
 
               </Link>
 
-              <button
-                onClick={logout}
-                className="
-                  h-14
-                  rounded-2xl
-                  bg-red-500
-                  text-white
-                  font-bold
-                "
-              >
+              {user && (
 
-                Logout
+                <button
+                  onClick={logout}
+                  className="
+                    h-14
+                    rounded-2xl
+                    bg-red-500
+                    text-white
+                    font-bold
+                  "
+                >
 
-              </button>
+                  Logout
+
+                </button>
+
+              )}
 
             </div>
 
@@ -583,6 +742,7 @@ export default function Navbar() {
         >
 
           🏠
+
           <span>
             Home
           </span>
@@ -595,6 +755,7 @@ export default function Navbar() {
         >
 
           ❤️
+
           <span>
             Favoriten
           </span>
@@ -628,6 +789,7 @@ export default function Navbar() {
         >
 
           💬
+
           <span>
             Nachrichten
           </span>
@@ -640,6 +802,7 @@ export default function Navbar() {
         >
 
           👤
+
           <span>
             Profil
           </span>

@@ -53,24 +53,7 @@ export default function Navbar() {
 
   useEffect(() => {
 
-    let cleanup:
-      (() => void) | undefined;
-
-    init().then(
-      (cleanupFn) => {
-
-        cleanup =
-          cleanupFn;
-      }
-    );
-
-    return () => {
-
-      if (cleanup) {
-
-        cleanup();
-      }
-    };
+    init();
 
   }, []);
 
@@ -88,18 +71,11 @@ export default function Navbar() {
       session.user
     );
 
-    await Promise.all([
+    loadNotifications(
+      session.user.id
+    );
 
-      loadNotifications(
-        session.user.id
-      ),
-
-      loadMessages(
-        session.user.id
-      ),
-    ]);
-
-    return listenRealtime(
+    loadMessages(
       session.user.id
     );
   }
@@ -156,92 +132,6 @@ export default function Navbar() {
     );
   }
 
-  function listenRealtime(
-    userId: string
-  ) {
-
-    /* NOTIFICATIONS */
-
-    const notificationChannel =
-      supabase.channel(
-        `navbar-notifications-${userId}`
-      );
-
-    notificationChannel.on(
-
-      "postgres_changes",
-
-      {
-
-        event: "*",
-
-        schema: "public",
-
-        table:
-          "notifications",
-
-        filter:
-          `user_id=eq.${userId}`,
-      },
-
-      () => {
-
-        loadNotifications(
-          userId
-        );
-      }
-
-    );
-
-    notificationChannel.subscribe();
-
-    /* MESSAGES */
-
-    const messageChannel =
-      supabase.channel(
-        `navbar-messages-${userId}`
-      );
-
-    messageChannel.on(
-
-      "postgres_changes",
-
-      {
-
-        event: "INSERT",
-
-        schema: "public",
-
-        table:
-          "messages",
-
-        filter:
-          `receiver_id=eq.${userId}`,
-      },
-
-      () => {
-
-        loadMessages(
-          userId
-        );
-      }
-
-    );
-
-    messageChannel.subscribe();
-
-    return () => {
-
-      supabase.removeChannel(
-        notificationChannel
-      );
-
-      supabase.removeChannel(
-        messageChannel
-      );
-    };
-  }
-
   async function logout() {
 
     await supabase.auth.signOut();
@@ -250,61 +140,49 @@ export default function Navbar() {
       "/";
   }
 
-  function navLink(
-    href: string
-  ) {
-
-    return pathname === href
-
-      ? "text-black font-black"
-
-      : "text-gray-500 hover:text-black transition";
-  }
-
   function closeMenu() {
 
     setMenuOpen(false);
   }
 
   return (
-    <header
-      className="
-        sticky
-        top-0
-        z-50
-        bg-white/80
-        backdrop-blur-xl
-        border-b
-        border-gray-100
-      "
-    >
 
-      <div
+    <>
+
+      {/* TOP NAVBAR */}
+
+      <header
         className="
-          max-w-7xl
-          mx-auto
-          px-4
-          h-24
-          flex
-          items-center
-          justify-between
+          sticky
+          top-0
+          z-50
+          bg-white/80
+          backdrop-blur-xl
+          border-b
+          border-gray-100
         "
       >
 
-        {/* LEFT */}
-
         <div
           className="
+            max-w-7xl
+            mx-auto
+            px-4
+            h-20
+            md:h-24
             flex
             items-center
-            gap-12
+            justify-between
           "
         >
+
+          {/* LOGO */}
 
           <Link
             href="/"
             className="
-              text-4xl
+              text-3xl
+              md:text-4xl
               font-black
               tracking-tight
             "
@@ -327,430 +205,333 @@ export default function Navbar() {
             "
           >
 
-            <Link
-              href="/"
-              className={navLink("/")}
-            >
+            <Link href="/">
               Home
             </Link>
 
-            <Link
-              href="/favorites"
-              className={navLink("/favorites")}
-            >
+            <Link href="/favorites">
               Favoriten
             </Link>
 
-            <Link
-              href="/bookings"
-              className={navLink("/bookings")}
-            >
+            <Link href="/bookings">
               Buchungen
             </Link>
 
-            <Link
-              href="/dashboard"
-              className={navLink("/dashboard")}
-            >
-              Dashboard
+            <Link href="/host/bookings">
+              Vermieter
             </Link>
 
-            <Link
-              href="/notifications"
-              className={navLink("/notifications")}
-            >
-              Notifications
+            <Link href="/messages">
+              Nachrichten
             </Link>
 
           </nav>
 
-        </div>
-
-        {/* RIGHT */}
-
-        <div
-          className="
-            flex
-            items-center
-            gap-4
-          "
-        >
-
-          {/* CREATE */}
-
-          <Link
-            href="/create"
-            className="
-              hidden
-              md:flex
-              h-14
-              px-6
-              rounded-2xl
-              bg-[#16d64d]
-              hover:scale-[1.03]
-              transition
-              text-white
-              items-center
-              justify-center
-              gap-3
-              font-bold
-              shadow-lg
-            "
-          >
-
-            <Plus
-              size={20}
-            />
-
-            Erstellen
-
-          </Link>
-
-          {/* FAVORITES */}
-
-          <Link
-            href="/favorites"
-            className="
-              relative
-              w-14
-              h-14
-              rounded-2xl
-              bg-gray-100
-              hover:bg-gray-200
-              transition
-              flex
-              items-center
-              justify-center
-            "
-          >
-
-            <Heart
-              size={22}
-            />
-
-          </Link>
-
-          {/* NOTIFICATIONS */}
-
-          <Link
-            href="/notifications"
-            className="
-              relative
-              w-14
-              h-14
-              rounded-2xl
-              bg-gray-100
-              hover:bg-gray-200
-              transition
-              flex
-              items-center
-              justify-center
-            "
-          >
-
-            <Bell
-              size={22}
-            />
-
-            {notifications > 0 && (
-
-              <div
-                className="
-                  absolute
-                  -top-1
-                  -right-1
-                  min-w-[24px]
-                  h-6
-                  rounded-full
-                  bg-red-500
-                  text-white
-                  text-xs
-                  font-black
-                  flex
-                  items-center
-                  justify-center
-                  px-1
-                "
-              >
-
-                {notifications > 99
-
-                  ? "99+"
-
-                  : notifications}
-
-              </div>
-
-            )}
-
-          </Link>
-
-          {/* MESSAGES */}
-
-          <Link
-            href="/messages"
-            className="
-              relative
-              w-14
-              h-14
-              rounded-2xl
-              bg-gray-100
-              hover:bg-gray-200
-              transition
-              flex
-              items-center
-              justify-center
-            "
-          >
-
-            <Inbox
-              size={22}
-            />
-
-            {messages > 0 && (
-
-              <div
-                className="
-                  absolute
-                  -top-1
-                  -right-1
-                  min-w-[24px]
-                  h-6
-                  rounded-full
-                  bg-[#16d64d]
-                  text-white
-                  text-xs
-                  font-black
-                  flex
-                  items-center
-                  justify-center
-                  px-1
-                "
-              >
-
-                {messages > 99
-
-                  ? "99+"
-
-                  : messages}
-
-              </div>
-
-            )}
-
-          </Link>
-
-          {/* PROFILE */}
-
-          {user && (
-
-            <Link
-              href="/profile"
-              className="
-                w-14
-                h-14
-                rounded-2xl
-                bg-black
-                hover:scale-105
-                transition
-                text-white
-                flex
-                items-center
-                justify-center
-              "
-            >
-
-              <User
-                size={22}
-              />
-
-            </Link>
-
-          )}
-
-          {/* LOGIN */}
-
-          {!user && (
-
-            <Link
-              href="/login"
-              className="
-                h-14
-                px-6
-                rounded-2xl
-                bg-black
-                hover:scale-[1.03]
-                transition
-                text-white
-                flex
-                items-center
-                justify-center
-                font-bold
-              "
-            >
-              Login
-            </Link>
-
-          )}
-
-          {/* LOGOUT */}
-
-          {user && (
-
-            <button
-              onClick={logout}
-              className="
-                hidden
-                md:flex
-                w-14
-                h-14
-                rounded-2xl
-                bg-red-500
-                hover:bg-red-600
-                transition
-                text-white
-                items-center
-                justify-center
-              "
-            >
-
-              <LogOut
-                size={22}
-              />
-
-            </button>
-
-          )}
-
-          {/* MOBILE BUTTON */}
-
-          <button
-            onClick={() =>
-              setMenuOpen(
-                !menuOpen
-              )
-            }
-            className="
-              lg:hidden
-              w-14
-              h-14
-              rounded-2xl
-              bg-gray-100
-              hover:bg-gray-200
-              transition
-              flex
-              items-center
-              justify-center
-            "
-          >
-
-            {menuOpen ? (
-
-              <X
-                size={24}
-              />
-
-            ) : (
-
-              <Menu
-                size={24}
-              />
-
-            )}
-
-          </button>
-
-        </div>
-
-      </div>
-
-      {/* MOBILE MENU */}
-
-      {menuOpen && (
-
-        <div
-          className="
-            lg:hidden
-            border-t
-            border-gray-100
-            bg-white
-            px-4
-            py-6
-            animate-in
-            slide-in-from-top-2
-          "
-        >
+          {/* RIGHT */}
 
           <div
             className="
               flex
-              flex-col
-              gap-5
-              text-lg
+              items-center
+              gap-2
+              md:gap-4
             "
           >
 
+            {/* CREATE */}
+
             <Link
-              href="/"
-              onClick={closeMenu}
-              className="font-bold"
+              href="/create"
+              className="
+                hidden
+                md:flex
+                h-14
+                px-6
+                rounded-2xl
+                bg-[#16d64d]
+                text-white
+                items-center
+                justify-center
+                gap-2
+                font-bold
+              "
             >
-              Home
+
+              <Plus size={18} />
+
+              Erstellen
+
             </Link>
+
+            {/* ICONS */}
 
             <Link
               href="/favorites"
-              onClick={closeMenu}
-              className="font-bold"
+              className="
+                relative
+                w-12
+                h-12
+                md:w-14
+                md:h-14
+                rounded-2xl
+                bg-gray-100
+                flex
+                items-center
+                justify-center
+              "
             >
-              Favoriten
-            </Link>
 
-            <Link
-              href="/bookings"
-              onClick={closeMenu}
-              className="font-bold"
-            >
-              Buchungen
-            </Link>
+              <Heart size={20} />
 
-            <Link
-              href="/dashboard"
-              onClick={closeMenu}
-              className="font-bold"
-            >
-              Dashboard
-            </Link>
-
-            <Link
-              href="/messages"
-              onClick={closeMenu}
-              className="font-bold"
-            >
-              Nachrichten
             </Link>
 
             <Link
               href="/notifications"
-              onClick={closeMenu}
-              className="font-bold"
+              className="
+                relative
+                w-12
+                h-12
+                md:w-14
+                md:h-14
+                rounded-2xl
+                bg-gray-100
+                flex
+                items-center
+                justify-center
+              "
             >
-              Notifications
+
+              <Bell size={20} />
+
+              {notifications > 0 && (
+
+                <div
+                  className="
+                    absolute
+                    -top-1
+                    -right-1
+                    min-w-[22px]
+                    h-5
+                    rounded-full
+                    bg-red-500
+                    text-white
+                    text-[10px]
+                    font-black
+                    flex
+                    items-center
+                    justify-center
+                    px-1
+                  "
+                >
+
+                  {notifications}
+
+                </div>
+
+              )}
+
             </Link>
 
+            <Link
+              href="/messages"
+              className="
+                relative
+                w-12
+                h-12
+                md:w-14
+                md:h-14
+                rounded-2xl
+                bg-gray-100
+                flex
+                items-center
+                justify-center
+              "
+            >
+
+              <Inbox size={20} />
+
+              {messages > 0 && (
+
+                <div
+                  className="
+                    absolute
+                    -top-1
+                    -right-1
+                    min-w-[22px]
+                    h-5
+                    rounded-full
+                    bg-[#16d64d]
+                    text-white
+                    text-[10px]
+                    font-black
+                    flex
+                    items-center
+                    justify-center
+                    px-1
+                  "
+                >
+
+                  {messages}
+
+                </div>
+
+              )}
+
+            </Link>
+
+            {/* PROFILE */}
+
             {user && (
+
+              <Link
+                href="/profile"
+                className="
+                  hidden
+                  md:flex
+                  w-14
+                  h-14
+                  rounded-2xl
+                  bg-black
+                  text-white
+                  items-center
+                  justify-center
+                "
+              >
+
+                <User size={20} />
+
+              </Link>
+
+            )}
+
+            {/* MOBILE MENU */}
+
+            <button
+              onClick={() =>
+                setMenuOpen(
+                  !menuOpen
+                )
+              }
+              className="
+                lg:hidden
+                w-12
+                h-12
+                rounded-2xl
+                bg-gray-100
+                flex
+                items-center
+                justify-center
+              "
+            >
+
+              {menuOpen ? (
+
+                <X size={22} />
+
+              ) : (
+
+                <Menu size={22} />
+
+              )}
+
+            </button>
+
+          </div>
+
+        </div>
+
+        {/* MOBILE MENU */}
+
+        {menuOpen && (
+
+          <div
+            className="
+              lg:hidden
+              bg-white
+              border-t
+              border-gray-100
+              px-4
+              py-6
+            "
+          >
+
+            <div
+              className="
+                flex
+                flex-col
+                gap-4
+              "
+            >
+
+              <Link
+                href="/"
+                onClick={closeMenu}
+                className="font-bold"
+              >
+
+                Home
+
+              </Link>
+
+              <Link
+                href="/favorites"
+                onClick={closeMenu}
+                className="font-bold"
+              >
+
+                Favoriten
+
+              </Link>
+
+              <Link
+                href="/bookings"
+                onClick={closeMenu}
+                className="font-bold"
+              >
+
+                Buchungen
+
+              </Link>
+
+              <Link
+                href="/host/bookings"
+                onClick={closeMenu}
+                className="font-bold"
+              >
+
+                Vermieter Dashboard
+
+              </Link>
+
+              <Link
+                href="/messages"
+                onClick={closeMenu}
+                className="font-bold"
+              >
+
+                Nachrichten
+
+              </Link>
+
+              <Link
+                href="/notifications"
+                onClick={closeMenu}
+                className="font-bold"
+              >
+
+                Notifications
+
+              </Link>
 
               <Link
                 href="/profile"
                 onClick={closeMenu}
                 className="font-bold"
               >
+
                 Profil
+
               </Link>
-
-            )}
-
-            {user && (
 
               <button
                 onClick={logout}
@@ -762,17 +543,112 @@ export default function Navbar() {
                   font-bold
                 "
               >
+
                 Logout
+
               </button>
 
-            )}
+            </div>
 
           </div>
 
-        </div>
+        )}
 
-      )}
+      </header>
 
-    </header>
+      {/* MOBILE BOTTOM NAV */}
+
+      <div
+        className="
+          md:hidden
+          fixed
+          bottom-0
+          left-0
+          right-0
+          z-50
+          bg-white
+          border-t
+          border-gray-200
+          h-20
+          flex
+          items-center
+          justify-around
+          px-2
+        "
+      >
+
+        <Link
+          href="/"
+          className="flex flex-col items-center text-xs"
+        >
+
+          🏠
+          <span>
+            Home
+          </span>
+
+        </Link>
+
+        <Link
+          href="/favorites"
+          className="flex flex-col items-center text-xs"
+        >
+
+          ❤️
+          <span>
+            Favoriten
+          </span>
+
+        </Link>
+
+        <Link
+          href="/create"
+          className="
+            -mt-10
+            w-16
+            h-16
+            rounded-full
+            bg-[#16d64d]
+            text-white
+            flex
+            items-center
+            justify-center
+            text-3xl
+            shadow-xl
+          "
+        >
+
+          +
+
+        </Link>
+
+        <Link
+          href="/messages"
+          className="flex flex-col items-center text-xs"
+        >
+
+          💬
+          <span>
+            Nachrichten
+          </span>
+
+        </Link>
+
+        <Link
+          href="/profile"
+          className="flex flex-col items-center text-xs"
+        >
+
+          👤
+          <span>
+            Profil
+          </span>
+
+        </Link>
+
+      </div>
+
+    </>
+
   );
 }

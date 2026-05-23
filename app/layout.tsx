@@ -5,6 +5,9 @@ import type {
   Viewport,
 } from "next";
 
+import { Toaster }
+from "react-hot-toast";
+
 export const metadata: Metadata = {
 
   metadataBase:
@@ -198,8 +201,22 @@ export default function RootLayout({
           antialiased
           bg-[#f4f7fb]
           text-gray-900
+          overflow-x-hidden
         "
       >
+
+        {/* TOASTER */}
+
+        <Toaster
+          position="top-right"
+          toastOptions={{
+            style: {
+              borderRadius: "18px",
+              padding: "16px",
+              fontWeight: "700",
+            },
+          }}
+        />
 
         {children}
 

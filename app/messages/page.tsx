@@ -5,25 +5,54 @@ import {
   useState,
 } from "react";
 
-import Link from "next/link";
-
-import Navbar from "@/components/Navbar";
-
 import {
-  MessageCircle,
-  ShieldCheck,
-} from "lucide-react";
+  useParams,
+  useRouter,
+} from "next/navigation";
+
+import Navbar
+from "@/components/Navbar";
 
 import { supabase }
 from "@/lib/supabase";
 
-export default function MessagesPage() {
+import ConversationSidebar
+from "@/components/ConversationSidebar";
+
+import ChatArea
+from "@/components/ChatArea";
+
+export default function ChatPage() {
+
+  const params =
+    useParams();
+
+  const router =
+    useRouter();
+
+  const receiverId =
+    params.id as string;
+
+  const [message, setMessage] =
+    useState("");
+
+  const [messages, setMessages] =
+    useState<any[]>([]);
+
+  const [conversations, setConversations] =
+    useState<any[]>([]);
+
+  const [currentUser, setCurrentUser] =
+    useState<any>(null);
+
+  const [receiver, setReceiver] =
+    useState<any>(null);
 
   const [loading, setLoading] =
     useState(true);
 
-  const [conversations, setConversations] =
-    useState<any[]>([]);
+  const [sending, setSending] =
+    useState(false);
 
   useEffect(() => {
 
@@ -40,17 +69,48 @@ export default function MessagesPage() {
 
     if (!session) {
 
-      window.location.href =
-        "/login";
+      router.push("/login");
 
       return;
     }
 
-    await loadConversations(
-      session.user.id
+    setCurrentUser(
+      session.user
     );
 
-    setLoading(false);
+    await Promise.all([
+
+      loadReceiver(),
+
+      loadMessages(
+        session.user.id
+      ),
+
+      loadConversations(
+        session.user.id
+      ),
+    ]);
+
+    subscribeMessages(
+      session.user.id
+    );
+  }
+
+  async function loadReceiver() {
+
+    const {
+      data,
+    } =
+      await supabase
+        .from("profiles")
+        .select("*")
+        .eq(
+          "id",
+          receiverId
+        )
+        .maybeSingle();
+
+    setReceiver(data);
   }
 
   async function loadConversations(
@@ -59,7 +119,6 @@ export default function MessagesPage() {
 
     const {
       data,
-      error,
     } =
       await supabase
         .from("messages")
@@ -74,19 +133,8 @@ export default function MessagesPage() {
           }
         );
 
-    if (error) {
-
-      console.log(error);
-
+    if (!data)
       return;
-    }
-
-    if (!data) {
-
-      setConversations([]);
-
-      return;
-    }
 
     const map =
       new Map();
@@ -144,6 +192,141 @@ export default function MessagesPage() {
     );
   }
 
+  async function loadMessages(
+    currentUserId: string
+  ) {
+
+    const { data } =
+      await supabase
+        .from("messages")
+        .select("*")
+        .or(
+          `
+          and(sender_id.eq.${currentUserId},receiver_id.eq.${receiverId}),
+          and(sender_id.eq.${receiverId},receiver_id.eq.${currentUserId})
+          `
+        )
+        .order(
+          "created_at",
+          {
+            ascending: true,
+          }
+        );
+
+    setMessages(data || []);
+
+    setLoading(false);
+  }
+
+  function subscribeMessages(
+    currentUserId: string
+  ) {
+
+    const channel =
+      supabase
+        .channel(
+          `chat-${currentUserId}-${receiverId}`
+        )
+        .on(
+
+          "postgres_changes",
+
+          {
+
+            event: "INSERT",
+
+            schema: "public",
+
+            table: "messages",
+          },
+
+          (payload) => {
+
+            const newMessage =
+              payload.new as any;
+
+            const valid =
+
+              (
+                newMessage.sender_id ===
+                currentUserId &&
+
+                newMessage.receiver_id ===
+                receiverId
+              ) ||
+
+              (
+                newMessage.sender_id ===
+                receiverId &&
+
+                newMessage.receiver_id ===
+                currentUserId
+              );
+
+            if (!valid)
+              return;
+
+            setMessages(
+              (prev) => [
+
+                ...prev,
+
+                newMessage,
+              ]
+            );
+          }
+        )
+        .subscribe();
+
+    return () => {
+
+      supabase.removeChannel(
+        channel
+      );
+    };
+  }
+
+  async function sendMessage() {
+
+    if (
+      !message.trim()
+    ) return;
+
+    if (!currentUser)
+      return;
+
+    try {
+
+      setSending(true);
+
+      await supabase
+        .from("messages")
+        .insert({
+
+          sender_id:
+            currentUser.id,
+
+          receiver_id:
+            receiverId,
+
+          message:
+            message.trim(),
+
+          listing_id: null,
+        });
+
+      setMessage("");
+
+    } catch (error) {
+
+      console.log(error);
+
+    } finally {
+
+      setSending(false);
+    }
+  }
+
   if (loading) {
 
     return (
@@ -154,12 +337,12 @@ export default function MessagesPage() {
           flex
           items-center
           justify-center
-          text-2xl
+          text-3xl
           font-black
         "
       >
 
-        Nachrichten werden geladen...
+        Chat wird geladen...
 
       </div>
 
@@ -168,249 +351,74 @@ export default function MessagesPage() {
 
   return (
 
-    <main className="min-h-screen bg-[#f5f7fb]">
+    <main className="h-screen bg-[#f5f7fb] overflow-hidden">
 
       <Navbar />
 
       <div
         className="
-          max-w-5xl
-          mx-auto
-          px-4
-          py-10
+          h-[calc(100vh-96px)]
+          flex
         "
       >
 
+        {/* SIDEBAR */}
+
         <div
           className="
-            flex
-            items-center
-            justify-between
-            mb-10
+            hidden
+            lg:block
           "
         >
 
-          <div>
-
-            <h1
-              className="
-                text-5xl
-                font-black
-                mb-3
-              "
-            >
-              Nachrichten
-            </h1>
-
-            <p
-              className="
-                text-gray-500
-                text-lg
-              "
-            >
-              Deine Unterhaltungen
-            </p>
-
-          </div>
-
-          <div
-            className="
-              hidden
-              md:flex
-              items-center
-              gap-3
-              px-5
-              py-3
-              rounded-2xl
-              bg-[#16d64d]/10
-              text-[#16d64d]
-              font-bold
-            "
-          >
-
-            <ShieldCheck
-              size={22}
-            />
-
-            Sicher verschlüsselt
-
-          </div>
+          <ConversationSidebar
+            conversations={
+              conversations
+            }
+            activeId={
+              receiverId
+            }
+          />
 
         </div>
 
-        {conversations.length === 0 && (
+        {/* CHAT */}
 
-          <div
-            className="
-              bg-white
-              rounded-[40px]
-              p-20
-              text-center
-              shadow-sm
-            "
-          >
+        <ChatArea
 
-            <div
-              className="
-                w-24
-                h-24
-                rounded-full
-                bg-[#16d64d]
-                text-white
-                flex
-                items-center
-                justify-center
-                mx-auto
-                mb-8
-              "
-            >
+          receiver={
+            receiver
+          }
 
-              <MessageCircle
-                size={42}
-              />
+          messages={
+            messages
+          }
 
-            </div>
+          currentUser={
+            currentUser
+          }
 
-            <h2
-              className="
-                text-4xl
-                font-black
-                mb-5
-              "
-            >
-              Keine Nachrichten
-            </h2>
+          message={
+            message
+          }
 
-            <p
-              className="
-                text-gray-500
-                text-xl
-              "
-            >
-              Starte eine Unterhaltung
-              mit einem Anbieter.
-            </p>
+          setMessage={
+            setMessage
+          }
 
-          </div>
+          sendMessage={
+            sendMessage
+          }
 
-        )}
+          sending={
+            sending
+          }
 
-        <div className="space-y-5">
+          router={
+            router
+          }
 
-          {conversations.map(
-            (chat) => (
-
-              <Link
-                key={chat.userId}
-                href={`/messages/${chat.userId}`}
-                className="
-                  bg-white
-                  rounded-[32px]
-                  p-6
-                  shadow-sm
-                  flex
-                  items-center
-                  gap-5
-                  hover:shadow-lg
-                  transition
-                "
-              >
-
-                <div
-                  className="
-                    w-20
-                    h-20
-                    rounded-full
-                    overflow-hidden
-                    bg-gray-100
-                    flex-shrink-0
-                  "
-                >
-
-                  <img
-                    src={
-                      chat.profile
-                        ?.avatar_url ||
-
-                      "https://placehold.co/300x300/png"
-                    }
-                    alt="User"
-                    className="
-                      w-full
-                      h-full
-                      object-cover
-                    "
-                  />
-
-                </div>
-
-                <div className="flex-1">
-
-                  <div
-                    className="
-                      flex
-                      items-center
-                      justify-between
-                      gap-4
-                      mb-2
-                    "
-                  >
-
-                    <h2
-                      className="
-                        text-2xl
-                        font-black
-                      "
-                    >
-
-                      {
-                        chat.profile
-                          ?.full_name ||
-
-                        "User"
-                      }
-
-                    </h2>
-
-                    <span
-                      className="
-                        text-sm
-                        text-gray-400
-                      "
-                    >
-
-                      {new Date(
-                        chat.createdAt
-                      ).toLocaleDateString(
-                        "de-DE"
-                      )}
-
-                    </span>
-
-                  </div>
-
-                  <p
-                    className="
-                      text-gray-500
-                      line-clamp-1
-                      text-lg
-                    "
-                  >
-
-                    {
-                      chat.latestMessage
-                    }
-
-                  </p>
-
-                </div>
-
-              </Link>
-
-            )
-          )}
-
-        </div>
+        />
 
       </div>
 

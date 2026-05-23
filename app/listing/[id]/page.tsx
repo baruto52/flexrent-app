@@ -16,16 +16,13 @@ import {
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ReviewsSection from "@/components/ReviewsSection";
-import FavoriteButton from "@/components/FavoriteButton";
 import ImageGallery from "@/components/ImageGallery";
+import BookingCalendar from "@/components/BookingCalendar";
 
 import {
   MessageCircle,
   MapPin,
-  Shield,
-  Share2,
   Star,
-  Flag,
 } from "lucide-react";
 
 import { supabase }
@@ -59,6 +56,29 @@ export default function ListingPage() {
 
   const [checkoutLoading, setCheckoutLoading] =
     useState(false);
+
+  const [startDate, setStartDate] =
+    useState<Date | null>(null);
+
+  const [endDate, setEndDate] =
+    useState<Date | null>(null);
+
+  const totalDays =
+    startDate && endDate
+
+      ? Math.ceil(
+          (
+            endDate.getTime() -
+            startDate.getTime()
+          ) /
+            (1000 * 60 * 60 * 24)
+        ) + 1
+
+      : 0;
+
+  const totalPrice =
+    totalDays *
+    (listing?.price || 0);
 
   useEffect(() => {
 
@@ -114,8 +134,6 @@ export default function ListingPage() {
       return;
     }
 
-    /* FIX IMAGES */
-
     let fixedImages: string[] = [];
 
     if (Array.isArray(data.images)) {
@@ -141,8 +159,6 @@ export default function ListingPage() {
 
     setListing(data);
 
-    /* OWNER */
-
     const {
       data: ownerData,
     } =
@@ -156,8 +172,6 @@ export default function ListingPage() {
         .maybeSingle();
 
     setOwner(ownerData);
-
-    /* REVIEWS */
 
     const {
       data: reviews,
@@ -209,6 +223,18 @@ export default function ListingPage() {
     }
 
     if (
+      !startDate ||
+      !endDate
+    ) {
+
+      alert(
+        "Bitte Zeitraum auswählen."
+      );
+
+      return;
+    }
+
+    if (
       user.id ===
       listing.user_id
     ) {
@@ -223,6 +249,28 @@ export default function ListingPage() {
     try {
 
       setCheckoutLoading(true);
+
+      localStorage.setItem(
+        "pendingBooking",
+
+        JSON.stringify({
+
+          listingId:
+            listing.id,
+
+          renterId:
+            user.id,
+
+          ownerId:
+            listing.user_id,
+
+          totalPrice,
+
+          startDate,
+
+          endDate,
+        })
+      );
 
       const response =
         await fetch(
@@ -245,6 +293,8 @@ export default function ListingPage() {
               price:
                 listing.price,
 
+              totalPrice,
+
               listingId:
                 listing.id,
 
@@ -253,6 +303,10 @@ export default function ListingPage() {
 
               ownerId:
                 listing.user_id,
+
+              startDate,
+
+              endDate,
             }),
           }
         );
@@ -264,7 +318,6 @@ export default function ListingPage() {
 
         window.location.href =
           data.url;
-
       }
 
     } catch (error) {
@@ -289,41 +342,6 @@ export default function ListingPage() {
     router.push(
       `/messages/${listing.user_id}`
     );
-  }
-
-  async function shareListing() {
-
-    try {
-
-      if (navigator.share) {
-
-        await navigator.share({
-
-          title:
-            listing.title,
-
-          text:
-            listing.description,
-
-          url:
-            window.location.href,
-        });
-
-        return;
-      }
-
-      await navigator.clipboard.writeText(
-        window.location.href
-      );
-
-      alert("Link kopiert");
-
-    } catch {
-
-      alert(
-        "Teilen fehlgeschlagen"
-      );
-    }
   }
 
   if (loading) {
@@ -420,7 +438,7 @@ export default function ListingPage() {
 
               <p className="text-gray-500 mb-2">
 
-                Preis
+                Preis pro Tag
 
               </p>
 
@@ -458,6 +476,7 @@ export default function ListingPage() {
                     alt="Host"
                     fill
                     className="object-cover"
+                    unoptimized
                   />
 
                 </div>
@@ -484,6 +503,63 @@ export default function ListingPage() {
               </Link>
 
             )}
+
+            {/* CALENDAR */}
+
+            <div className="mb-8">
+
+              <BookingCalendar
+                startDate={startDate}
+                endDate={endDate}
+                setStartDate={setStartDate}
+                setEndDate={setEndDate}
+              />
+
+            </div>
+
+            {/* TOTAL */}
+
+            {totalDays > 0 && (
+
+              <div className="bg-[#f5f7fb] rounded-3xl p-6 mb-8">
+
+                <div className="flex items-center justify-between mb-3">
+
+                  <span className="text-gray-500">
+
+                    Tage
+
+                  </span>
+
+                  <span className="font-bold">
+
+                    {totalDays}
+
+                  </span>
+
+                </div>
+
+                <div className="flex items-center justify-between">
+
+                  <span className="text-gray-500">
+
+                    Gesamtpreis
+
+                  </span>
+
+                  <span className="text-3xl font-black">
+
+                    €{totalPrice}
+
+                  </span>
+
+                </div>
+
+              </div>
+
+            )}
+
+            {/* ACTIONS */}
 
             <div className="space-y-4">
 

@@ -5,29 +5,18 @@ import {
   useState,
 } from "react";
 
-import Image from "next/image";
-
 import Navbar from "@/components/Navbar";
-
 import Footer from "@/components/Footer";
-
-import ProfileStats
-from "@/components/ProfileStats";
+import ProfileStats from "@/components/ProfileStats";
 
 import {
-
   Camera,
-
   MapPin,
-
   User,
-
   FileText,
-
 } from "lucide-react";
 
-import { supabase }
-from "@/lib/supabase";
+import { supabase } from "@/lib/supabase";
 
 export default function ProfilePage() {
 
@@ -69,8 +58,6 @@ export default function ProfilePage() {
     loadProfile();
 
   }, []);
-
-  /* LOAD */
 
   const loadProfile =
     async () => {
@@ -185,8 +172,6 @@ export default function ProfilePage() {
       setLoading(false);
     };
 
-  /* AVATAR */
-
   const uploadAvatar =
     async (
       e: React.ChangeEvent<HTMLInputElement>
@@ -297,8 +282,6 @@ export default function ProfilePage() {
       }
     };
 
-  /* SAVE */
-
   const saveProfile =
     async () => {
 
@@ -306,12 +289,24 @@ export default function ProfilePage() {
 
       try {
 
+        const {
+          data: { session },
+        } =
+          await supabase.auth.getSession();
+
+        if (!session) {
+
+          alert("Nicht eingeloggt");
+
+          return;
+        }
+
         const { error } =
           await supabase
             .from("profiles")
             .upsert({
 
-              id: userId,
+              id: session.user.id,
 
               full_name:
                 fullName,
@@ -326,9 +321,9 @@ export default function ProfilePage() {
 
         if (error) {
 
-          alert(
-            error.message
-          );
+          console.log(error);
+
+          alert(error.message);
 
           return;
         }
@@ -372,13 +367,12 @@ export default function ProfilePage() {
   }
 
   return (
+
     <main className="min-h-screen bg-[#f5f7fb]">
 
       <Navbar />
 
       <div className="max-w-6xl mx-auto px-4 py-10">
-
-        {/* HEADER */}
 
         <div
           className="
@@ -399,8 +393,6 @@ export default function ProfilePage() {
               gap-10
             "
           >
-
-            {/* AVATAR */}
 
             <div
               className="
@@ -423,14 +415,12 @@ export default function ProfilePage() {
                 "
               >
 
-                <Image
+                <img
                   src={
                     avatar ||
                     "https://placehold.co/400x400/png"
                   }
                   alt="Avatar"
-                  width={400}
-                  height={400}
                   className="
                     w-full
                     h-full
@@ -439,8 +429,6 @@ export default function ProfilePage() {
                 />
 
               </div>
-
-              {/* UPLOAD */}
 
               <label
                 className="
@@ -476,8 +464,6 @@ export default function ProfilePage() {
               </label>
 
             </div>
-
-            {/* USER INFO */}
 
             <div className="flex-1">
 
@@ -537,8 +523,6 @@ export default function ProfilePage() {
 
         </div>
 
-        {/* STATS */}
-
         <ProfileStats
 
           listingsCount={
@@ -555,8 +539,6 @@ export default function ProfilePage() {
 
         />
 
-        {/* FORM */}
-
         <div
           className="
             bg-white
@@ -567,8 +549,6 @@ export default function ProfilePage() {
         >
 
           <div className="space-y-8">
-
-            {/* NAME */}
 
             <div>
 
@@ -627,8 +607,6 @@ export default function ProfilePage() {
 
             </div>
 
-            {/* LOCATION */}
-
             <div>
 
               <label
@@ -686,8 +664,6 @@ export default function ProfilePage() {
 
             </div>
 
-            {/* BIO */}
-
             <div>
 
               <label
@@ -743,8 +719,6 @@ export default function ProfilePage() {
               </div>
 
             </div>
-
-            {/* BUTTON */}
 
             <button
               onClick={

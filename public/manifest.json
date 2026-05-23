@@ -1,0 +1,23 @@
+{
+  "name": "FlexRent",
+  "short_name": "FlexRent",
+  "description": "Premium Marketplace Plattform",
+  "theme_color": "#16d64d",
+  "background_color": "#ffffff",
+  "display": "standalone",
+  "orientation": "portrait",
+  "scope": "/",
+  "start_url": "/",
+  "icons": [
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

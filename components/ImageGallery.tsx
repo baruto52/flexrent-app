@@ -1,8 +1,8 @@
 "use client";
 
-import {
-  useState,
-} from "react";
+import { useState } from "react";
+
+import Image from "next/image";
 
 import {
   FaChevronLeft,
@@ -10,37 +10,38 @@ import {
 } from "react-icons/fa";
 
 type Props = {
-  images: string[];
+  images?: string[];
 };
 
 export default function ImageGallery({
-  images,
+  images = [],
 }: Props) {
+
+  const safeImages =
+    Array.isArray(images)
+      ? images.filter(
+          (img) =>
+            typeof img === "string" &&
+            img.trim() !== ""
+        )
+      : [];
+
+  const finalImages =
+    safeImages.length > 0
+      ? safeImages
+      : [
+          "https://placehold.co/1200x900/png",
+        ];
 
   const [index, setIndex] =
     useState(0);
-
-  if (
-    !images ||
-    images.length === 0
-  ) {
-
-    return (
-
-      <img
-        src="https://via.placeholder.com/1000x700"
-        className="w-full h-[500px] object-cover rounded-3xl"
-      />
-
-    );
-  }
 
   function prev() {
 
     setIndex((prev) =>
 
       prev === 0
-        ? images.length - 1
+        ? finalImages.length - 1
         : prev - 1
     );
   }
@@ -50,7 +51,7 @@ export default function ImageGallery({
     setIndex((prev) =>
 
       prev ===
-      images.length - 1
+      finalImages.length - 1
         ? 0
         : prev + 1
     );
@@ -58,67 +59,133 @@ export default function ImageGallery({
 
   return (
 
-    <div className="relative">
+    <div className="w-full">
 
-      {/* IMAGE */}
+      {/* MAIN IMAGE */}
 
-      <img
-        src={images[index]}
-        className="w-full h-[500px] object-cover rounded-3xl"
-      />
+      <div
+        className="
+          relative
+          w-full
+          h-[550px]
+          rounded-[40px]
+          overflow-hidden
+          bg-white
+          shadow-sm
+        "
+      >
 
-      {/* LEFT */}
+        <Image
+          src={
+            finalImages[index]
+          }
+          alt="Listing"
+          fill
+          priority
+          className="object-cover"
+          unoptimized
+        />
 
-      {images.length > 1 && (
+        {finalImages.length > 1 && (
 
-        <button
-          onClick={prev}
-          className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/90 p-4 rounded-full shadow-lg"
-        >
+          <>
+            <button
+              onClick={prev}
+              className="
+                absolute
+                left-5
+                top-1/2
+                -translate-y-1/2
+                z-20
+                bg-white/90
+                hover:bg-white
+                p-4
+                rounded-full
+                shadow-xl
+              "
+            >
 
-          <FaChevronLeft />
+              <FaChevronLeft />
 
-        </button>
-
-      )}
-
-      {/* RIGHT */}
-
-      {images.length > 1 && (
-
-        <button
-          onClick={next}
-          className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/90 p-4 rounded-full shadow-lg"
-        >
-
-          <FaChevronRight />
-
-        </button>
-
-      )}
-
-      {/* DOTS */}
-
-      {images.length > 1 && (
-
-        <div className="absolute bottom-5 left-1/2 -translate-x-1/2 flex gap-2">
-
-          {images.map(
-            (_, i) => (
+            </button>
 
             <button
-              key={i}
-              onClick={() =>
-                setIndex(i)
-              }
-              className={`w-3 h-3 rounded-full ${
-                i === index
-                  ? "bg-white"
-                  : "bg-white/50"
-              }`}
-            />
+              onClick={next}
+              className="
+                absolute
+                right-5
+                top-1/2
+                -translate-y-1/2
+                z-20
+                bg-white/90
+                hover:bg-white
+                p-4
+                rounded-full
+                shadow-xl
+              "
+            >
 
-          ))}
+              <FaChevronRight />
+
+            </button>
+          </>
+
+        )}
+
+      </div>
+
+      {/* THUMBNAILS */}
+
+      {finalImages.length > 1 && (
+
+        <div
+          className="
+            flex
+            gap-4
+            overflow-x-auto
+            mt-5
+            pb-2
+          "
+        >
+
+          {finalImages.map(
+            (image, i) => (
+
+              <button
+                key={i}
+                onClick={() =>
+                  setIndex(i)
+                }
+                className={`
+                  relative
+                  min-w-[120px]
+                  h-[100px]
+                  rounded-2xl
+                  overflow-hidden
+                  border-4
+                  transition
+                  ${
+                    index === i
+
+                      ? "border-[#16d64d]"
+
+                      : "border-transparent"
+                  }
+                `}
+              >
+
+                <Image
+                  src={image}
+                  alt=""
+                  fill
+                  className="object-cover"
+                  unoptimized
+                />
+
+              </button>
+
+            )
+          )}
 
         </div>
 

@@ -6,8 +6,6 @@ import {
   useState,
 } from "react";
 
-import Image from "next/image";
-
 import {
   useParams,
   useRouter,
@@ -17,13 +15,9 @@ import Navbar
 from "@/components/Navbar";
 
 import {
-
   ArrowLeft,
-
   Send,
-
   ShieldCheck,
-
 } from "lucide-react";
 
 import { supabase }
@@ -162,61 +156,60 @@ export default function ChatPage() {
   ) {
 
     const channel =
-      supabase.channel(
-        `chat-${currentUserId}-${receiverId}`
-      );
+      supabase
+        .channel(
+          `chat-${currentUserId}-${receiverId}`
+        )
+        .on(
 
-    channel.on(
+          "postgres_changes",
 
-      "postgres_changes",
+          {
 
-      {
+            event: "INSERT",
 
-        event: "INSERT",
+            schema: "public",
 
-        schema: "public",
+            table: "messages",
+          },
 
-        table: "messages",
-      },
+          (payload) => {
 
-      (payload) => {
+            const newMessage =
+              payload.new as any;
 
-        const newMessage =
-          payload.new as any;
+            const valid =
 
-        const valid =
+              (
+                newMessage.sender_id ===
+                currentUserId &&
 
-          (
-            newMessage.sender_id ===
-            currentUserId &&
+                newMessage.receiver_id ===
+                receiverId
+              ) ||
 
-            newMessage.receiver_id ===
-            receiverId
-          ) ||
+              (
+                newMessage.sender_id ===
+                receiverId &&
 
-          (
-            newMessage.sender_id ===
-            receiverId &&
+                newMessage.receiver_id ===
+                currentUserId
+              );
 
-            newMessage.receiver_id ===
-            currentUserId
-          );
+            if (!valid)
+              return;
 
-        if (!valid)
-          return;
+            setMessages(
+              (prev) => [
 
-        setMessages(
-          (prev) => [
+                ...prev,
 
-            ...prev,
-
-            newMessage,
-          ]
-        );
-      }
-    );
-
-    channel.subscribe();
+                newMessage,
+              ]
+            );
+          }
+        )
+        .subscribe();
 
     return () => {
 
@@ -288,6 +281,7 @@ export default function ChatPage() {
   }
 
   return (
+
     <main className="min-h-screen bg-[#f5f7fb]">
 
       <Navbar />
@@ -301,8 +295,6 @@ export default function ChatPage() {
           flex-col
         "
       >
-
-        {/* HEADER */}
 
         <div
           className="
@@ -357,7 +349,6 @@ export default function ChatPage() {
 
               <div
                 className="
-                  relative
                   w-14
                   h-14
                   rounded-full
@@ -366,15 +357,16 @@ export default function ChatPage() {
                 "
               >
 
-                <Image
+                <img
                   src={
                     receiver?.avatar_url ||
 
                     "https://placehold.co/300x300/png"
                   }
                   alt="User"
-                  fill
                   className="
+                    w-full
+                    h-full
                     object-cover
                   "
                 />
@@ -423,8 +415,6 @@ export default function ChatPage() {
           </div>
 
         </div>
-
-        {/* MESSAGES */}
 
         <div
           className="
@@ -483,32 +473,6 @@ export default function ChatPage() {
 
                     </p>
 
-                    <div
-                      className={`
-                        mt-2
-                        text-sm
-                        ${
-                          own
-
-                            ? "text-white/70"
-
-                            : "text-gray-400"
-                        }
-                      `}
-                    >
-
-                      {new Date(
-                        msg.created_at
-                      ).toLocaleTimeString(
-                        "de-DE",
-                        {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        }
-                      )}
-
-                    </div>
-
                   </div>
 
                 </div>
@@ -524,8 +488,6 @@ export default function ChatPage() {
           />
 
         </div>
-
-        {/* INPUT */}
 
         <div
           className="

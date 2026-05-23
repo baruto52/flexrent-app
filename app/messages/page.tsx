@@ -5,28 +5,19 @@ import {
   useState,
 } from "react";
 
-import Image from "next/image";
-
 import Link from "next/link";
 
-import Navbar
-from "@/components/Navbar";
+import Navbar from "@/components/Navbar";
 
 import {
-
   MessageCircle,
-
   ShieldCheck,
-
 } from "lucide-react";
 
 import { supabase }
 from "@/lib/supabase";
 
 export default function MessagesPage() {
-
-  const [user, setUser] =
-    useState<any>(null);
 
   const [loading, setLoading] =
     useState(true);
@@ -55,10 +46,6 @@ export default function MessagesPage() {
       return;
     }
 
-    setUser(
-      session.user
-    );
-
     await loadConversations(
       session.user.id
     );
@@ -72,15 +59,13 @@ export default function MessagesPage() {
 
     const {
       data,
+      error,
     } =
       await supabase
         .from("messages")
         .select("*")
         .or(
-          `
-          sender_id.eq.${userId},
-          receiver_id.eq.${userId}
-          `
+          `sender_id.eq.${userId},receiver_id.eq.${userId}`
         )
         .order(
           "created_at",
@@ -88,6 +73,13 @@ export default function MessagesPage() {
             ascending: false,
           }
         );
+
+    if (error) {
+
+      console.log(error);
+
+      return;
+    }
 
     if (!data) {
 
@@ -175,6 +167,7 @@ export default function MessagesPage() {
   }
 
   return (
+
     <main className="min-h-screen bg-[#f5f7fb]">
 
       <Navbar />
@@ -187,8 +180,6 @@ export default function MessagesPage() {
           py-10
         "
       >
-
-        {/* HEADER */}
 
         <div
           className="
@@ -247,8 +238,6 @@ export default function MessagesPage() {
 
         </div>
 
-        {/* EMPTY */}
-
         {conversations.length === 0 && (
 
           <div
@@ -306,8 +295,6 @@ export default function MessagesPage() {
 
         )}
 
-        {/* LIST */}
-
         <div className="space-y-5">
 
           {conversations.map(
@@ -329,11 +316,8 @@ export default function MessagesPage() {
                 "
               >
 
-                {/* AVATAR */}
-
                 <div
                   className="
-                    relative
                     w-20
                     h-20
                     rounded-full
@@ -343,7 +327,7 @@ export default function MessagesPage() {
                   "
                 >
 
-                  <Image
+                  <img
                     src={
                       chat.profile
                         ?.avatar_url ||
@@ -351,15 +335,14 @@ export default function MessagesPage() {
                       "https://placehold.co/300x300/png"
                     }
                     alt="User"
-                    fill
                     className="
+                      w-full
+                      h-full
                       object-cover
                     "
                   />
 
                 </div>
-
-                {/* CONTENT */}
 
                 <div className="flex-1">
 

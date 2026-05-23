@@ -7,8 +7,6 @@ import {
 
 import Link from "next/link";
 
-import Image from "next/image";
-
 import {
 
   MapPin,
@@ -388,31 +386,24 @@ export default function ListingGrid({
               "
             >
 
-              <Image
-                src={
-
-                  listing?.images?.[0]
-
-                    ? listing.images[0]
-
-                    : "https://placehold.co/1200x900/png"
-                }
-                alt={
-                  listing.title
-                }
-                fill
-                sizes="
-                  (max-width: 768px) 100vw,
-                  (max-width: 1200px) 50vw,
-                  33vw
-                "
-                className="
-                  object-cover
-                  group-hover:scale-105
-                  transition
-                  duration-500
-                "
-              />
+              <img
+  src={
+    Array.isArray(listing.images)
+      ? listing.images[0]
+      : typeof listing.images === "string"
+      ? JSON.parse(listing.images || "[]")[0]
+      : "https://placehold.co/1200x900/png"
+  }
+  alt={listing.title}
+  className="
+    w-full
+    h-full
+    object-cover
+    group-hover:scale-105
+    transition
+    duration-500
+  "
+/>
 
               {/* CATEGORY */}
 

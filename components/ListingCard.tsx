@@ -175,21 +175,22 @@ export default function ListingCard({
       >
 
         <Image
-          src={
-            listing.images?.[0] ||
-            "/placeholder.jpg"
-          }
-          alt={
-            listing.title
-          }
-          fill
-          className="
-            object-cover
-            group-hover:scale-105
-            transition
-            duration-500
-          "
-        />
+  src={
+    Array.isArray(listing.images)
+      ? listing.images[0]
+      : typeof listing.images === "string"
+      ? JSON.parse(listing.images || "[]")[0]
+      : "/placeholder.jpg"
+  }
+  alt={listing.title}
+  fill
+  className="
+    object-cover
+    group-hover:scale-105
+    transition
+    duration-500
+  "
+/>
 
         {/* FAVORITE */}
 

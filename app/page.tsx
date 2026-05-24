@@ -34,6 +34,16 @@ from "@/components/Footer";
 import SearchBar
 from "@/components/SearchBar";
 
+import {
+
+  SlidersHorizontal,
+
+  MapPin,
+
+  Search,
+
+} from "lucide-react";
+
 function HomeContent() {
 
   const searchParams =
@@ -47,6 +57,9 @@ function HomeContent() {
 
   const [category, setCategory] =
     useState("Alle");
+
+  const [location, setLocation] =
+    useState("");
 
   useEffect(() => {
 
@@ -79,21 +92,203 @@ function HomeContent() {
 
       <Navbar />
 
-      <div className="max-w-7xl mx-auto px-4 py-6">
+      <div
+        className="
+          max-w-7xl
+          mx-auto
+          px-4
+          md:px-6
+          py-6
+        "
+      >
 
         {/* HERO */}
 
         <HeroSection />
 
-        {/* SEARCH */}
+        {/* STICKY SEARCH */}
 
-        <div className="mt-10">
+        <div
+          className="
+            sticky
+            top-24
+            z-30
+            mt-10
+          "
+        >
 
-          <SearchBar
-            onSearch={
-              setSearch
-            }
-          />
+          <div
+            className="
+              bg-white/90
+              backdrop-blur-xl
+              border
+              border-gray-100
+              rounded-[36px]
+              p-4
+              shadow-xl
+            "
+          >
+
+            <div
+              className="
+                grid
+                lg:grid-cols-4
+                gap-4
+              "
+            >
+
+              {/* SEARCH */}
+
+              <div
+                className="
+                  h-16
+                  rounded-2xl
+                  border
+                  border-gray-200
+                  flex
+                  items-center
+                  px-5
+                  gap-3
+                  bg-white
+                "
+              >
+
+                <Search
+                  size={20}
+                  className="
+                    text-gray-400
+                  "
+                />
+
+                <input
+                  type="text"
+                  value={search}
+                  onChange={(e) =>
+                    setSearch(
+                      e.target.value
+                    )
+                  }
+                  placeholder="Was möchtest du mieten?"
+                  className="
+                    flex-1
+                    h-full
+                    outline-none
+                    text-lg
+                    bg-transparent
+                  "
+                />
+
+              </div>
+
+              {/* LOCATION */}
+
+              <div
+                className="
+                  h-16
+                  rounded-2xl
+                  border
+                  border-gray-200
+                  flex
+                  items-center
+                  px-5
+                  gap-3
+                  bg-white
+                "
+              >
+
+                <MapPin
+                  size={20}
+                  className="
+                    text-gray-400
+                  "
+                />
+
+                <input
+                  type="text"
+                  value={location}
+                  onChange={(e) =>
+                    setLocation(
+                      e.target.value
+                    )
+                  }
+                  placeholder="Standort"
+                  className="
+                    flex-1
+                    h-full
+                    outline-none
+                    text-lg
+                    bg-transparent
+                  "
+                />
+
+              </div>
+
+              {/* PRICE */}
+
+              <div
+                className="
+                  h-16
+                  rounded-2xl
+                  border
+                  border-gray-200
+                  flex
+                  items-center
+                  px-5
+                  gap-3
+                  bg-white
+                "
+              >
+
+                <SlidersHorizontal
+                  size={20}
+                  className="
+                    text-gray-400
+                  "
+                />
+
+                <input
+                  type="number"
+                  value={maxPrice}
+                  onChange={(e) =>
+                    setMaxPrice(
+                      e.target.value
+                    )
+                  }
+                  placeholder="Max Preis"
+                  className="
+                    flex-1
+                    h-full
+                    outline-none
+                    text-lg
+                    bg-transparent
+                  "
+                />
+
+              </div>
+
+              {/* BUTTON */}
+
+              <button
+                className="
+                  h-16
+                  rounded-2xl
+                  bg-[#16d64d]
+                  text-white
+                  text-lg
+                  font-black
+                  hover:scale-[1.01]
+                  transition
+                  shadow-lg
+                "
+              >
+
+                Jetzt entdecken
+
+              </button>
+
+            </div>
+
+          </div>
 
         </div>
 
@@ -115,102 +310,68 @@ function HomeContent() {
 
         </div>
 
-        {/* FILTERS */}
+        {/* EXPLORE HEADER */}
 
         <div
           className="
-            mt-10
-            bg-white
-            rounded-[36px]
-            p-6
-            shadow-sm
+            mt-14
+            flex
+            flex-col
+            md:flex-row
+            md:items-end
+            md:justify-between
+            gap-5
           "
         >
 
-          <div
-            className="
-              grid
-              md:grid-cols-2
-              gap-5
-            "
-          >
+          <div>
 
-            {/* PRICE */}
-
-            <input
-              type="number"
-              value={maxPrice}
-              onChange={(e) =>
-                setMaxPrice(
-                  e.target.value
-                )
-              }
-              placeholder="Max Preis"
+            <h2
               className="
-                h-16
-                rounded-2xl
-                border
-                border-gray-200
-                px-5
-                outline-none
-                text-lg
-              "
-            />
-
-            {/* CATEGORY */}
-
-            <select
-              value={category}
-              onChange={(e) =>
-                setCategory(
-                  e.target.value
-                )
-              }
-              className="
-                h-16
-                rounded-2xl
-                border
-                border-gray-200
-                px-5
-                outline-none
-                text-lg
-                bg-white
+                text-4xl
+                md:text-6xl
+                font-black
+                leading-none
               "
             >
 
-              <option>
-                Alle
-              </option>
+              Entdecken
 
-              <option>
-                Fahrzeuge
-              </option>
+            </h2>
 
-              <option>
-                Werkzeuge
-              </option>
+            <p
+              className="
+                text-gray-500
+                text-lg
+                md:text-xl
+                mt-4
+              "
+            >
 
-              <option>
-                Elektronik
-              </option>
+              Werkzeuge, Garagen,
+              Parkplätze, Keller &
+              vieles mehr in deiner Nähe.
 
-              <option>
-                Immobilien
-              </option>
+            </p>
 
-              <option>
-                Business
-              </option>
+          </div>
 
-              <option>
-                Gaming
-              </option>
+          <div
+            className="
+              bg-white
+              rounded-2xl
+              px-5
+              py-4
+              shadow-sm
+              border
+              border-gray-100
+              text-sm
+              font-bold
+              text-gray-500
+            "
+          >
 
-              <option>
-                Sport
-              </option>
-
-            </select>
+            Premium Marketplace
 
           </div>
 
@@ -234,7 +395,7 @@ function HomeContent() {
 
         {/* FEATURES */}
 
-        <div className="mt-16">
+        <div className="mt-24">
 
           <FeaturesSection />
 
@@ -242,7 +403,7 @@ function HomeContent() {
 
         {/* CTA */}
 
-        <div className="mt-16">
+        <div className="mt-24">
 
           <CTASection />
 
@@ -274,7 +435,9 @@ export default function HomePage() {
             font-black
           "
         >
+
           Loading...
+
         </div>
       }
     >

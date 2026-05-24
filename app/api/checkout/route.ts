@@ -3,6 +3,9 @@ from "next/server";
 
 import Stripe from "stripe";
 
+import { supabase }
+from "@/lib/supabase";
+
 const stripe =
   new Stripe(
     process.env
@@ -46,6 +49,86 @@ export async function POST(
     }
 
     /*
+      OWNER PROFILE
+    */
+
+    const {
+      data: ownerProfile,
+      error: ownerError,
+    } =
+      await supabase
+        .from("profiles")
+        .select(
+          "stripe_account_id"
+        )
+        .eq(
+          "id",
+          body.ownerId
+        )
+        .single();
+
+    if (
+      ownerError ||
+      !ownerProfile
+    ) {
+
+      return NextResponse.json(
+
+        {
+          error:
+            "Vermieter Profil nicht gefunden",
+        },
+
+        {
+          status: 404,
+        }
+      );
+    }
+
+    /*
+      STRIPE CONNECT CHECK
+    */
+
+    if (
+      !ownerProfile
+        .stripe_account_id
+    ) {
+
+      return NextResponse.json(
+
+        {
+          error:
+            "Vermieter hat Stripe Connect nicht eingerichtet",
+        },
+
+        {
+          status: 400,
+        }
+      );
+    }
+
+    /*
+      PRICING
+    */
+
+    const totalAmount =
+      Math.round(
+
+        Number(
+          body.totalPrice
+        ) * 100
+      );
+
+    /*
+      10% PLATFORM FEE
+    */
+
+    const applicationFee =
+      Math.round(
+        totalAmount * 0.1
+      );
+
+    /*
       STRIPE SESSION
     */
 
@@ -85,15 +168,27 @@ export async function POST(
               },
 
               unit_amount:
-                Math.round(
-
-                  Number(
-                    body.totalPrice
-                  ) * 100
-                ),
+                totalAmount,
             },
           },
         ],
+
+        /*
+          MARKETPLACE PAYMENT
+        */
+
+        payment_intent_data: {
+
+          application_fee_amount:
+            applicationFee,
+
+          transfer_data: {
+
+            destination:
+              ownerProfile
+                .stripe_account_id,
+          },
+        },
 
         metadata: {
 

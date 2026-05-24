@@ -32,6 +32,8 @@ type Message = {
   message: string;
 
   created_at: string;
+
+  seen?: boolean;
 };
 
 export default function ChatPage() {
@@ -62,6 +64,9 @@ export default function ChatPage() {
 
   const [loading, setLoading] =
     useState(true);
+
+  const [otherTyping, setOtherTyping] =
+    useState(false);
 
   useEffect(() => {
 
@@ -113,6 +118,10 @@ export default function ChatPage() {
       userId
     );
 
+    listenTyping(
+      userId
+    );
+
     setLoading(false);
   }
 
@@ -160,7 +169,10 @@ export default function ChatPage() {
     await supabase
       .from("messages")
       .update({
+
         is_read: true,
+
+        seen: true,
       })
       .eq(
         "sender_id",
@@ -185,38 +197,56 @@ export default function ChatPage() {
       .on(
         "postgres_changes",
         {
-          event: "INSERT",
+          event: "*",
           schema: "public",
           table: "messages",
         },
-        (payload) => {
+        async () => {
 
-          const msg =
-            payload.new as Message;
+          await loadMessages(
+            userId
+          );
+        }
+      )
+      .subscribe();
+  }
 
-          const isRelevant =
-            (
-              msg.sender_id ===
-                userId &&
-              msg.receiver_id ===
+  function listenTyping(
+    userId: string
+  ) {
+
+    const channel =
+      supabase.channel(
+        `typing-${userId}-${otherUserId}`
+      );
+
+    channel
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "typing_status",
+        },
+        async () => {
+
+          const { data } =
+            await supabase
+              .from("typing_status")
+              .select("*")
+              .eq(
+                "user_id",
                 otherUserId
-            ) ||
-            (
-              msg.sender_id ===
-                otherUserId &&
-              msg.receiver_id ===
+              )
+              .eq(
+                "receiver_id",
                 userId
-            );
+              )
+              .maybeSingle();
 
-          if (isRelevant) {
-
-            setMessages(
-              (prev) => [
-                ...prev,
-                msg,
-              ]
-            );
-          }
+          setOtherTyping(
+            data?.typing || false
+          );
         }
       )
       .subscribe();
@@ -246,6 +276,8 @@ export default function ChatPage() {
 
           message:
             newMessage,
+
+          seen: false,
         });
 
     if (error) {
@@ -254,6 +286,26 @@ export default function ChatPage() {
 
       return;
     }
+
+    /*
+      STOP TYPING
+    */
+
+    await supabase
+      .from("typing_status")
+      .upsert({
+
+        user_id:
+          currentUserId,
+
+        receiver_id:
+          otherUserId,
+
+        typing: false,
+
+        updated_at:
+          new Date(),
+      });
 
     /*
       SEND PUSH
@@ -477,7 +529,11 @@ export default function ChatPage() {
               "
             >
 
-              Online
+              {otherTyping
+                ? "schreibt gerade..."
+                : profile?.online
+                ? "Online"
+                : "Offline"}
 
             </p>
 
@@ -604,6 +660,24 @@ export default function ChatPage() {
                       }
                     )}
 
+                    {isMine && (
+
+                      <div
+                        className="
+                          mt-1
+                          text-[10px]
+                          font-bold
+                        "
+                      >
+
+                        {msg.seen
+                          ? "Gelesen"
+                          : "Gesendet"}
+
+                      </div>
+
+                    )}
+
                   </div>
 
                 </div>
@@ -643,11 +717,51 @@ export default function ChatPage() {
 
           <input
             value={newMessage}
-            onChange={(e) =>
+            onChange={async (e) => {
+
               setNewMessage(
                 e.target.value
-              )
-            }
+              );
+
+              await supabase
+                .from("typing_status")
+                .upsert({
+
+                  user_id:
+                    currentUserId,
+
+                  receiver_id:
+                    otherUserId,
+
+                  typing: true,
+
+                  updated_at:
+                    new Date(),
+                });
+
+              setTimeout(
+                async () => {
+
+                  await supabase
+                    .from("typing_status")
+                    .upsert({
+
+                      user_id:
+                        currentUserId,
+
+                      receiver_id:
+                        otherUserId,
+
+                      typing: false,
+
+                      updated_at:
+                        new Date(),
+                    });
+
+                },
+                1500
+              );
+            }}
             onKeyDown={(e) => {
 
               if (

@@ -11,6 +11,12 @@ from "react-hot-toast";
 import MobileBottomBar
 from "@/components/MobileBottomBar";
 
+import PushNotifications
+from "@/components/PushNotifications";
+
+import OnlineStatus
+from "@/components/OnlineStatus";
+
 export const metadata: Metadata = {
 
   metadataBase:
@@ -244,6 +250,14 @@ export default function RootLayout({
         />
 
         {children}
+
+        {/* ONLINE STATUS */}
+
+        <OnlineStatus />
+
+        {/* PUSH */}
+
+        <PushNotifications />
 
         {/* MOBILE APP BAR */}
 

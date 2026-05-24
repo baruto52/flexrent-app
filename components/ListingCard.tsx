@@ -10,29 +10,21 @@ import Link from "next/link";
 import Image from "next/image";
 
 import {
-
   Heart,
-
   MapPin,
-
   Star,
-
   ShieldCheck,
-
 } from "lucide-react";
 
 import { supabase }
 from "@/lib/supabase";
 
 interface Props {
-
   listing: any;
 }
 
 export default function ListingCard({
-
   listing,
-
 }: Props) {
 
   const [user, setUser] =
@@ -137,22 +129,64 @@ export default function ListingCard({
     }
   }
 
-  const image =
+  /*
+    IMAGE FIX
+  */
 
-    Array.isArray(
-      listing.images
-    )
+  let image =
+    "/placeholder.jpg";
 
-      ? listing.images[0]
+  try {
 
-      : typeof listing.images ===
-        "string"
+    if (listing.image) {
 
-      ? JSON.parse(
-          listing.images || "[]"
-        )[0]
+      image =
+        listing.image;
 
-      : "/placeholder.jpg";
+    } else if (
+      listing.image_url
+    ) {
+
+      image =
+        listing.image_url;
+
+    } else if (
+      Array.isArray(
+        listing.images
+      ) &&
+      listing.images.length > 0
+    ) {
+
+      image =
+        listing.images[0];
+
+    } else if (
+      typeof listing.images ===
+      "string"
+    ) {
+
+      const parsed =
+        JSON.parse(
+          listing.images
+        );
+
+      if (
+        Array.isArray(parsed) &&
+        parsed.length > 0
+      ) {
+
+        image =
+          parsed[0];
+      }
+    }
+
+  } catch (error) {
+
+    console.log(
+      "IMAGE ERROR:",
+      error
+    );
+  }
 
   return (
 
@@ -180,13 +214,15 @@ export default function ListingCard({
           relative
           h-[290px]
           overflow-hidden
+          bg-gray-100
         "
       >
 
         <Image
           src={image}
-          alt={listing.title}
+          alt={listing.title || "Listing"}
           fill
+          unoptimized
           className="
             object-cover
             group-hover:scale-110
@@ -230,7 +266,6 @@ export default function ListingCard({
 
           {
             listing.category ||
-
             "Listing"
           }
 
@@ -277,7 +312,7 @@ export default function ListingCard({
 
         </button>
 
-        {/* PRICE OVERLAY */}
+        {/* PRICE */}
 
         <div
           className="
@@ -323,7 +358,6 @@ export default function ListingCard({
             >
 
               €
-
               {listing.price}
 
             </span>
@@ -442,8 +476,6 @@ export default function ListingCard({
           "
         >
 
-          {/* VERIFIED */}
-
           <div
             className="
               flex
@@ -465,8 +497,6 @@ export default function ListingCard({
             Verifiziert
 
           </div>
-
-          {/* BUTTON */}
 
           <div
             className="

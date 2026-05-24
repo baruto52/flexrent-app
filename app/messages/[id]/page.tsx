@@ -16,6 +16,7 @@ import {
   Send,
   Trash2,
   ShieldCheck,
+  Image as ImageIcon,
 } from "lucide-react";
 
 import { supabase }
@@ -30,6 +31,8 @@ type Message = {
   receiver_id: string;
 
   message: string;
+
+  image_url?: string;
 
   created_at: string;
 
@@ -55,6 +58,9 @@ export default function ChatPage() {
 
   const [newMessage, setNewMessage] =
     useState("");
+
+  const [uploading, setUploading] =
+    useState(false);
 
   const [currentUserId, setCurrentUserId] =
     useState("");
@@ -252,6 +258,104 @@ export default function ChatPage() {
       .subscribe();
   }
 
+  async function uploadImage(
+    file: File
+  ) {
+
+    try {
+
+      setUploading(true);
+
+      const fileName =
+        `${Date.now()}-${file.name}`;
+
+      const {
+        error,
+      } =
+        await supabase.storage
+          .from("chat-images")
+          .upload(
+
+            fileName,
+            file
+          );
+
+      if (error) {
+
+        console.log(error);
+
+        return;
+      }
+
+      const {
+        data,
+      } =
+        supabase.storage
+          .from("chat-images")
+          .getPublicUrl(
+            fileName
+          );
+
+      /*
+        SAVE MESSAGE
+      */
+
+      await supabase
+        .from("messages")
+        .insert({
+
+          sender_id:
+            currentUserId,
+
+          receiver_id:
+            otherUserId,
+
+          image_url:
+            data.publicUrl,
+
+          seen: false,
+        });
+
+      /*
+        PUSH
+      */
+
+      await fetch(
+        "/api/send-push",
+        {
+
+          method: "POST",
+
+          headers: {
+
+            "Content-Type":
+              "application/json",
+          },
+
+          body: JSON.stringify({
+
+            userId:
+              otherUserId,
+
+            title:
+              "Neues Bild",
+
+            message:
+              "Du hast ein Bild erhalten",
+          }),
+        }
+      );
+
+    } catch (error) {
+
+      console.log(error);
+
+    } finally {
+
+      setUploading(false);
+    }
+  }
+
   async function sendMessage() {
 
     if (!newMessage.trim())
@@ -441,8 +545,6 @@ export default function ChatPage() {
           "
         >
 
-          {/* BACK BUTTON */}
-
           <button
             onClick={() =>
               router.push(
@@ -468,8 +570,6 @@ export default function ChatPage() {
 
           </button>
 
-          {/* AVATAR */}
-
           <img
             src={
               profile?.avatar_url ||
@@ -485,8 +585,6 @@ export default function ChatPage() {
               shadow-md
             "
           />
-
-          {/* INFO */}
 
           <div>
 
@@ -606,6 +704,22 @@ export default function ChatPage() {
                         leading-7
                       "
                     >
+
+                      {msg.image_url && (
+
+                        <img
+                          src={
+                            msg.image_url
+                          }
+                          className="
+                            rounded-2xl
+                            mb-3
+                            max-h-[320px]
+                            object-cover
+                          "
+                        />
+
+                      )}
 
                       {msg.message}
 
@@ -786,8 +900,48 @@ export default function ChatPage() {
             "
           />
 
+          <label
+            className="
+              w-16
+              h-16
+              rounded-2xl
+              bg-white
+              border
+              border-gray-200
+              flex
+              items-center
+              justify-center
+              cursor-pointer
+              hover:bg-gray-100
+              transition
+            "
+          >
+
+            <ImageIcon
+              size={22}
+            />
+
+            <input
+              type="file"
+              accept="image/*"
+              hidden
+              onChange={(e) => {
+
+                const file =
+                  e.target.files?.[0];
+
+                if (file) {
+
+                  uploadImage(file);
+                }
+              }}
+            />
+
+          </label>
+
           <button
             onClick={sendMessage}
+            disabled={uploading}
             className="
               w-16
               h-16
@@ -800,6 +954,7 @@ export default function ChatPage() {
               hover:scale-105
               transition
               shadow-lg
+              disabled:opacity-50
             "
           >
 

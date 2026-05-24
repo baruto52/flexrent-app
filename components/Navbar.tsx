@@ -35,8 +35,6 @@ import {
 
   CalendarDays,
 
-  ShieldCheck,
-
 } from "lucide-react";
 
 import toast
@@ -44,6 +42,9 @@ from "react-hot-toast";
 
 import { supabase }
 from "@/lib/supabase";
+
+import MobileBottomBar
+from "@/components/MobileBottomBar";
 
 export default function Navbar() {
 
@@ -301,6 +302,12 @@ export default function Navbar() {
 
     <>
 
+      {/* HIDE MOBILE BAR WHEN MENU OPEN */}
+
+      <MobileBottomBar
+        hidden={menuOpen}
+      />
+
       <header
         className="
           sticky
@@ -420,6 +427,7 @@ export default function Navbar() {
                       justify-center
                       font-bold
                       transition-all
+
                       ${
                         active
 
@@ -450,34 +458,6 @@ export default function Navbar() {
             "
           >
 
-            {/* CREATE */}
-
-            <Link
-              href="/create"
-              className="
-                hidden
-                md:flex
-                h-12
-                px-5
-                rounded-2xl
-                bg-[#16d64d]
-                text-white
-                items-center
-                justify-center
-                gap-2
-                font-black
-                shadow-lg
-              "
-            >
-
-              <Plus size={18} />
-
-              Erstellen
-
-            </Link>
-
-            {/* FAVORITES */}
-
             <Link
               href="/favorites"
               className="
@@ -495,8 +475,6 @@ export default function Navbar() {
               <Heart size={20} />
 
             </Link>
-
-            {/* NOTIFICATIONS */}
 
             <Link
               href="/notifications"
@@ -546,8 +524,6 @@ export default function Navbar() {
 
             </Link>
 
-            {/* MESSAGES */}
-
             <Link
               href="/messages"
               className="
@@ -596,88 +572,6 @@ export default function Navbar() {
 
             </Link>
 
-            {/* USER */}
-
-            {user && (
-
-              <div
-                className="
-                  hidden
-                  md:flex
-                  items-center
-                  gap-2
-                  ml-2
-                "
-              >
-
-                <Link
-                  href="/profile"
-                  className="
-                    w-12
-                    h-12
-                    rounded-2xl
-                    bg-black
-                    text-white
-                    flex
-                    items-center
-                    justify-center
-                  "
-                >
-
-                  <User size={20} />
-
-                </Link>
-
-                <button
-                  onClick={logout}
-                  className="
-                    h-12
-                    px-5
-                    rounded-2xl
-                    bg-red-500
-                    text-white
-                    font-black
-                    flex
-                    items-center
-                    justify-center
-                    gap-2
-                  "
-                >
-
-                  <LogOut size={18} />
-
-                  Logout
-
-                </button>
-
-              </div>
-
-            )}
-
-            {!user && (
-
-              <Link
-                href="/login"
-                className="
-                  hidden
-                  md:flex
-                  h-12
-                  px-5
-                  rounded-2xl
-                  bg-black
-                  text-white
-                  items-center
-                  justify-center
-                  font-black
-                "
-              >
-
-                Login
-
-              </Link>
-
-            )}
-
             {/* MOBILE MENU */}
 
             <button
@@ -724,7 +618,7 @@ export default function Navbar() {
           className="
             fixed
             inset-0
-            z-40
+            z-[100]
             bg-black/40
             backdrop-blur-sm
             lg:hidden
@@ -737,16 +631,19 @@ export default function Navbar() {
               absolute
               top-0
               right-0
-              w-[320px]
+              w-[340px]
               h-full
               bg-white
               p-6
               shadow-2xl
+              overflow-y-auto
             "
             onClick={(e) =>
               e.stopPropagation()
             }
           >
+
+            {/* HEADER */}
 
             <div
               className="
@@ -786,6 +683,8 @@ export default function Navbar() {
               </button>
 
             </div>
+
+            {/* LINKS */}
 
             <div className="space-y-3">
 
@@ -847,16 +746,16 @@ export default function Navbar() {
 
             </div>
 
+            {/* LOGOUT */}
+
             {user && (
 
               <button
                 onClick={logout}
                 className="
-                  absolute
-                  bottom-6
-                  left-6
-                  right-6
-                  h-14
+                  mt-10
+                  w-full
+                  h-16
                   rounded-2xl
                   bg-red-500
                   text-white

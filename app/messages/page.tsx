@@ -232,7 +232,9 @@ export default function MessagesPage() {
             "/avatar.png",
 
           lastMessage:
-            msg.message,
+            msg.image_url
+              ? "📷 Bild"
+              : msg.message,
 
           createdAt:
             msg.created_at,
@@ -595,8 +597,6 @@ export default function MessagesPage() {
                     "
                   >
 
-                    {/* AVATAR */}
-
                     <Link
                       href={`/messages/${chat.userId}`}
                     >
@@ -618,8 +618,6 @@ export default function MessagesPage() {
                       />
 
                     </Link>
-
-                    {/* CONTENT */}
 
                     <Link
                       href={`/messages/${chat.userId}`}
@@ -741,8 +739,6 @@ export default function MessagesPage() {
                       </div>
 
                     </Link>
-
-                    {/* ACTIONS */}
 
                     <div
                       className="

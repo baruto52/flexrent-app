@@ -20,10 +20,28 @@ import {
 
 } from "lucide-react";
 
-export default function MobileBottomBar() {
+interface Props {
+
+  hidden?: boolean;
+}
+
+export default function MobileBottomBar({
+
+  hidden = false,
+
+}: Props) {
 
   const pathname =
     usePathname();
+
+  /*
+    HIDE BAR
+  */
+
+  if (hidden) {
+
+    return null;
+  }
 
   const items = [
 
@@ -66,7 +84,7 @@ export default function MobileBottomBar() {
         bottom-5
         left-1/2
         -translate-x-1/2
-        z-50
+        z-40
         lg:hidden
         w-[95%]
         max-w-[430px]
@@ -75,12 +93,12 @@ export default function MobileBottomBar() {
 
       <div
         className="
-          bg-white/92
+          bg-white/82
           backdrop-blur-2xl
           border
-          border-gray-100
-          shadow-[0_20px_50px_rgba(0,0,0,0.12)]
-          rounded-[32px]
+          border-white/30
+          shadow-[0_20px_60px_rgba(0,0,0,0.18)]
+          rounded-[38px]
           px-3
           py-3
           flex
@@ -109,42 +127,51 @@ export default function MobileBottomBar() {
                   flex
                   flex-col
                   items-center
-                  gap-1
+                  gap-2
                   flex-1
                 "
               >
 
                 <div
                   className={`
-                    w-14
-                    h-14
-                    rounded-[20px]
+                    w-16
+                    h-16
+                    rounded-[22px]
                     flex
                     items-center
                     justify-center
                     transition-all
                     duration-300
+
                     ${
                       active
 
-                        ? "bg-[#00e01a] text-white shadow-lg scale-110"
+                        ? `
+                          bg-[#00e01a]
+                          text-white
+                          shadow-lg
+                          scale-110
+                        `
 
-                        : "text-gray-500"
+                        : `
+                          text-gray-500
+                        `
                     }
                   `}
                 >
 
                   <Icon
-                    size={24}
+                    size={28}
                   />
 
                 </div>
 
                 <span
                   className={`
-                    text-[11px]
+                    text-[12px]
                     font-black
                     transition-all
+
                     ${
                       active
 
@@ -168,5 +195,6 @@ export default function MobileBottomBar() {
       </div>
 
     </div>
+
   );
 }

@@ -29,11 +29,80 @@ export default function FavoriteButton({
   const [loading, setLoading] =
     useState(true);
 
+  const [favoritesCount, setFavoritesCount] =
+    useState(0);
+
+  const [animating, setAnimating] =
+    useState(false);
+
   useEffect(() => {
 
-    checkFavorite();
+    init();
+
+    listenFavorites();
 
   }, [listingId]);
+
+  async function init() {
+
+    await Promise.all([
+
+      checkFavorite(),
+
+      loadFavoritesCount(),
+    ]);
+
+    setLoading(false);
+  }
+
+  async function loadFavoritesCount() {
+
+    const {
+      count,
+    } =
+      await supabase
+        .from("favorites")
+        .select(
+          "*",
+          {
+            count: "exact",
+            head: true,
+          }
+        )
+        .eq(
+          "listing_id",
+          listingId
+        );
+
+    setFavoritesCount(
+      count || 0
+    );
+  }
+
+  function listenFavorites() {
+
+    const channel =
+      supabase.channel(
+        `favorites-${listingId}`
+      );
+
+    channel
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "favorites",
+          filter:
+            `listing_id=eq.${listingId}`,
+        },
+        () => {
+
+          loadFavoritesCount();
+        }
+      )
+      .subscribe();
+  }
 
   async function checkFavorite() {
 
@@ -44,12 +113,8 @@ export default function FavoriteButton({
       } =
         await supabase.auth.getUser();
 
-      if (!user) {
-
-        setLoading(false);
-
+      if (!user)
         return;
-      }
 
       const {
         data,
@@ -74,10 +139,6 @@ export default function FavoriteButton({
     } catch (error) {
 
       console.log(error);
-
-    } finally {
-
-      setLoading(false);
     }
   }
 
@@ -104,6 +165,22 @@ export default function FavoriteButton({
         return;
       }
 
+      /*
+        HEART ANIMATION
+      */
+
+      setAnimating(true);
+
+      setTimeout(() => {
+
+        setAnimating(false);
+
+      }, 400);
+
+      /*
+        REMOVE
+      */
+
       if (favorited) {
 
         await supabase
@@ -120,8 +197,21 @@ export default function FavoriteButton({
 
         setFavorited(false);
 
+        setFavoritesCount(
+          (prev) =>
+
+            Math.max(
+              prev - 1,
+              0
+            )
+        );
+
         return;
       }
+
+      /*
+        ADD
+      */
 
       await supabase
         .from("favorites")
@@ -136,6 +226,12 @@ export default function FavoriteButton({
 
       setFavorited(true);
 
+      setFavoritesCount(
+        (prev) =>
+
+          prev + 1
+      );
+
     } catch (error) {
 
       console.log(error);
@@ -148,11 +244,15 @@ export default function FavoriteButton({
 
       <div
         className="
-          w-12
-          h-12
+          absolute
+          top-5
+          right-5
+          w-14
+          h-14
           rounded-full
           bg-white/90
           backdrop-blur
+          z-20
         "
       />
 
@@ -161,43 +261,120 @@ export default function FavoriteButton({
 
   return (
 
-    <button
-      onClick={
-        toggleFavorite
-      }
+    <div
       className="
         absolute
         top-5
         right-5
-        w-12
-        h-12
-        rounded-full
-        bg-white/90
-        backdrop-blur
-        flex
-        items-center
-        justify-center
-        hover:scale-110
-        transition
         z-20
       "
     >
 
-      <Heart
-        size={22}
+      <button
+        onClick={
+          toggleFavorite
+        }
         className={`
-          transition
+          relative
+          w-14
+          h-14
+          rounded-full
+          bg-white/90
+          backdrop-blur-xl
+          border
+          border-white/50
+          shadow-xl
+          flex
+          items-center
+          justify-center
+          transition-all
+          duration-300
+          hover:scale-110
+          active:scale-95
+
           ${
-            favorited
+            animating
 
-              ? "fill-red-500 text-red-500"
+              ? "scale-125"
 
-              : "text-black"
+              : ""
           }
         `}
-      />
+      >
 
-    </button>
+        <Heart
+          size={24}
+          className={`
+            transition-all
+            duration-300
+
+            ${
+              favorited
+
+                ? `
+                  fill-red-500
+                  text-red-500
+                  scale-110
+                `
+
+                : `
+                  text-gray-700
+                `
+            }
+          `}
+        />
+
+        {/* PULSE */}
+
+        {favorited && animating && (
+
+          <div
+            className="
+              absolute
+              inset-0
+              rounded-full
+              border-4
+              border-red-400
+              animate-ping
+            "
+          />
+
+        )}
+
+      </button>
+
+      {/* COUNTER */}
+
+      {favoritesCount > 0 && (
+
+        <div
+          className="
+            absolute
+            -bottom-2
+            left-1/2
+            -translate-x-1/2
+            min-w-[28px]
+            h-7
+            px-2
+            rounded-full
+            bg-black
+            text-white
+            text-xs
+            font-black
+            flex
+            items-center
+            justify-center
+            shadow-lg
+          "
+        >
+
+          {favoritesCount}
+
+        </div>
+
+      )}
+
+    </div>
 
   );
 }

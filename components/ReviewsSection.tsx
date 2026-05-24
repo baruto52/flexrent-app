@@ -25,11 +25,19 @@ from "@/components/RatingStars";
 interface Props {
 
   listingId: string;
+
+  ownerId: string;
+
+  user: any;
 }
 
 export default function ReviewsSection({
 
   listingId,
+
+  ownerId,
+
+  user,
 
 }: Props) {
 
@@ -38,9 +46,6 @@ export default function ReviewsSection({
 
   const [loading, setLoading] =
     useState(true);
-
-  const [user, setUser] =
-    useState<any>(null);
 
   const [rating, setRating] =
     useState(5);
@@ -79,18 +84,6 @@ export default function ReviewsSection({
   }, []);
 
   async function init() {
-
-    const {
-      data: { session },
-    } =
-      await supabase.auth.getSession();
-
-    if (session?.user) {
-
-      setUser(
-        session.user
-      );
-    }
 
     await loadReviews();
 
@@ -240,8 +233,11 @@ export default function ReviewsSection({
             listing_id:
               listingId,
 
-            user_id:
+            reviewer_id:
               user.id,
+
+            owner_id:
+              ownerId,
 
             rating,
 
@@ -258,9 +254,59 @@ export default function ReviewsSection({
         return;
       }
 
+      /*
+        UPDATE OWNER RATING
+      */
+
+      const {
+        data: allOwnerReviews,
+      } =
+        await supabase
+          .from("reviews")
+          .select("rating")
+          .eq(
+            "owner_id",
+            ownerId
+          );
+
+      if (allOwnerReviews) {
+
+        const avg =
+
+          allOwnerReviews.reduce(
+            (
+              acc,
+              review
+            ) =>
+
+              acc +
+              review.rating,
+
+            0
+          ) /
+          allOwnerReviews.length;
+
+        await supabase
+          .from("profiles")
+          .update({
+
+            rating:
+              avg.toFixed(1),
+
+            reviews_count:
+              allOwnerReviews.length,
+          })
+          .eq(
+            "id",
+            ownerId
+          );
+      }
+
       setComment("");
 
       setRating(5);
+
+      await loadReviews();
 
     } catch (error) {
 
@@ -422,8 +468,6 @@ export default function ReviewsSection({
           Bewertung schreiben
         </h3>
 
-        {/* STARS */}
-
         <div
           className="
             flex
@@ -467,8 +511,6 @@ export default function ReviewsSection({
 
         </div>
 
-        {/* COMMENT */}
-
         <textarea
           value={comment}
           disabled={sending}
@@ -490,8 +532,6 @@ export default function ReviewsSection({
             disabled:opacity-50
           "
         />
-
-        {/* BUTTON */}
 
         <button
           onClick={

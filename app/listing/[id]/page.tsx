@@ -871,6 +871,15 @@ export default function ListingPage() {
 
         </div>
 
+ {listing && (
+
+  <ReviewsSection
+    listingId={listing.id}
+    ownerId={listing.user_id}
+    user={user}
+  />
+
+)}
         <Footer />
 
       </main>

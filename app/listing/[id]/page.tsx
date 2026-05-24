@@ -32,7 +32,14 @@ import {
 
   Clock3,
 
+  Flag,
+
+  X,
+
 } from "lucide-react";
+
+import toast
+from "react-hot-toast";
 
 import { supabase }
 from "@/lib/supabase";
@@ -74,6 +81,22 @@ export default function ListingPage() {
 
   const [excludedDates, setExcludedDates] =
     useState<Date[]>([]);
+
+  /*
+    REPORT SYSTEM
+  */
+
+  const [reportOpen, setReportOpen] =
+    useState(false);
+
+  const [reportReason, setReportReason] =
+    useState("Spam");
+
+  const [reportMessage, setReportMessage] =
+    useState("");
+
+  const [reportLoading, setReportLoading] =
+    useState(false);
 
   const totalDays =
     startDate && endDate
@@ -162,7 +185,16 @@ export default function ListingPage() {
       fixedImages = [data.images];
     }
 
-    if (fixedImages.length === 0) {
+    if (data.image) {
+
+      fixedImages.unshift(
+        data.image
+      );
+    }
+
+    if (
+      fixedImages.length === 0
+    ) {
 
       fixedImages = [
         "https://placehold.co/1200x900/png",
@@ -292,8 +324,8 @@ export default function ListingPage() {
       !endDate
     ) {
 
-      alert(
-        "Bitte Zeitraum auswählen."
+      toast.error(
+        "Bitte Zeitraum auswählen"
       );
 
       return;
@@ -304,8 +336,8 @@ export default function ListingPage() {
       listing.user_id
     ) {
 
-      alert(
-        "Eigenes Listing kann nicht gebucht werden."
+      toast.error(
+        "Eigenes Listing kann nicht gebucht werden"
       );
 
       return;
@@ -333,9 +365,6 @@ export default function ListingPage() {
               title:
                 listing.title,
 
-              price:
-                listing.price,
-
               totalPrice,
 
               listingId:
@@ -361,11 +390,22 @@ export default function ListingPage() {
 
         window.location.href =
           data.url;
+
+      } else {
+
+        toast.error(
+          data.error ||
+          "Checkout Fehler"
+        );
       }
 
     } catch (error) {
 
       console.log(error);
+
+      toast.error(
+        "Checkout Fehler"
+      );
 
     } finally {
 
@@ -385,6 +425,66 @@ export default function ListingPage() {
     router.push(
       `/messages/${listing.user_id}`
     );
+  }
+
+  /*
+    REPORT LISTING
+  */
+
+  async function submitReport() {
+
+    if (!user) {
+
+      router.push("/login");
+
+      return;
+    }
+
+    try {
+
+      setReportLoading(true);
+
+      await supabase
+        .from("reports")
+        .insert({
+
+          listing_id:
+            listing.id,
+
+          reporter_id:
+            user.id,
+
+          reason:
+            reportReason,
+
+          message:
+            reportMessage,
+        });
+
+      toast.success(
+        "Listing gemeldet"
+      );
+
+      setReportOpen(false);
+
+      setReportMessage("");
+
+      setReportReason(
+        "Spam"
+      );
+
+    } catch (error) {
+
+      console.log(error);
+
+      toast.error(
+        "Fehler beim Melden"
+      );
+
+    } finally {
+
+      setReportLoading(false);
+    }
   }
 
   if (loading) {
@@ -433,571 +533,159 @@ export default function ListingPage() {
 
   return (
 
-    <main className="min-h-screen bg-[#f5f7fb]">
+    <>
 
-      <Navbar />
+      <main className="min-h-screen bg-[#f5f7fb]">
 
-      <div
-        className="
-          max-w-7xl
-          mx-auto
-          px-4
-          md:px-6
-          py-6
-          md:py-10
-        "
-      >
+        <Navbar />
 
-        {/* HEADER */}
+        {/* REPORT MODAL */}
 
-        <div className="mb-8">
+        {reportOpen && (
 
           <div
             className="
-              flex
-              flex-wrap
-              items-center
-              gap-4
-              mb-5
-            "
-          >
-
-            <div
-              className="
-                px-4
-                py-2
-                rounded-full
-                bg-[#16d64d]
-                text-white
-                text-sm
-                font-black
-              "
-            >
-
-              {
-                listing.category ||
-                "Listing"
-              }
-
-            </div>
-
-            <div
-              className="
-                flex
-                items-center
-                gap-2
-                text-sm
-                font-bold
-                text-gray-600
-              "
-            >
-
-              <Star
-                size={16}
-                className="
-                  text-yellow-400
-                  fill-yellow-400
-                "
-              />
-
-              {averageRating}
-
-            </div>
-
-            <div
-              className="
-                flex
-                items-center
-                gap-2
-                text-sm
-                font-bold
-                text-gray-600
-              "
-            >
-
-              <ShieldCheck
-                size={16}
-                className="
-                  text-[#16d64d]
-                "
-              />
-
-              Verifiziert
-
-            </div>
-
-          </div>
-
-          <h1
-            className="
-              text-4xl
-              md:text-6xl
-              font-black
-              leading-tight
-              mb-5
-            "
-          >
-
-            {listing.title}
-
-          </h1>
-
-          <div
-            className="
+              fixed
+              inset-0
+              z-[100]
+              bg-black/50
+              backdrop-blur-sm
               flex
               items-center
-              gap-3
-              text-gray-500
-              text-lg
+              justify-center
+              p-4
             "
           >
-
-            <MapPin size={20} />
-
-            {
-              listing.location ||
-              "Standort unbekannt"
-            }
-
-          </div>
-
-        </div>
-
-        {/* MAIN GRID */}
-
-        <div
-          className="
-            grid
-            lg:grid-cols-[1.2fr_0.8fr]
-            gap-10
-          "
-        >
-
-          {/* LEFT */}
-
-          <div className="space-y-10">
-
-            {/* GALLERY */}
 
             <div
               className="
                 bg-white
                 rounded-[40px]
-                p-3
-                shadow-sm
+                p-8
+                max-w-2xl
+                w-full
               "
             >
-
-              <ImageGallery
-                images={listing.images}
-              />
-
-            </div>
-
-            {/* DESCRIPTION */}
-
-            <div
-              className="
-                bg-white
-                rounded-[40px]
-                p-7
-                md:p-10
-                shadow-sm
-              "
-            >
-
-              <h2
-                className="
-                  text-3xl
-                  md:text-4xl
-                  font-black
-                  mb-8
-                "
-              >
-
-                Beschreibung
-
-              </h2>
-
-              <p
-                className="
-                  text-gray-700
-                  leading-9
-                  text-lg
-                "
-              >
-
-                {
-                  listing.description ||
-                  "Keine Beschreibung vorhanden."
-                }
-
-              </p>
-
-            </div>
-
-            {/* HOST */}
-
-            {owner && (
 
               <div
                 className="
-                  bg-white
-                  rounded-[40px]
-                  p-7
-                  md:p-10
-                  shadow-sm
+                  flex
+                  items-center
+                  justify-between
+                  mb-8
                 "
               >
 
                 <h2
                   className="
-                    text-3xl
-                    md:text-4xl
+                    text-4xl
                     font-black
-                    mb-8
                   "
                 >
 
-                  Vermieter
+                  Listing melden
 
                 </h2>
 
-                <Link
-                  href={`/user/${owner.id}`}
-                  className="
-                    flex
-                    items-center
-                    gap-5
-                  "
-                >
-
-                  <div
-                    className="
-                      relative
-                      w-24
-                      h-24
-                      rounded-full
-                      overflow-hidden
-                      bg-gray-100
-                    "
-                  >
-
-                    <Image
-                      src={
-                        owner.avatar_url ||
-                        "https://placehold.co/300x300/png"
-                      }
-                      alt="Host"
-                      fill
-                      className="
-                        object-cover
-                      "
-                      unoptimized
-                    />
-
-                  </div>
-
-                  <div>
-
-                    <h3
-                      className="
-                        text-2xl
-                        font-black
-                        mb-2
-                      "
-                    >
-
-                      {
-                        owner.full_name ||
-                        "Host"
-                      }
-
-                    </h3>
-
-                    <div
-                      className="
-                        flex
-                        items-center
-                        gap-2
-                        text-gray-500
-                      "
-                    >
-
-                      <Clock3 size={16} />
-
-                      Antwortet schnell
-
-                    </div>
-
-                  </div>
-
-                </Link>
-
-              </div>
-
-            )}
-
-            {/* MAP */}
-
-            <div
-              className="
-                bg-white
-                rounded-[40px]
-                p-5
-                md:p-8
-                shadow-sm
-              "
-            >
-
-              <h2
-                className="
-                  text-3xl
-                  md:text-4xl
-                  font-black
-                  mb-8
-                "
-              >
-
-                Standort
-
-              </h2>
-
-              <ListingMap
-                lat={
-                  listing.latitude ||
-                  52.52
-                }
-                lng={
-                  listing.longitude ||
-                  13.405
-                }
-              />
-
-            </div>
-
-            {/* REVIEWS */}
-
-            <ReviewsSection
-              listingId={listing.id}
-            />
-
-          </div>
-
-          {/* RIGHT */}
-
-          <div>
-
-            <div
-              className="
-                sticky
-                top-28
-                bg-white
-                rounded-[40px]
-                p-6
-                md:p-8
-                shadow-xl
-                border
-                border-gray-100
-              "
-            >
-
-              {/* PRICE */}
-
-              <div className="mb-8">
-
-                <p
-                  className="
-                    text-gray-400
-                    mb-2
-                  "
-                >
-
-                  Preis pro Tag
-
-                </p>
-
-                <div
-                  className="
-                    flex
-                    items-end
-                    gap-2
-                  "
-                >
-
-                  <h2
-                    className="
-                      text-5xl
-                      md:text-6xl
-                      font-black
-                      leading-none
-                    "
-                  >
-
-                    €
-
-                    {listing.price}
-
-                  </h2>
-
-                  <span
-                    className="
-                      text-gray-500
-                      text-lg
-                      mb-1
-                    "
-                  >
-
-                    / Tag
-
-                  </span>
-
-                </div>
-
-              </div>
-
-              {/* CALENDAR */}
-
-              <div className="mb-8">
-
-                <BookingCalendar
-                  startDate={startDate}
-                  endDate={endDate}
-                  setStartDate={setStartDate}
-                  setEndDate={setEndDate}
-                  excludedDates={excludedDates}
-                />
-
-              </div>
-
-              {/* TOTAL */}
-
-              {totalDays > 0 && (
-
-                <div
-                  className="
-                    bg-[#f5f7fb]
-                    rounded-3xl
-                    p-6
-                    mb-8
-                  "
-                >
-
-                  <div
-                    className="
-                      flex
-                      items-center
-                      justify-between
-                      mb-4
-                    "
-                  >
-
-                    <span
-                      className="
-                        text-gray-500
-                      "
-                    >
-
-                      Tage
-
-                    </span>
-
-                    <span
-                      className="
-                        font-black
-                      "
-                    >
-
-                      {totalDays}
-
-                    </span>
-
-                  </div>
-
-                  <div
-                    className="
-                      flex
-                      items-center
-                      justify-between
-                    "
-                  >
-
-                    <span
-                      className="
-                        text-gray-500
-                      "
-                    >
-
-                      Gesamtpreis
-
-                    </span>
-
-                    <span
-                      className="
-                        text-3xl
-                        font-black
-                      "
-                    >
-
-                      €{totalPrice}
-
-                    </span>
-
-                  </div>
-
-                </div>
-
-              )}
-
-              {/* BUTTONS */}
-
-              <div className="space-y-4">
-
                 <button
-                  onClick={handleCheckout}
-                  disabled={checkoutLoading}
-                  className="
-                    w-full
-                    h-16
-                    rounded-2xl
-                    bg-[#16d64d]
-                    text-white
-                    text-lg
-                    md:text-xl
-                    font-black
-                    hover:scale-[1.01]
-                    transition
-                  "
+                  onClick={() =>
+                    setReportOpen(false)
+                  }
                 >
 
-                  Jetzt buchen
+                  <X size={30} />
 
                 </button>
 
-                <button
-                  onClick={handleMessage}
+              </div>
+
+              <div className="space-y-6">
+
+                <select
+                  value={reportReason}
+                  onChange={(e) =>
+                    setReportReason(
+                      e.target.value
+                    )
+                  }
                   className="
                     w-full
                     h-16
                     rounded-2xl
                     border
                     border-gray-200
-                    flex
-                    items-center
-                    justify-center
-                    gap-3
+                    px-5
                     text-lg
-                    font-bold
-                    hover:bg-gray-50
-                    transition
+                    outline-none
                   "
                 >
 
-                  <MessageCircle
-                    size={22}
-                  />
+                  <option>
+                    Spam
+                  </option>
 
-                  Nachricht senden
+                  <option>
+                    Betrug
+                  </option>
+
+                  <option>
+                    Falsche Bilder
+                  </option>
+
+                  <option>
+                    Verbotener Inhalt
+                  </option>
+
+                  <option>
+                    Sonstiges
+                  </option>
+
+                </select>
+
+                <textarea
+                  value={reportMessage}
+                  onChange={(e) =>
+                    setReportMessage(
+                      e.target.value
+                    )
+                  }
+                  placeholder="Beschreibe das Problem..."
+                  className="
+                    w-full
+                    h-40
+                    rounded-2xl
+                    border
+                    border-gray-200
+                    p-5
+                    outline-none
+                    resize-none
+                    text-lg
+                  "
+                />
+
+                <button
+                  onClick={
+                    submitReport
+                  }
+                  disabled={
+                    reportLoading
+                  }
+                  className="
+                    w-full
+                    h-16
+                    rounded-2xl
+                    bg-red-500
+                    text-white
+                    text-lg
+                    font-black
+                  "
+                >
+
+                  {reportLoading
+
+                    ? "Wird gesendet..."
+
+                    : "Listing melden"}
 
                 </button>
 
@@ -1007,12 +695,187 @@ export default function ListingPage() {
 
           </div>
 
+        )}
+
+        {/* REST DEINER PAGE */}
+
+        <div
+          className="
+            max-w-7xl
+            mx-auto
+            px-4
+            md:px-6
+            py-6
+            md:py-10
+          "
+        >
+
+          {/* HEADER */}
+
+          <div className="mb-8">
+
+            <div
+              className="
+                flex
+                flex-wrap
+                items-center
+                gap-4
+                mb-5
+              "
+            >
+
+              <div
+                className="
+                  px-4
+                  py-2
+                  rounded-full
+                  bg-[#16d64d]
+                  text-white
+                  text-sm
+                  font-black
+                "
+              >
+
+                {
+                  listing.category ||
+                  "Listing"
+                }
+
+              </div>
+
+              <div
+                className="
+                  flex
+                  items-center
+                  gap-2
+                  text-sm
+                  font-bold
+                  text-gray-600
+                "
+              >
+
+                <Star
+                  size={16}
+                  className="
+                    text-yellow-400
+                    fill-yellow-400
+                  "
+                />
+
+                {averageRating}
+
+              </div>
+
+              <div
+                className="
+                  flex
+                  items-center
+                  gap-2
+                  text-sm
+                  font-bold
+                  text-gray-600
+                "
+              >
+
+                <ShieldCheck
+                  size={16}
+                  className="
+                    text-[#16d64d]
+                  "
+                />
+
+                Verifiziert
+
+              </div>
+
+            </div>
+
+            <div
+              className="
+                flex
+                flex-col
+                lg:flex-row
+                lg:items-start
+                lg:justify-between
+                gap-6
+              "
+            >
+
+              <div>
+
+                <h1
+                  className="
+                    text-4xl
+                    md:text-6xl
+                    font-black
+                    leading-tight
+                    mb-5
+                  "
+                >
+
+                  {listing.title}
+
+                </h1>
+
+                <div
+                  className="
+                    flex
+                    items-center
+                    gap-3
+                    text-gray-500
+                    text-lg
+                  "
+                >
+
+                  <MapPin size={20} />
+
+                  {
+                    listing.location ||
+                    "Standort unbekannt"
+                  }
+
+                </div>
+
+              </div>
+
+              {/* REPORT BUTTON */}
+
+              <button
+                onClick={() =>
+                  setReportOpen(true)
+                }
+                className="
+                  h-14
+                  px-6
+                  rounded-2xl
+                  bg-red-500
+                  text-white
+                  flex
+                  items-center
+                  justify-center
+                  gap-3
+                  font-black
+                  min-w-fit
+                "
+              >
+
+                <Flag size={20} />
+
+                Melden
+
+              </button>
+
+            </div>
+
+          </div>
+
         </div>
 
-      </div>
+        <Footer />
 
-      <Footer />
+      </main>
 
-    </main>
+    </>
+
   );
 }

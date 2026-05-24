@@ -6,15 +6,36 @@ import {
   useState,
 } from "react";
 
-import { useParams } from "next/navigation";
+import {
+  useParams,
+  useRouter,
+} from "next/navigation";
 
-import { supabase } from "@/lib/supabase";
+import {
+
+  ArrowLeft,
+
+  Send,
+
+  Trash2,
+
+  ShieldCheck,
+
+} from "lucide-react";
+
+import { supabase }
+from "@/lib/supabase";
 
 type Message = {
+
   id: string;
+
   sender_id: string;
+
   receiver_id: string;
+
   message: string;
+
   created_at: string;
 };
 
@@ -22,6 +43,9 @@ export default function ChatPage() {
 
   const params =
     useParams();
+
+  const router =
+    useRouter();
 
   const otherUserId =
     params.id as string;
@@ -40,6 +64,9 @@ export default function ChatPage() {
 
   const [profile, setProfile] =
     useState<any>(null);
+
+  const [loading, setLoading] =
+    useState(true);
 
   useEffect(() => {
 
@@ -60,7 +87,12 @@ export default function ChatPage() {
     } =
       await supabase.auth.getSession();
 
-    if (!session) return;
+    if (!session) {
+
+      router.push("/login");
+
+      return;
+    }
 
     const userId =
       session.user.id;
@@ -69,19 +101,24 @@ export default function ChatPage() {
       userId
     );
 
-    loadMessages(
-      userId
-    );
+    await Promise.all([
 
-    markMessagesAsRead(
-      userId
-    );
+      loadMessages(
+        userId
+      ),
 
-    loadProfile();
+      markMessagesAsRead(
+        userId
+      ),
+
+      loadProfile(),
+    ]);
 
     listenMessages(
       userId
     );
+
+    setLoading(false);
   }
 
   async function loadProfile() {
@@ -198,10 +235,13 @@ export default function ChatPage() {
     await supabase
       .from("messages")
       .insert({
+
         sender_id:
           currentUserId,
+
         receiver_id:
           otherUserId,
+
         message:
           newMessage,
       });
@@ -212,44 +252,203 @@ export default function ChatPage() {
   function scrollToBottom() {
 
     messagesEndRef.current?.scrollIntoView({
+
       behavior: "smooth",
     });
   }
 
+  async function deleteMessage(
+    id: string
+  ) {
+
+    await supabase
+      .from("messages")
+      .delete()
+      .eq(
+        "id",
+        id
+      );
+
+    setMessages(
+      (prev) =>
+
+        prev.filter(
+          (msg) =>
+            msg.id !== id
+        )
+    );
+  }
+
+  if (loading) {
+
+    return (
+
+      <div
+        className="
+          min-h-screen
+          flex
+          items-center
+          justify-center
+          text-3xl
+          font-black
+        "
+      >
+
+        Chat wird geladen...
+
+      </div>
+
+    );
+  }
+
   return (
 
-    <div className="h-screen flex flex-col bg-[#f5f5f5]">
+    <main
+      className="
+        h-screen
+        bg-[#f5f7fb]
+        flex
+        flex-col
+      "
+    >
 
-      <div className="bg-white border-b px-6 py-4 flex items-center gap-4">
+      {/* HEADER */}
 
-        <img
-          src={
-            profile?.avatar_url ||
-            "/avatar.png"
-          }
-          className="w-14 h-14 rounded-full object-cover"
-        />
+      <div
+        className="
+          bg-white
+          border-b
+          border-gray-100
+          px-4
+          md:px-6
+          py-4
+          flex
+          items-center
+          justify-between
+          sticky
+          top-0
+          z-40
+        "
+      >
 
-        <div>
+        <div
+          className="
+            flex
+            items-center
+            gap-4
+          "
+        >
 
-          <h1 className="font-bold text-xl">
+          {/* BACK BUTTON */}
 
-            {profile?.full_name ||
-              "User"}
+          <button
+            onClick={() =>
+              router.push(
+                "/messages"
+              )
+            }
+            className="
+              w-12
+              h-12
+              rounded-2xl
+              bg-[#f5f7fb]
+              flex
+              items-center
+              justify-center
+              hover:bg-gray-200
+              transition
+            "
+          >
 
-          </h1>
+            <ArrowLeft
+              size={22}
+            />
 
-          <p className="text-green-500 text-sm">
+          </button>
 
-            Online
+          {/* AVATAR */}
 
-          </p>
+          <img
+            src={
+              profile?.avatar_url ||
+              "/avatar.png"
+            }
+            className="
+              w-14
+              h-14
+              rounded-full
+              object-cover
+              border-2
+              border-white
+              shadow-md
+            "
+          />
+
+          {/* INFO */}
+
+          <div>
+
+            <div
+              className="
+                flex
+                items-center
+                gap-2
+              "
+            >
+
+              <h1
+                className="
+                  font-black
+                  text-xl
+                "
+              >
+
+                {
+                  profile?.full_name ||
+                  "User"
+                }
+
+              </h1>
+
+              <ShieldCheck
+                size={18}
+                className="
+                  text-[#16d64d]
+                "
+              />
+
+            </div>
+
+            <p
+              className="
+                text-[#16d64d]
+                text-sm
+                font-semibold
+              "
+            >
+
+              Online
+
+            </p>
+
+          </div>
 
         </div>
 
       </div>
 
-      <div className="flex-1 overflow-y-auto px-6 py-6 space-y-4">
+      {/* CHAT */}
+
+      <div
+        className="
+          flex-1
+          overflow-y-auto
+          px-4
+          md:px-6
+          py-6
+          space-y-5
+        "
+      >
 
         {messages.map(
           (msg) => {
@@ -270,65 +469,77 @@ export default function ChatPage() {
               >
 
                 <div
-                  className={`max-w-[350px] px-5 py-3 rounded-3xl shadow-sm ${
-                    isMine
-                      ? "bg-green-500 text-white"
-                      : "bg-white text-black"
-                  }`}
+                  className={`
+                    max-w-[85%]
+                    md:max-w-[500px]
+                    rounded-[30px]
+                    px-5
+                    py-4
+                    shadow-sm
+                    ${
+                      isMine
+                        ? "bg-[#16d64d] text-white"
+                        : "bg-white text-black"
+                    }
+                  `}
                 >
 
-                  <div className="flex items-center gap-3">
+                  <div
+                    className="
+                      flex
+                      items-start
+                      gap-4
+                    "
+                  >
 
-                    <span>
+                    <div
+                      className="
+                        flex-1
+                        break-words
+                        text-[16px]
+                        leading-7
+                      "
+                    >
 
                       {msg.message}
 
-                    </span>
+                    </div>
 
                     {isMine && (
 
                       <button
-                        onClick={async () => {
-
-                          await supabase
-                            .from(
-                              "messages"
-                            )
-                            .delete()
-                            .eq(
-                              "id",
-                              msg.id
-                            );
-
-                          setMessages(
-                            (
-                              prev
-                            ) =>
-                              prev.filter(
-                                (
-                                  m
-                                ) =>
-                                  m.id !==
-                                  msg.id
-                              )
-                          );
-                        }}
-                        className="text-xs opacity-70 hover:opacity-100"
+                        onClick={() =>
+                          deleteMessage(
+                            msg.id
+                          )
+                        }
+                        className="
+                          opacity-70
+                          hover:opacity-100
+                          transition
+                        "
                       >
 
-                        ✕
+                        <Trash2
+                          size={16}
+                        />
 
                       </button>
+
                     )}
 
                   </div>
 
                   <div
-                    className={`text-[11px] mt-2 ${
-                      isMine
-                        ? "text-green-100"
-                        : "text-gray-400"
-                    }`}
+                    className={`
+                      text-[11px]
+                      mt-3
+                      ${
+                        isMine
+                          ? "text-green-100"
+                          : "text-gray-400"
+                      }
+                    `}
                   >
 
                     {new Date(
@@ -348,6 +559,7 @@ export default function ChatPage() {
                 </div>
 
               </div>
+
             );
           }
         )}
@@ -356,30 +568,87 @@ export default function ChatPage() {
 
       </div>
 
-      <div className="bg-white border-t p-4 flex gap-3">
+      {/* INPUT */}
 
-        <input
-          value={newMessage}
-          onChange={(e) =>
-            setNewMessage(
-              e.target.value
-            )
-          }
-          placeholder="Nachricht schreiben..."
-          className="flex-1 border rounded-2xl px-5 py-4 outline-none"
-        />
+      <div
+        className="
+          bg-white
+          border-t
+          border-gray-100
+          p-4
+          sticky
+          bottom-0
+        "
+      >
 
-        <button
-          onClick={sendMessage}
-          className="bg-green-500 hover:bg-green-600 text-white px-8 rounded-2xl font-semibold"
+        <div
+          className="
+            flex
+            items-center
+            gap-3
+            max-w-5xl
+            mx-auto
+          "
         >
 
-          Senden
+          <input
+            value={newMessage}
+            onChange={(e) =>
+              setNewMessage(
+                e.target.value
+              )
+            }
+            onKeyDown={(e) => {
 
-        </button>
+              if (
+                e.key ===
+                "Enter"
+              ) {
+
+                sendMessage();
+              }
+            }}
+            placeholder="Nachricht schreiben..."
+            className="
+              flex-1
+              h-16
+              rounded-2xl
+              border
+              border-gray-200
+              px-5
+              outline-none
+              text-lg
+              bg-[#f5f7fb]
+            "
+          />
+
+          <button
+            onClick={sendMessage}
+            className="
+              w-16
+              h-16
+              rounded-2xl
+              bg-[#16d64d]
+              text-white
+              flex
+              items-center
+              justify-center
+              hover:scale-105
+              transition
+              shadow-lg
+            "
+          >
+
+            <Send
+              size={22}
+            />
+
+          </button>
+
+        </div>
 
       </div>
 
-    </div>
+    </main>
   );
 }

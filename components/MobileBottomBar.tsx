@@ -3,16 +3,63 @@
 import Link from "next/link";
 
 import {
+  usePathname,
+} from "next/navigation";
+
+import {
+
   House,
+
   Search,
+
   Plus,
-  LayoutGrid,
+
+  Inbox,
+
   User,
+
 } from "lucide-react";
 
 export default function MobileBottomBar() {
 
+  const pathname =
+    usePathname();
+
+  const items = [
+
+    {
+      href: "/",
+      label: "Home",
+      icon: House,
+    },
+
+    {
+      href: "/map",
+      label: "Explore",
+      icon: Search,
+    },
+
+    {
+      href: "/create",
+      label: "Create",
+      icon: Plus,
+    },
+
+    {
+      href: "/messages",
+      label: "Chats",
+      icon: Inbox,
+    },
+
+    {
+      href: "/dashboard",
+      label: "Profil",
+      icon: User,
+    },
+  ];
+
   return (
+
     <div
       className="
         fixed
@@ -28,195 +75,95 @@ export default function MobileBottomBar() {
 
       <div
         className="
-          bg-white/90
+          bg-white/92
           backdrop-blur-2xl
           border
           border-gray-100
           shadow-[0_20px_50px_rgba(0,0,0,0.12)]
           rounded-[32px]
-          px-5
-          py-4
+          px-3
+          py-3
           flex
           items-center
           justify-between
         "
       >
 
-        {/* HOME */}
+        {items.map(
+          (item) => {
 
-        <Link
-          href="/"
-          className="
-            flex
-            flex-col
-            items-center
-            gap-1
-            text-[#00e01a]
-          "
-        >
+            const active =
 
-          <div
-            className="
-              w-13
-              h-13
-              rounded-[18px]
-              bg-[#00e01a]/10
-              flex
-              items-center
-              justify-center
-              p-3
-            "
-          >
+              pathname ===
+              item.href;
 
-            <House size={24} />
+            const Icon =
+              item.icon;
 
-          </div>
+            return (
 
-          <span className="text-xs font-bold">
-            Home
-          </span>
+              <Link
+                key={item.href}
+                href={item.href}
+                className="
+                  flex
+                  flex-col
+                  items-center
+                  gap-1
+                  flex-1
+                "
+              >
 
-        </Link>
+                <div
+                  className={`
+                    w-14
+                    h-14
+                    rounded-[20px]
+                    flex
+                    items-center
+                    justify-center
+                    transition-all
+                    duration-300
+                    ${
+                      active
 
-        {/* EXPLORE */}
+                        ? "bg-[#00e01a] text-white shadow-lg scale-110"
 
-        <Link
-          href="/explore"
-          className="
-            flex
-            flex-col
-            items-center
-            gap-1
-            text-gray-500
-          "
-        >
+                        : "text-gray-500"
+                    }
+                  `}
+                >
 
-          <div
-            className="
-              w-13
-              h-13
-              rounded-[18px]
-              flex
-              items-center
-              justify-center
-              p-3
-            "
-          >
+                  <Icon
+                    size={24}
+                  />
 
-            <Search size={24} />
+                </div>
 
-          </div>
+                <span
+                  className={`
+                    text-[11px]
+                    font-black
+                    transition-all
+                    ${
+                      active
 
-          <span className="text-xs font-bold">
-            Entdecken
-          </span>
+                        ? "text-[#00e01a]"
 
-        </Link>
+                        : "text-gray-500"
+                    }
+                  `}
+                >
 
-        {/* CREATE */}
+                  {item.label}
 
-        <Link
-          href="/create"
-          className="
-            flex
-            flex-col
-            items-center
-            gap-1
-            text-gray-500
-          "
-        >
+                </span>
 
-          <div
-            className="
-              w-13
-              h-13
-              rounded-[18px]
-              flex
-              items-center
-              justify-center
-              p-3
-            "
-          >
+              </Link>
 
-            <Plus size={24} />
-
-          </div>
-
-          <span className="text-xs font-bold">
-            Erstellen
-          </span>
-
-        </Link>
-
-        {/* CATEGORIES */}
-
-        <Link
-          href="/categories"
-          className="
-            flex
-            flex-col
-            items-center
-            gap-1
-            text-gray-500
-          "
-        >
-
-          <div
-            className="
-              w-13
-              h-13
-              rounded-[18px]
-              flex
-              items-center
-              justify-center
-              p-3
-            "
-          >
-
-            <LayoutGrid size={24} />
-
-          </div>
-
-          <span className="text-xs font-bold">
-            Kategorien
-          </span>
-
-        </Link>
-
-        {/* PROFILE */}
-
-        <Link
-          href="/profile"
-          className="
-            flex
-            flex-col
-            items-center
-            gap-1
-            text-gray-500
-          "
-        >
-
-          <div
-            className="
-              w-13
-              h-13
-              rounded-[18px]
-              flex
-              items-center
-              justify-center
-              p-3
-            "
-          >
-
-            <User size={24} />
-
-          </div>
-
-          <span className="text-xs font-bold">
-            Profil
-          </span>
-
-        </Link>
+            );
+          }
+        )}
 
       </div>
 

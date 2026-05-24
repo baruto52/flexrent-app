@@ -8,6 +8,9 @@ import type {
 import { Toaster }
 from "react-hot-toast";
 
+import MobileBottomBar
+from "@/components/MobileBottomBar";
+
 export const metadata: Metadata = {
 
   metadataBase:
@@ -196,6 +199,9 @@ export const viewport: Viewport = {
 
   themeColor:
     "#16d64d",
+
+  viewportFit:
+    "cover",
 };
 
 export default function RootLayout({
@@ -219,6 +225,8 @@ export default function RootLayout({
           bg-[#f4f7fb]
           text-gray-900
           overflow-x-hidden
+          pb-28
+          md:pb-0
         "
       >
 
@@ -236,6 +244,10 @@ export default function RootLayout({
         />
 
         {children}
+
+        {/* MOBILE APP BAR */}
+
+        <MobileBottomBar />
 
       </body>
 

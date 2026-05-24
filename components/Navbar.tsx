@@ -12,14 +12,31 @@ import {
 } from "next/navigation";
 
 import {
+
   Bell,
+
   Heart,
+
   Inbox,
+
   LogOut,
+
   Menu,
+
   Plus,
+
   User,
+
   X,
+
+  LayoutDashboard,
+
+  Map,
+
+  CalendarDays,
+
+  ShieldCheck,
+
 } from "lucide-react";
 
 import toast
@@ -143,6 +160,10 @@ export default function Navbar() {
         .eq(
           "receiver_id",
           userId
+        )
+        .eq(
+          "is_read",
+          false
         );
 
     setMessages(
@@ -253,6 +274,29 @@ export default function Navbar() {
     setMenuOpen(false);
   }
 
+  const navLinks = [
+
+    {
+      href: "/",
+      label: "Home",
+    },
+
+    {
+      href: "/map",
+      label: "Karte",
+    },
+
+    {
+      href: "/bookings",
+      label: "Buchungen",
+    },
+
+    {
+      href: "/dashboard",
+      label: "Dashboard",
+    },
+  ];
+
   return (
 
     <>
@@ -263,7 +307,7 @@ export default function Navbar() {
           top-0
           z-50
           bg-white/85
-          backdrop-blur-xl
+          backdrop-blur-2xl
           border-b
           border-gray-100
         "
@@ -273,7 +317,8 @@ export default function Navbar() {
           className="
             max-w-7xl
             mx-auto
-            px-6
+            px-4
+            md:px-6
             h-20
             flex
             items-center
@@ -286,14 +331,60 @@ export default function Navbar() {
           <Link
             href="/"
             className="
-              text-3xl
-              md:text-4xl
-              font-black
-              tracking-tight
+              flex
+              items-center
+              gap-3
             "
           >
 
-            FlexRent
+            <div
+              className="
+                w-12
+                h-12
+                rounded-2xl
+                bg-[#16d64d]
+                text-white
+                flex
+                items-center
+                justify-center
+                font-black
+                text-xl
+                shadow-lg
+              "
+            >
+
+              F
+
+            </div>
+
+            <div>
+
+              <h1
+                className="
+                  text-2xl
+                  md:text-3xl
+                  font-black
+                  leading-none
+                "
+              >
+
+                FlexRent
+
+              </h1>
+
+              <p
+                className="
+                  text-[10px]
+                  text-gray-400
+                  font-bold
+                "
+              >
+
+                PREMIUM MARKETPLACE
+
+              </p>
+
+            </div>
 
           </Link>
 
@@ -304,31 +395,48 @@ export default function Navbar() {
               hidden
               lg:flex
               items-center
-              gap-8
-              text-lg
-              font-semibold
+              gap-3
             "
           >
 
-            <Link href="/">
-              Home
-            </Link>
+            {navLinks.map(
+              (link) => {
 
-            <Link href="/favorites">
-              Favoriten
-            </Link>
+                const active =
+                  pathname ===
+                  link.href;
 
-            <Link href="/map">
-              Karte
-            </Link>
+                return (
 
-            <Link href="/bookings">
-              Buchungen
-            </Link>
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className={`
+                      px-6
+                      h-12
+                      rounded-2xl
+                      flex
+                      items-center
+                      justify-center
+                      font-bold
+                      transition-all
+                      ${
+                        active
 
-            <Link href="/host/bookings">
-              Vermieter
-            </Link>
+                          ? "bg-[#16d64d] text-white shadow-lg"
+
+                          : "hover:bg-gray-100"
+                      }
+                    `}
+                  >
+
+                    {link.label}
+
+                  </Link>
+
+                );
+              }
+            )}
 
           </nav>
 
@@ -338,7 +446,7 @@ export default function Navbar() {
             className="
               flex
               items-center
-              gap-3
+              gap-2
             "
           >
 
@@ -349,15 +457,16 @@ export default function Navbar() {
               className="
                 hidden
                 md:flex
-                h-14
-                px-6
+                h-12
+                px-5
                 rounded-2xl
                 bg-[#16d64d]
                 text-white
                 items-center
                 justify-center
                 gap-2
-                font-bold
+                font-black
+                shadow-lg
               "
             >
 
@@ -412,17 +521,18 @@ export default function Navbar() {
                     absolute
                     -top-1
                     -right-1
-                    min-w-[22px]
-                    h-5
+                    min-w-[24px]
+                    h-6
                     rounded-full
                     bg-red-500
                     text-white
-                    text-[10px]
+                    text-[11px]
                     font-black
                     flex
                     items-center
                     justify-center
                     px-1
+                    shadow-lg
                   "
                 >
 
@@ -461,17 +571,18 @@ export default function Navbar() {
                     absolute
                     -top-1
                     -right-1
-                    min-w-[22px]
-                    h-5
+                    min-w-[24px]
+                    h-6
                     rounded-full
                     bg-[#16d64d]
                     text-white
-                    text-[10px]
+                    text-[11px]
                     font-black
                     flex
                     items-center
                     justify-center
                     px-1
+                    shadow-lg
                   "
                 >
 
@@ -485,7 +596,7 @@ export default function Navbar() {
 
             </Link>
 
-            {/* PROFILE */}
+            {/* USER */}
 
             {user && (
 
@@ -494,7 +605,8 @@ export default function Navbar() {
                   hidden
                   md:flex
                   items-center
-                  gap-3
+                  gap-2
+                  ml-2
                 "
               >
 
@@ -524,7 +636,7 @@ export default function Navbar() {
                     rounded-2xl
                     bg-red-500
                     text-white
-                    font-bold
+                    font-black
                     flex
                     items-center
                     justify-center
@@ -556,7 +668,7 @@ export default function Navbar() {
                   text-white
                   items-center
                   justify-center
-                  font-bold
+                  font-black
                 "
               >
 
@@ -604,7 +716,226 @@ export default function Navbar() {
 
       </header>
 
+      {/* MOBILE MENU */}
+
+      {menuOpen && (
+
+        <div
+          className="
+            fixed
+            inset-0
+            z-40
+            bg-black/40
+            backdrop-blur-sm
+            lg:hidden
+          "
+          onClick={closeMenu}
+        >
+
+          <div
+            className="
+              absolute
+              top-0
+              right-0
+              w-[320px]
+              h-full
+              bg-white
+              p-6
+              shadow-2xl
+            "
+            onClick={(e) =>
+              e.stopPropagation()
+            }
+          >
+
+            <div
+              className="
+                flex
+                items-center
+                justify-between
+                mb-10
+              "
+            >
+
+              <h2
+                className="
+                  text-3xl
+                  font-black
+                "
+              >
+
+                Menü
+
+              </h2>
+
+              <button
+                onClick={closeMenu}
+                className="
+                  w-12
+                  h-12
+                  rounded-2xl
+                  bg-gray-100
+                  flex
+                  items-center
+                  justify-center
+                "
+              >
+
+                <X size={22} />
+
+              </button>
+
+            </div>
+
+            <div className="space-y-3">
+
+              <MobileLink
+                href="/"
+                icon={<Map size={20} />}
+                label="Home"
+                onClick={closeMenu}
+              />
+
+              <MobileLink
+                href="/map"
+                icon={<Map size={20} />}
+                label="Karte"
+                onClick={closeMenu}
+              />
+
+              <MobileLink
+                href="/dashboard"
+                icon={<LayoutDashboard size={20} />}
+                label="Dashboard"
+                onClick={closeMenu}
+              />
+
+              <MobileLink
+                href="/bookings"
+                icon={<CalendarDays size={20} />}
+                label="Buchungen"
+                onClick={closeMenu}
+              />
+
+              <MobileLink
+                href="/messages"
+                icon={<Inbox size={20} />}
+                label="Nachrichten"
+                onClick={closeMenu}
+              />
+
+              <MobileLink
+                href="/notifications"
+                icon={<Bell size={20} />}
+                label="Benachrichtigungen"
+                onClick={closeMenu}
+              />
+
+              <MobileLink
+                href="/favorites"
+                icon={<Heart size={20} />}
+                label="Favoriten"
+                onClick={closeMenu}
+              />
+
+              <MobileLink
+                href="/profile"
+                icon={<User size={20} />}
+                label="Profil"
+                onClick={closeMenu}
+              />
+
+            </div>
+
+            {user && (
+
+              <button
+                onClick={logout}
+                className="
+                  absolute
+                  bottom-6
+                  left-6
+                  right-6
+                  h-14
+                  rounded-2xl
+                  bg-red-500
+                  text-white
+                  font-black
+                  flex
+                  items-center
+                  justify-center
+                  gap-3
+                "
+              >
+
+                <LogOut size={20} />
+
+                Logout
+
+              </button>
+
+            )}
+
+          </div>
+
+        </div>
+
+      )}
+
     </>
+
+  );
+}
+
+function MobileLink({
+
+  href,
+
+  icon,
+
+  label,
+
+  onClick,
+
+}: any) {
+
+  return (
+
+    <Link
+      href={href}
+      onClick={onClick}
+      className="
+        h-16
+        rounded-2xl
+        bg-[#f5f7fb]
+        px-5
+        flex
+        items-center
+        gap-4
+        font-black
+        text-lg
+      "
+    >
+
+      <div
+        className="
+          w-11
+          h-11
+          rounded-xl
+          bg-white
+          flex
+          items-center
+          justify-center
+        "
+      >
+
+        {icon}
+
+      </div>
+
+      {label}
+
+    </Link>
 
   );
 }

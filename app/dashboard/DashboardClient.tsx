@@ -405,25 +405,7 @@ export default function DashboardClient() {
 
             </h1>
 
-            <p
-              className="
-                text-gray-500
-                text-lg
-                md:text-2xl
-                mt-5
-                max-w-3xl
-              "
-            >
-
-              Verwalte deine Listings,
-              Einnahmen und Aktivitäten
-              auf FlexRent.
-
-            </p>
-
           </div>
-
-          {/* PROFILE */}
 
           <div
             className="
@@ -449,45 +431,24 @@ export default function DashboardClient() {
                 h-20
                 rounded-full
                 object-cover
-                border-4
-                border-white
-                shadow-lg
               "
             />
 
             <div>
 
-              <div
+              <h2
                 className="
-                  flex
-                  items-center
-                  gap-2
-                  mb-2
+                  text-2xl
+                  font-black
                 "
               >
 
-                <h2
-                  className="
-                    text-2xl
-                    font-black
-                  "
-                >
+                {
+                  profile?.full_name ||
+                  "User"
+                }
 
-                  {
-                    profile?.full_name ||
-                    "User"
-                  }
-
-                </h2>
-
-                <ShieldCheck
-                  size={18}
-                  className="
-                    text-[#16d64d]
-                  "
-                />
-
-              </div>
+              </h2>
 
               <p
                 className="
@@ -517,245 +478,57 @@ export default function DashboardClient() {
           "
         >
 
-          {/* TOTAL */}
-
-          <div
-            className="
-              bg-white
-              rounded-[36px]
-              p-7
-              shadow-sm
-              border
-              border-gray-100
-            "
-          >
-
-            <div
-              className="
-                w-16
-                h-16
-                rounded-2xl
-                bg-[#16d64d]/10
-                flex
-                items-center
-                justify-center
-                mb-6
-              "
-            >
-
+          <StatCard
+            icon={
               <Package
                 size={30}
                 className="
                   text-[#16d64d]
                 "
               />
+            }
+            title="Listings"
+            value={listings.length}
+          />
 
-            </div>
-
-            <p
-              className="
-                text-gray-400
-                mb-3
-              "
-            >
-
-              Listings
-
-            </p>
-
-            <h2
-              className="
-                text-5xl
-                font-black
-                leading-none
-              "
-            >
-
-              {listings.length}
-
-            </h2>
-
-          </div>
-
-          {/* ACTIVE */}
-
-          <div
-            className="
-              bg-white
-              rounded-[36px]
-              p-7
-              shadow-sm
-              border
-              border-gray-100
-            "
-          >
-
-            <div
-              className="
-                w-16
-                h-16
-                rounded-2xl
-                bg-blue-500/10
-                flex
-                items-center
-                justify-center
-                mb-6
-              "
-            >
-
+          <StatCard
+            icon={
               <Activity
                 size={30}
                 className="
                   text-blue-500
                 "
               />
+            }
+            title="Aktiv"
+            value={activeListings}
+          />
 
-            </div>
-
-            <p
-              className="
-                text-gray-400
-                mb-3
-              "
-            >
-
-              Aktiv
-
-            </p>
-
-            <h2
-              className="
-                text-5xl
-                font-black
-                leading-none
-              "
-            >
-
-              {activeListings}
-
-            </h2>
-
-          </div>
-
-          {/* INACTIVE */}
-
-          <div
-            className="
-              bg-white
-              rounded-[36px]
-              p-7
-              shadow-sm
-              border
-              border-gray-100
-            "
-          >
-
-            <div
-              className="
-                w-16
-                h-16
-                rounded-2xl
-                bg-red-500/10
-                flex
-                items-center
-                justify-center
-                mb-6
-              "
-            >
-
+          <StatCard
+            icon={
               <EyeOff
                 size={30}
                 className="
                   text-red-500
                 "
               />
+            }
+            title="Inaktiv"
+            value={inactiveListings}
+          />
 
-            </div>
-
-            <p
-              className="
-                text-gray-400
-                mb-3
-              "
-            >
-
-              Inaktiv
-
-            </p>
-
-            <h2
-              className="
-                text-5xl
-                font-black
-                leading-none
-              "
-            >
-
-              {inactiveListings}
-
-            </h2>
-
-          </div>
-
-          {/* VALUE */}
-
-          <div
-            className="
-              bg-white
-              rounded-[36px]
-              p-7
-              shadow-sm
-              border
-              border-gray-100
-            "
-          >
-
-            <div
-              className="
-                w-16
-                h-16
-                rounded-2xl
-                bg-yellow-500/10
-                flex
-                items-center
-                justify-center
-                mb-6
-              "
-            >
-
+          <StatCard
+            icon={
               <Euro
                 size={30}
                 className="
                   text-yellow-500
                 "
               />
-
-            </div>
-
-            <p
-              className="
-                text-gray-400
-                mb-3
-              "
-            >
-
-              Gesamtwert
-
-            </p>
-
-            <h2
-              className="
-                text-5xl
-                font-black
-                leading-none
-              "
-            >
-
-              €{totalValue}
-
-            </h2>
-
-          </div>
+            }
+            title="Gesamtwert"
+            value={`€${totalValue}`}
+          />
 
         </div>
 
@@ -785,7 +558,6 @@ export default function DashboardClient() {
               gap-3
               font-black
               text-lg
-              shadow-lg
             "
           >
 
@@ -830,291 +602,327 @@ export default function DashboardClient() {
         <div className="space-y-6">
 
           {listings.map(
-            (listing) => (
+            (listing) => {
 
-              <div
-                key={listing.id}
-                className="
-                  bg-white
-                  rounded-[40px]
-                  p-5
-                  md:p-6
-                  shadow-sm
-                  border
-                  border-gray-100
-                "
-              >
+              let image =
+                "/placeholder.jpg";
+
+              try {
+
+                if (
+                  listing.image
+                ) {
+
+                  image =
+                    listing.image;
+
+                } else if (
+                  listing.image_url
+                ) {
+
+                  image =
+                    listing.image_url;
+
+                } else if (
+                  Array.isArray(
+                    listing.images
+                  ) &&
+                  listing.images.length > 0
+                ) {
+
+                  image =
+                    listing.images[0];
+                }
+
+              } catch (error) {
+
+                console.log(error);
+              }
+
+              return (
 
                 <div
+                  key={listing.id}
                   className="
-                    flex
-                    flex-col
-                    xl:flex-row
-                    xl:items-center
-                    gap-6
+                    bg-white
+                    rounded-[40px]
+                    p-5
+                    md:p-6
+                    shadow-sm
+                    border
+                    border-gray-100
                   "
                 >
 
-                  {/* IMAGE */}
-
                   <div
                     className="
-                      relative
-                      w-full
-                      xl:w-[240px]
-                      h-[220px]
-                      rounded-[30px]
-                      overflow-hidden
-                      flex-shrink-0
+                      flex
+                      flex-col
+                      xl:flex-row
+                      xl:items-center
+                      gap-6
                     "
                   >
 
-                    <Image
-                      src={
-                        listing.images?.[0] ||
-                        "/placeholder.jpg"
-                      }
-                      alt={
-                        listing.title
-                      }
-                      fill
-                      className="
-                        object-cover
-                      "
-                    />
-
-                  </div>
-
-                  {/* CONTENT */}
-
-                  <div className="flex-1">
+                    {/* IMAGE */}
 
                     <div
                       className="
-                        flex
-                        flex-col
-                        lg:flex-row
-                        lg:items-start
-                        lg:justify-between
-                        gap-5
+                        relative
+                        w-full
+                        xl:w-[240px]
+                        h-[220px]
+                        rounded-[30px]
+                        overflow-hidden
+                        flex-shrink-0
+                        bg-gray-100
                       "
                     >
 
-                      <div>
-
-                        <div
-                          className="
-                            inline-flex
-                            px-4
-                            py-2
-                            rounded-full
-                            bg-[#16d64d]/10
-                            text-[#16d64d]
-                            font-black
-                            text-sm
-                            mb-4
-                          "
-                        >
-
-                          {
-                            listing.category ||
-                            "Listing"
-                          }
-
-                        </div>
-
-                        <h2
-                          className="
-                            text-3xl
-                            font-black
-                            mb-4
-                          "
-                        >
-
-                          {
-                            listing.title
-                          }
-
-                        </h2>
-
-                        <p
-                          className="
-                            text-gray-500
-                            line-clamp-2
-                            leading-7
-                            max-w-3xl
-                          "
-                        >
-
-                          {
-                            listing.description
-                          }
-
-                        </p>
-
-                      </div>
-
-                      {/* PRICE */}
-
-                      <div
+                      <Image
+                        src={image}
+                        alt={
+                          listing.title
+                        }
+                        fill
+                        unoptimized
                         className="
-                          bg-[#f5f7fb]
-                          rounded-3xl
-                          px-6
-                          py-5
-                          min-w-fit
+                          object-cover
                         "
-                      >
-
-                        <p
-                          className="
-                            text-gray-400
-                            mb-2
-                          "
-                        >
-
-                          Preis
-
-                        </p>
-
-                        <h3
-                          className="
-                            text-4xl
-                            font-black
-                            leading-none
-                          "
-                        >
-
-                          €
-                          {
-                            listing.price
-                          }
-
-                        </h3>
-
-                      </div>
+                      />
 
                     </div>
 
-                    {/* ACTIONS */}
+                    {/* CONTENT */}
 
-                    <div
-                      className="
-                        flex
-                        flex-wrap
-                        gap-4
-                        mt-8
-                      "
-                    >
+                    <div className="flex-1">
 
-                      <button
-                        onClick={() =>
-                          toggleActive(
-                            listing.id,
-                            listing.active
-                          )
-                        }
-                        className={`
-                          h-14
-                          px-6
-                          rounded-2xl
-                          text-white
+                      <div
+                        className="
                           flex
-                          items-center
-                          justify-center
-                          gap-3
-                          font-black
-                          ${
-                            listing.active
+                          flex-col
+                          lg:flex-row
+                          lg:items-start
+                          lg:justify-between
+                          gap-5
+                        "
+                      >
 
-                              ? "bg-red-500"
+                        <div>
 
-                              : "bg-[#16d64d]"
+                          <div
+                            className="
+                              inline-flex
+                              px-4
+                              py-2
+                              rounded-full
+                              bg-[#16d64d]/10
+                              text-[#16d64d]
+                              font-black
+                              text-sm
+                              mb-4
+                            "
+                          >
+
+                            {
+                              listing.category ||
+                              "Listing"
+                            }
+
+                          </div>
+
+                          <h2
+                            className="
+                              text-3xl
+                              font-black
+                              mb-4
+                            "
+                          >
+
+                            {
+                              listing.title
+                            }
+
+                          </h2>
+
+                          <p
+                            className="
+                              text-gray-500
+                              line-clamp-2
+                              leading-7
+                              max-w-3xl
+                            "
+                          >
+
+                            {
+                              listing.description
+                            }
+
+                          </p>
+
+                        </div>
+
+                        <div
+                          className="
+                            bg-[#f5f7fb]
+                            rounded-3xl
+                            px-6
+                            py-5
+                            min-w-fit
+                          "
+                        >
+
+                          <p
+                            className="
+                              text-gray-400
+                              mb-2
+                            "
+                          >
+
+                            Preis
+
+                          </p>
+
+                          <h3
+                            className="
+                              text-4xl
+                              font-black
+                              leading-none
+                            "
+                          >
+
+                            €
+                            {
+                              listing.price
+                            }
+
+                          </h3>
+
+                        </div>
+
+                      </div>
+
+                      {/* ACTIONS */}
+
+                      <div
+                        className="
+                          flex
+                          flex-wrap
+                          gap-4
+                          mt-8
+                        "
+                      >
+
+                        <button
+                          onClick={() =>
+                            toggleActive(
+                              listing.id,
+                              listing.active
+                            )
                           }
-                        `}
-                      >
+                          className={`
+                            h-14
+                            px-6
+                            rounded-2xl
+                            text-white
+                            flex
+                            items-center
+                            justify-center
+                            gap-3
+                            font-black
+                            ${
+                              listing.active
 
-                        {listing.active ? (
+                                ? "bg-red-500"
 
-                          <>
+                                : "bg-[#16d64d]"
+                            }
+                          `}
+                        >
 
-                            <EyeOff
-                              size={20}
-                            />
+                          {listing.active ? (
 
-                            Deaktivieren
+                            <>
 
-                          </>
+                              <EyeOff
+                                size={20}
+                              />
 
-                        ) : (
+                              Deaktivieren
 
-                          <>
+                            </>
 
-                            <Eye
-                              size={20}
-                            />
+                          ) : (
 
-                            Aktivieren
+                            <>
 
-                          </>
+                              <Eye
+                                size={20}
+                              />
 
-                        )}
+                              Aktivieren
 
-                      </button>
+                            </>
 
-                      <Link
-                        href={`/edit/${listing.id}`}
-                        className="
-                          h-14
-                          px-6
-                          rounded-2xl
-                          bg-black
-                          text-white
-                          flex
-                          items-center
-                          justify-center
-                          gap-3
-                          font-black
-                        "
-                      >
+                          )}
 
-                        <Pencil
-                          size={20}
-                        />
+                        </button>
 
-                        Bearbeiten
+                        <Link
+                          href={`/edit-listing/${listing.id}`}
+                          className="
+                            h-14
+                            px-6
+                            rounded-2xl
+                            bg-black
+                            text-white
+                            flex
+                            items-center
+                            justify-center
+                            gap-3
+                            font-black
+                          "
+                        >
 
-                      </Link>
+                          <Pencil
+                            size={20}
+                          />
 
-                      <button
-                        onClick={() =>
-                          deleteListing(
-                            listing.id
-                          )
-                        }
-                        className="
-                          h-14
-                          px-6
-                          rounded-2xl
-                          bg-white
-                          border
-                          border-red-200
-                          text-red-500
-                          flex
-                          items-center
-                          justify-center
-                          gap-3
-                          font-black
-                        "
-                      >
+                          Bearbeiten
 
-                        <Trash2
-                          size={20}
-                        />
+                        </Link>
 
-                        Löschen
+                        <button
+                          onClick={() =>
+                            deleteListing(
+                              listing.id
+                            )
+                          }
+                          className="
+                            h-14
+                            px-6
+                            rounded-2xl
+                            bg-white
+                            border
+                            border-red-200
+                            text-red-500
+                            flex
+                            items-center
+                            justify-center
+                            gap-3
+                            font-black
+                          "
+                        >
 
-                      </button>
+                          <Trash2
+                            size={20}
+                          />
+
+                          Löschen
+
+                        </button>
+
+                      </div>
 
                     </div>
 
@@ -1122,102 +930,8 @@ export default function DashboardClient() {
 
                 </div>
 
-              </div>
-
-            )
-          )}
-
-          {listings.length === 0 && (
-
-            <div
-              className="
-                bg-white
-                rounded-[40px]
-                p-12
-                md:p-24
-                text-center
-                shadow-sm
-              "
-            >
-
-              <div
-                className="
-                  w-28
-                  h-28
-                  rounded-full
-                  bg-[#16d64d]
-                  text-white
-                  flex
-                  items-center
-                  justify-center
-                  mx-auto
-                  mb-8
-                "
-              >
-
-                <Package
-                  size={50}
-                />
-
-              </div>
-
-              <h2
-                className="
-                  text-4xl
-                  md:text-6xl
-                  font-black
-                  mb-6
-                "
-              >
-
-                Keine Listings
-
-              </h2>
-
-              <p
-                className="
-                  text-gray-500
-                  text-lg
-                  md:text-2xl
-                  max-w-3xl
-                  mx-auto
-                "
-              >
-
-                Erstelle jetzt dein erstes
-                Premium Listing auf
-                FlexRent.
-
-              </p>
-
-              <Link
-                href="/create"
-                className="
-                  inline-flex
-                  items-center
-                  justify-center
-                  gap-3
-                  mt-10
-                  h-16
-                  px-8
-                  rounded-2xl
-                  bg-[#16d64d]
-                  text-white
-                  text-lg
-                  font-black
-                "
-              >
-
-                <Plus
-                  size={22}
-                />
-
-                Erstes Listing erstellen
-
-              </Link>
-
-            </div>
-
+              );
+            }
           )}
 
         </div>
@@ -1227,5 +941,68 @@ export default function DashboardClient() {
       <Footer />
 
     </main>
+  );
+}
+
+function StatCard({
+  icon,
+  title,
+  value,
+}: any) {
+
+  return (
+
+    <div
+      className="
+        bg-white
+        rounded-[36px]
+        p-7
+        shadow-sm
+        border
+        border-gray-100
+      "
+    >
+
+      <div
+        className="
+          w-16
+          h-16
+          rounded-2xl
+          bg-gray-100
+          flex
+          items-center
+          justify-center
+          mb-6
+        "
+      >
+
+        {icon}
+
+      </div>
+
+      <p
+        className="
+          text-gray-400
+          mb-3
+        "
+      >
+
+        {title}
+
+      </p>
+
+      <h2
+        className="
+          text-5xl
+          font-black
+          leading-none
+        "
+      >
+
+        {value}
+
+      </h2>
+
+    </div>
   );
 }

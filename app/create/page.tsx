@@ -14,19 +14,17 @@ import Footer from "@/components/Footer";
 import LocationPicker from "@/components/LocationPicker";
 
 import {
-
   Upload,
-
   Trash2,
-
   Sparkles,
-
 } from "lucide-react";
 
 import { supabase }
 from "@/lib/supabase";
 
 const categories = [
+
+  "Alle",
 
   "Werkzeuge",
 
@@ -340,7 +338,7 @@ export default function CreatePage() {
 
       <Navbar />
 
-      <div className="max-w-5xl mx-auto px-4 py-10">
+      <div className="max-w-6xl mx-auto px-4 py-10">
 
         <div
           className="
@@ -405,7 +403,9 @@ export default function CreatePage() {
                     mt-3
                   "
                 >
-                  Veröffentliche dein Premium Listing
+                  Vermiete Werkzeuge,
+                  Keller, Garagen,
+                  Parkplätze & mehr.
                 </p>
 
               </div>
@@ -598,7 +598,7 @@ export default function CreatePage() {
 
             </div>
 
-            {/* LOCATION PICKER */}
+            {/* LOCATION */}
 
             <div>
 
@@ -631,7 +631,7 @@ export default function CreatePage() {
                   block
                   font-black
                   text-lg
-                  mb-4
+                  mb-5
                 "
               >
                 Kategorie
@@ -639,44 +639,100 @@ export default function CreatePage() {
 
               <div
                 className="
-                  grid
-                  grid-cols-2
-                  md:grid-cols-4
+                  flex
                   gap-4
+                  overflow-x-auto
+                  scrollbar-hide
+                  pb-3
                 "
               >
 
                 {categories.map(
-                  (item) => (
+                  (item) => {
 
-                    <button
-                      key={item}
-                      type="button"
-                      disabled={loading}
-                      onClick={() =>
-                        setCategory(
-                          item
-                        )
-                      }
-                      className={`
-                        h-16
-                        rounded-2xl
-                        border
-                        font-bold
-                        transition
-                        ${
-                          category === item
-                            ? "bg-[#16d64d] text-white border-[#16d64d]"
-                            : "border-gray-200 hover:border-[#16d64d]"
+                    const active =
+                      category === item;
+
+                    return (
+
+                      <button
+                        key={item}
+                        type="button"
+                        disabled={loading}
+                        onClick={() =>
+                          setCategory(item)
                         }
-                      `}
-                    >
+                        className={`
+                          min-w-[140px]
+                          h-[140px]
+                          rounded-[32px]
+                          border
+                          transition-all
+                          duration-300
+                          flex
+                          flex-col
+                          items-center
+                          justify-center
+                          gap-4
+                          shadow-sm
+                          hover:-translate-y-1
+                          hover:shadow-xl
+                          ${
+                            active
+                              ? "bg-[#16d64d] text-white border-[#16d64d]"
+                              : "bg-white border-gray-100"
+                          }
+                        `}
+                      >
 
-                      {item}
+                        <div
+                          className={`
+                            w-16
+                            h-16
+                            rounded-[22px]
+                            flex
+                            items-center
+                            justify-center
+                            text-2xl
+                            ${
+                              active
+                                ? "bg-white/20"
+                                : "bg-[#16d64d]/10"
+                            }
+                          `}
+                        >
 
-                    </button>
+                          {item === "Alle" && "📦"}
+                          {item === "Werkzeuge" && "🛠️"}
+                          {item === "Parkplätze" && "🅿️"}
+                          {item === "Garagen" && "🚗"}
+                          {item === "Keller" && "📦"}
+                          {item === "Lagerräume" && "🏢"}
+                          {item === "Transporter" && "🚚"}
+                          {item === "Anhänger" && "🛻"}
+                          {item === "Maschinen" && "⚙️"}
+                          {item === "Fahrzeuge" && "🚘"}
+                          {item === "Baumaschinen" && "🏗️"}
+                          {item === "Elektronik" && "💻"}
+                          {item === "Sonstiges" && "✨"}
 
-                  )
+                        </div>
+
+                        <span
+                          className="
+                            font-black
+                            text-sm
+                            text-center
+                            px-2
+                          "
+                        >
+                          {item}
+                        </span>
+
+                      </button>
+
+                    );
+                  }
                 )}
 
               </div>

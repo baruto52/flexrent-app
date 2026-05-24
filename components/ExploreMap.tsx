@@ -1,12 +1,10 @@
 "use client";
 
-import Link from "next/link";
-
 import {
 
   GoogleMap,
 
-  Marker,
+  OverlayView,
 
   useLoadScript,
 
@@ -80,7 +78,7 @@ export default function ExploreMap({
 
           return (
 
-            <Marker
+            <OverlayView
               key={listing.id}
               position={{
 
@@ -90,12 +88,39 @@ export default function ExploreMap({
                 lng:
                   listing.longitude,
               }}
-              onClick={() => {
+              mapPaneName={
+                OverlayView.OVERLAY_MOUSE_TARGET
+              }
+            >
 
-                window.location.href =
-                  `/listing/${listing.id}`;
-              }}
-            />
+              <button
+                onClick={() => {
+
+                  window.location.href =
+                    `/listing/${listing.id}`;
+                }}
+                className="
+                  bg-white
+                  px-4
+                  py-2
+                  rounded-full
+                  shadow-xl
+                  border
+                  border-gray-200
+                  font-black
+                  text-sm
+                  hover:scale-110
+                  transition
+                  whitespace-nowrap
+                "
+              >
+
+                €{listing.price}
+
+              </button>
+
+            </OverlayView>
+
           );
         }
       )}

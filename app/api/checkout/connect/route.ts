@@ -8,6 +8,7 @@ from "@/lib/supabase";
 
 const stripe =
   new Stripe(
+
     process.env
       .STRIPE_SECRET_KEY!
   );
@@ -27,56 +28,128 @@ export async function POST(
     } = body;
 
     /*
-      CREATE CONNECT ACCOUNT
+      VALIDATION
     */
 
-    const account =
-      await stripe.accounts.create({
+    if (
+      !userId ||
+      !email
+    ) {
 
-        type:
-          "express",
+      return NextResponse.json(
 
-        email,
-
-        capabilities: {
-
-          transfers: {
-
-            requested: true,
-          },
-
-          card_payments: {
-
-            requested: true,
-          },
+        {
+          error:
+            "Ungültige Daten",
         },
-      });
+
+        {
+          status: 400,
+        }
+      );
+    }
 
     /*
-      SAVE STRIPE ACCOUNT
+      CHECK EXISTING PROFILE
     */
 
-    await supabase
-      .from("profiles")
-      .update({
+    const {
+      data: profile,
+    } =
+      await supabase
+        .from("profiles")
+        .select("*")
+        .eq(
+          "id",
+          userId
+        )
+        .maybeSingle();
 
-        stripe_account_id:
-          account.id,
-      })
-      .eq(
-        "id",
-        userId
+    if (!profile) {
+
+      return NextResponse.json(
+
+        {
+          error:
+            "Profil nicht gefunden",
+        },
+
+        {
+          status: 404,
+        }
       );
+    }
 
     /*
-      ACCOUNT LINK
+      EXISTING ACCOUNT
+    */
+
+    let stripeAccountId =
+      profile.stripe_account_id;
+
+    /*
+      CREATE ACCOUNT
+    */
+
+    if (!stripeAccountId) {
+
+      const account =
+        await stripe.accounts.create({
+
+          type:
+            "express",
+
+          country:
+            "DE",
+
+          email,
+
+          business_type:
+            "individual",
+
+          capabilities: {
+
+            transfers: {
+
+              requested: true,
+            },
+
+            card_payments: {
+
+              requested: true,
+            },
+          },
+        });
+
+      stripeAccountId =
+        account.id;
+
+      /*
+        SAVE ACCOUNT ID
+      */
+
+      await supabase
+        .from("profiles")
+        .update({
+
+          stripe_account_id:
+            stripeAccountId,
+        })
+        .eq(
+          "id",
+          userId
+        );
+    }
+
+    /*
+      CREATE ACCOUNT LINK
     */
 
     const accountLink =
       await stripe.accountLinks.create({
 
         account:
-          account.id,
+          stripeAccountId,
 
         refresh_url:
           `${process.env.NEXT_PUBLIC_SITE_URL}/dashboard`,
@@ -96,13 +169,17 @@ export async function POST(
 
   } catch (error: any) {
 
-    console.log(error);
+    console.log(
+      "STRIPE CONNECT ERROR:",
+      error
+    );
 
     return NextResponse.json(
 
       {
         error:
-          error.message,
+          error.message ||
+          "Stripe Connect Fehler",
       },
 
       {

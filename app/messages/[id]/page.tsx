@@ -12,15 +12,10 @@ import {
 } from "next/navigation";
 
 import {
-
   ArrowLeft,
-
   Send,
-
   Trash2,
-
   ShieldCheck,
-
 } from "lucide-react";
 
 import { supabase }
@@ -232,19 +227,74 @@ export default function ChatPage() {
     if (!newMessage.trim())
       return;
 
-    await supabase
-      .from("messages")
-      .insert({
+    /*
+      SAVE MESSAGE
+    */
 
-        sender_id:
-          currentUserId,
+    const {
+      error,
+    } =
+      await supabase
+        .from("messages")
+        .insert({
 
-        receiver_id:
-          otherUserId,
+          sender_id:
+            currentUserId,
 
-        message:
-          newMessage,
-      });
+          receiver_id:
+            otherUserId,
+
+          message:
+            newMessage,
+        });
+
+    if (error) {
+
+      console.log(error);
+
+      return;
+    }
+
+    /*
+      SEND PUSH
+    */
+
+    try {
+
+      await fetch(
+        "/api/send-push",
+        {
+
+          method: "POST",
+
+          headers: {
+
+            "Content-Type":
+              "application/json",
+          },
+
+          body: JSON.stringify({
+
+            userId:
+              otherUserId,
+
+            title:
+              "Neue Nachricht",
+
+            message:
+              newMessage,
+          }),
+        }
+      );
+
+    } catch (error) {
+
+      console.log(error);
+    }
+
+    /*
+      RESET
+    */
 
     setNewMessage("");
   }
@@ -650,5 +700,6 @@ export default function ChatPage() {
       </div>
 
     </main>
+
   );
 }

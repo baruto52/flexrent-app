@@ -38,6 +38,13 @@ from "@/components/FavoriteButton";
 import { supabase }
 from "@/lib/supabase";
 
+import useUserLocation
+from "@/hooks/useUserLocation";
+
+import {
+  sortByDistance,
+} from "@/lib/distance";
+
 type Listing = {
 
   id: string;
@@ -57,6 +64,12 @@ type Listing = {
   images: string[];
 
   created_at: string;
+
+  latitude?: number;
+
+  longitude?: number;
+
+  distance?: number;
 };
 
 export default function ExplorePage() {
@@ -84,6 +97,11 @@ export default function ExplorePage() {
 
   const [mobileFilters, setMobileFilters] =
     useState(false);
+
+  const {
+    location: userLocation,
+  } =
+    useUserLocation();
 
   useEffect(() => {
 
@@ -131,8 +149,25 @@ export default function ExplorePage() {
   const filteredListings =
     useMemo(() => {
 
-      let filtered =
+      let filtered: any =
         [...listings];
+
+      /*
+        DISTANCE SORT
+      */
+
+      if (userLocation) {
+
+        filtered =
+          sortByDistance(
+
+            filtered,
+
+            userLocation.lat,
+
+            userLocation.lng
+          );
+      }
 
       /*
         SEARCH
@@ -142,7 +177,7 @@ export default function ExplorePage() {
 
         filtered =
           filtered.filter(
-            (listing) =>
+            (listing: any) =>
 
               listing.title
                 ?.toLowerCase()
@@ -172,7 +207,7 @@ export default function ExplorePage() {
 
         filtered =
           filtered.filter(
-            (listing) =>
+            (listing: any) =>
 
               listing.location
                 ?.toLowerCase()
@@ -193,7 +228,7 @@ export default function ExplorePage() {
 
         filtered =
           filtered.filter(
-            (listing) =>
+            (listing: any) =>
 
               listing.rental_type ===
               rentalType
@@ -206,7 +241,7 @@ export default function ExplorePage() {
 
       filtered =
         filtered.filter(
-          (listing) =>
+          (listing: any) =>
 
             Number(
               listing.price
@@ -222,7 +257,7 @@ export default function ExplorePage() {
         case "Preis niedrig":
 
           filtered.sort(
-            (a, b) =>
+            (a: any, b: any) =>
 
               a.price -
               b.price
@@ -233,7 +268,7 @@ export default function ExplorePage() {
         case "Preis hoch":
 
           filtered.sort(
-            (a, b) =>
+            (a: any, b: any) =>
 
               b.price -
               a.price
@@ -245,8 +280,8 @@ export default function ExplorePage() {
 
           filtered.sort(
             (
-              a,
-              b
+              a: any,
+              b: any
             ) =>
 
               new Date(
@@ -274,6 +309,8 @@ export default function ExplorePage() {
       sortBy,
 
       maxPrice,
+
+      userLocation,
     ]);
 
   return (
@@ -398,8 +435,6 @@ export default function ExplorePage() {
             "
           >
 
-            {/* TOP */}
-
             <div
               className="
                 flex
@@ -516,158 +551,6 @@ export default function ExplorePage() {
 
             </div>
 
-            {/* DESKTOP FILTERS */}
-
-            <div
-              className="
-                hidden
-                xl:grid
-                grid-cols-4
-                gap-5
-                mt-5
-              "
-            >
-
-              {/* TYPE */}
-
-              <select
-                value={rentalType}
-                onChange={(e) =>
-                  setRentalType(
-                    e.target.value
-                  )
-                }
-                className="
-                  h-16
-                  rounded-2xl
-                  bg-[#f5f7fb]
-                  px-5
-                "
-              >
-
-                <option>
-                  Alle
-                </option>
-
-                <option>
-                  Stunde
-                </option>
-
-                <option>
-                  Tag
-                </option>
-
-                <option>
-                  Woche
-                </option>
-
-                <option>
-                  Monat
-                </option>
-
-              </select>
-
-              {/* SORT */}
-
-              <select
-                value={sortBy}
-                onChange={(e) =>
-                  setSortBy(
-                    e.target.value
-                  )
-                }
-                className="
-                  h-16
-                  rounded-2xl
-                  bg-[#f5f7fb]
-                  px-5
-                "
-              >
-
-                <option>
-                  Neueste
-                </option>
-
-                <option>
-                  Preis niedrig
-                </option>
-
-                <option>
-                  Preis hoch
-                </option>
-
-              </select>
-
-              {/* PRICE */}
-
-              <div
-                className="
-                  rounded-2xl
-                  bg-[#f5f7fb]
-                  px-5
-                  flex
-                  items-center
-                  gap-5
-                "
-              >
-
-                <input
-                  type="range"
-                  min="0"
-                  max="10000"
-                  value={maxPrice}
-                  onChange={(e) =>
-                    setMaxPrice(
-                      Number(
-                        e.target.value
-                      )
-                    )
-                  }
-                  className="
-                    w-full
-                  "
-                />
-
-                <span
-                  className="
-                    font-black
-                    min-w-fit
-                  "
-                >
-
-                  €
-                  {maxPrice}
-
-                </span>
-
-              </div>
-
-              {/* RESULTS */}
-
-              <div
-                className="
-                  h-16
-                  rounded-2xl
-                  bg-[#16d64d]
-                  text-white
-                  flex
-                  items-center
-                  justify-center
-                  font-black
-                  text-lg
-                "
-              >
-
-                {
-                  filteredListings.length
-                }
-                {" "}
-                Ergebnisse
-
-              </div>
-
-            </div>
-
           </div>
 
         </div>
@@ -736,153 +619,6 @@ export default function ExplorePage() {
 
             </div>
 
-            <select
-              value={rentalType}
-              onChange={(e) =>
-                setRentalType(
-                  e.target.value
-                )
-              }
-              className="
-                w-full
-                h-16
-                rounded-2xl
-                bg-[#f5f7fb]
-                px-5
-              "
-            >
-
-              <option>
-                Alle
-              </option>
-
-              <option>
-                Stunde
-              </option>
-
-              <option>
-                Tag
-              </option>
-
-              <option>
-                Woche
-              </option>
-
-              <option>
-                Monat
-              </option>
-
-            </select>
-
-            <select
-              value={sortBy}
-              onChange={(e) =>
-                setSortBy(
-                  e.target.value
-                )
-              }
-              className="
-                w-full
-                h-16
-                rounded-2xl
-                bg-[#f5f7fb]
-                px-5
-              "
-            >
-
-              <option>
-                Neueste
-              </option>
-
-              <option>
-                Preis niedrig
-              </option>
-
-              <option>
-                Preis hoch
-              </option>
-
-            </select>
-
-            <div>
-
-              <div
-                className="
-                  flex
-                  items-center
-                  justify-between
-                  mb-4
-                "
-              >
-
-                <span
-                  className="
-                    font-black
-                    text-lg
-                  "
-                >
-                  Max Preis
-                </span>
-
-                <span
-                  className="
-                    font-black
-                    text-[#16d64d]
-                    text-xl
-                  "
-                >
-
-                  €
-                  {maxPrice}
-
-                </span>
-
-              </div>
-
-              <input
-                type="range"
-                min="0"
-                max="10000"
-                value={maxPrice}
-                onChange={(e) =>
-                  setMaxPrice(
-                    Number(
-                      e.target.value
-                    )
-                  )
-                }
-                className="
-                  w-full
-                "
-              />
-
-            </div>
-
-            <button
-              onClick={() =>
-                setMobileFilters(
-                  false
-                )
-              }
-              className="
-                w-full
-                h-16
-                rounded-2xl
-                bg-[#16d64d]
-                text-white
-                font-black
-                text-lg
-              "
-            >
-
-              {
-                filteredListings.length
-              }
-              {" "}
-              Ergebnisse anzeigen
-
-            </button>
-
           </div>
 
         </div>
@@ -932,18 +668,6 @@ export default function ExplorePage() {
 
               </h2>
 
-              <p
-                className="
-                  text-gray-500
-                  text-xl
-                "
-              >
-
-                Versuche andere Filter
-                oder Suchbegriffe.
-
-              </p>
-
             </div>
 
           ) : (
@@ -959,7 +683,7 @@ export default function ExplorePage() {
             >
 
               {filteredListings.map(
-                (listing) => (
+                (listing: any) => (
 
                   <Link
                     href={`/listing/${listing.id}`}
@@ -1087,7 +811,7 @@ export default function ExplorePage() {
                           items-center
                           gap-2
                           text-gray-500
-                          mb-5
+                          mb-2
                         "
                       >
 
@@ -1101,12 +825,39 @@ export default function ExplorePage() {
 
                       </div>
 
+                      {listing.distance && (
+
+                        <div
+                          className="
+                            mt-3
+                            inline-flex
+                            items-center
+                            gap-2
+                            px-3
+                            py-2
+                            rounded-full
+                            bg-[#16d64d]/10
+                            text-[#16d64d]
+                            text-sm
+                            font-black
+                          "
+                        >
+
+                          📍
+                          {listing.distance.toFixed(1)}
+                          km entfernt
+
+                        </div>
+
+                      )}
+
                       <p
                         className="
                           text-gray-500
                           leading-8
                           line-clamp-2
                           min-h-[64px]
+                          mt-5
                         "
                       >
 

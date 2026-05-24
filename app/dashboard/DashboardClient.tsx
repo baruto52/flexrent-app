@@ -33,7 +33,7 @@ import {
 
   ArrowUpRight,
 
-  ShieldCheck,
+  CreditCard,
 
 } from "lucide-react";
 
@@ -207,6 +207,57 @@ export default function DashboardClient() {
     } finally {
 
       setLoading(false);
+    }
+  }
+
+  async function connectStripe() {
+
+    try {
+
+      const {
+        data: { user },
+      } =
+        await supabase.auth.getUser();
+
+      if (!user)
+        return;
+
+      const response =
+        await fetch(
+          "/api/connect",
+          {
+
+            method: "POST",
+
+            headers: {
+
+              "Content-Type":
+                "application/json",
+            },
+
+            body: JSON.stringify({
+
+              userId:
+                user.id,
+
+              email:
+                user.email,
+            }),
+          }
+        );
+
+      const data =
+        await response.json();
+
+      if (data.url) {
+
+        window.location.href =
+          data.url;
+      }
+
+    } catch (error) {
+
+      console.log(error);
     }
   }
 
@@ -595,344 +646,32 @@ export default function DashboardClient() {
 
           </Link>
 
-        </div>
-
-        {/* LISTINGS */}
-
-        <div className="space-y-6">
-
-          {listings.map(
-            (listing) => {
-
-              let image =
-                "/placeholder.jpg";
-
-              try {
-
-                if (
-                  listing.image
-                ) {
-
-                  image =
-                    listing.image;
-
-                } else if (
-                  listing.image_url
-                ) {
-
-                  image =
-                    listing.image_url;
-
-                } else if (
-                  Array.isArray(
-                    listing.images
-                  ) &&
-                  listing.images.length > 0
-                ) {
-
-                  image =
-                    listing.images[0];
-                }
-
-              } catch (error) {
-
-                console.log(error);
-              }
-
-              return (
-
-                <div
-                  key={listing.id}
-                  className="
-                    bg-white
-                    rounded-[40px]
-                    p-5
-                    md:p-6
-                    shadow-sm
-                    border
-                    border-gray-100
-                  "
-                >
-
-                  <div
-                    className="
-                      flex
-                      flex-col
-                      xl:flex-row
-                      xl:items-center
-                      gap-6
-                    "
-                  >
-
-                    {/* IMAGE */}
-
-                    <div
-                      className="
-                        relative
-                        w-full
-                        xl:w-[240px]
-                        h-[220px]
-                        rounded-[30px]
-                        overflow-hidden
-                        flex-shrink-0
-                        bg-gray-100
-                      "
-                    >
-
-                      <Image
-                        src={image}
-                        alt={
-                          listing.title
-                        }
-                        fill
-                        unoptimized
-                        className="
-                          object-cover
-                        "
-                      />
-
-                    </div>
-
-                    {/* CONTENT */}
-
-                    <div className="flex-1">
-
-                      <div
-                        className="
-                          flex
-                          flex-col
-                          lg:flex-row
-                          lg:items-start
-                          lg:justify-between
-                          gap-5
-                        "
-                      >
-
-                        <div>
-
-                          <div
-                            className="
-                              inline-flex
-                              px-4
-                              py-2
-                              rounded-full
-                              bg-[#16d64d]/10
-                              text-[#16d64d]
-                              font-black
-                              text-sm
-                              mb-4
-                            "
-                          >
-
-                            {
-                              listing.category ||
-                              "Listing"
-                            }
-
-                          </div>
-
-                          <h2
-                            className="
-                              text-3xl
-                              font-black
-                              mb-4
-                            "
-                          >
-
-                            {
-                              listing.title
-                            }
-
-                          </h2>
-
-                          <p
-                            className="
-                              text-gray-500
-                              line-clamp-2
-                              leading-7
-                              max-w-3xl
-                            "
-                          >
-
-                            {
-                              listing.description
-                            }
-
-                          </p>
-
-                        </div>
-
-                        <div
-                          className="
-                            bg-[#f5f7fb]
-                            rounded-3xl
-                            px-6
-                            py-5
-                            min-w-fit
-                          "
-                        >
-
-                          <p
-                            className="
-                              text-gray-400
-                              mb-2
-                            "
-                          >
-
-                            Preis
-
-                          </p>
-
-                          <h3
-                            className="
-                              text-4xl
-                              font-black
-                              leading-none
-                            "
-                          >
-
-                            €
-                            {
-                              listing.price
-                            }
-
-                          </h3>
-
-                        </div>
-
-                      </div>
-
-                      {/* ACTIONS */}
-
-                      <div
-                        className="
-                          flex
-                          flex-wrap
-                          gap-4
-                          mt-8
-                        "
-                      >
-
-                        <button
-                          onClick={() =>
-                            toggleActive(
-                              listing.id,
-                              listing.active
-                            )
-                          }
-                          className={`
-                            h-14
-                            px-6
-                            rounded-2xl
-                            text-white
-                            flex
-                            items-center
-                            justify-center
-                            gap-3
-                            font-black
-                            ${
-                              listing.active
-
-                                ? "bg-red-500"
-
-                                : "bg-[#16d64d]"
-                            }
-                          `}
-                        >
-
-                          {listing.active ? (
-
-                            <>
-
-                              <EyeOff
-                                size={20}
-                              />
-
-                              Deaktivieren
-
-                            </>
-
-                          ) : (
-
-                            <>
-
-                              <Eye
-                                size={20}
-                              />
-
-                              Aktivieren
-
-                            </>
-
-                          )}
-
-                        </button>
-
-                        <Link
-                          href={`/edit-listing/${listing.id}`}
-                          className="
-                            h-14
-                            px-6
-                            rounded-2xl
-                            bg-black
-                            text-white
-                            flex
-                            items-center
-                            justify-center
-                            gap-3
-                            font-black
-                          "
-                        >
-
-                          <Pencil
-                            size={20}
-                          />
-
-                          Bearbeiten
-
-                        </Link>
-
-                        <button
-                          onClick={() =>
-                            deleteListing(
-                              listing.id
-                            )
-                          }
-                          className="
-                            h-14
-                            px-6
-                            rounded-2xl
-                            bg-white
-                            border
-                            border-red-200
-                            text-red-500
-                            flex
-                            items-center
-                            justify-center
-                            gap-3
-                            font-black
-                          "
-                        >
-
-                          <Trash2
-                            size={20}
-                          />
-
-                          Löschen
-
-                        </button>
-
-                      </div>
-
-                    </div>
-
-                  </div>
-
-                </div>
-
-              );
+          <button
+            onClick={
+              connectStripe
             }
-          )}
+            className="
+              h-16
+              px-8
+              rounded-2xl
+              bg-purple-600
+              text-white
+              flex
+              items-center
+              justify-center
+              gap-3
+              font-black
+              text-lg
+            "
+          >
+
+            <CreditCard
+              size={22}
+            />
+
+            Stripe Connect
+
+          </button>
 
         </div>
 
@@ -1004,5 +743,6 @@ function StatCard({
       </h2>
 
     </div>
+
   );
 }

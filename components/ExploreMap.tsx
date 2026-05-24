@@ -36,8 +36,8 @@ export default function ExploreMap({
 
       <div
         className="
-          h-[700px]
-          rounded-[40px]
+          h-full
+          rounded-[36px]
           bg-gray-200
           animate-pulse
         "
@@ -56,14 +56,18 @@ export default function ExploreMap({
       }}
       mapContainerClassName="
         w-full
-        h-[700px]
-        rounded-[40px]
+        h-full
+        rounded-[36px]
       "
       options={{
 
         disableDefaultUI: true,
 
         zoomControl: true,
+
+        clickableIcons: false,
+
+        gestureHandling: "greedy",
       }}
     >
 
@@ -101,21 +105,25 @@ export default function ExploreMap({
                 }}
                 className="
                   bg-white
-                  px-4
-                  py-2
+                  px-5
+                  py-3
                   rounded-full
-                  shadow-xl
+                  shadow-2xl
                   border
                   border-gray-200
                   font-black
                   text-sm
                   hover:scale-110
-                  transition
+                  transition-all
+                  duration-300
                   whitespace-nowrap
+                  hover:bg-[#16d64d]
+                  hover:text-white
                 "
               >
 
-                €{listing.price}
+                €
+                {listing.price}
 
               </button>
 

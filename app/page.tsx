@@ -31,9 +31,6 @@ from "@/components/CTASection";
 import Footer
 from "@/components/Footer";
 
-import SearchBar
-from "@/components/SearchBar";
-
 import {
 
   SlidersHorizontal,
@@ -82,6 +79,13 @@ function HomeContent() {
       searchParams.get(
         "category"
       ) || "Alle"
+    );
+
+    setLocation(
+
+      searchParams.get(
+        "location"
+      ) || ""
     );
 
   }, [searchParams]);
@@ -388,6 +392,8 @@ function HomeContent() {
             maxPrice={maxPrice}
 
             category={category}
+
+            location={location}
 
           />
 

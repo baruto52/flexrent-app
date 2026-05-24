@@ -12,11 +12,17 @@ import {
 } from "next/navigation";
 
 import {
+
   ArrowLeft,
+
   Send,
+
   Trash2,
+
   ShieldCheck,
+
   Image as ImageIcon,
+
 } from "lucide-react";
 
 import { supabase }
@@ -266,29 +272,67 @@ export default function ChatPage() {
 
       setUploading(true);
 
+      /*
+        SAFE FILE NAME
+      */
+
+      const extension =
+        file.name
+          .split(".")
+          .pop();
+
       const fileName =
-        `${Date.now()}-${file.name}`;
+        `${Date.now()}-${Math.random()
+          .toString(36)
+          .substring(2)}.${extension}`;
+
+      /*
+        UPLOAD
+      */
 
       const {
-        error,
+        error: uploadError,
       } =
         await supabase.storage
           .from("chat-images")
           .upload(
 
             fileName,
-            file
+
+            file,
+
+            {
+
+              cacheControl:
+                "3600",
+
+              upsert: false,
+
+              contentType:
+                file.type,
+            }
           );
 
-      if (error) {
+      if (uploadError) {
 
-        console.log(error);
+        console.log(
+          "UPLOAD ERROR:",
+          uploadError
+        );
+
+        alert(
+          "Bild Upload fehlgeschlagen"
+        );
 
         return;
       }
 
+      /*
+        PUBLIC URL
+      */
+
       const {
-        data,
+        data: publicUrlData,
       } =
         supabase.storage
           .from("chat-images")
@@ -296,59 +340,117 @@ export default function ChatPage() {
             fileName
           );
 
+      if (
+        !publicUrlData
+          ?.publicUrl
+      ) {
+
+        alert(
+          "Bild URL Fehler"
+        );
+
+        return;
+      }
+
       /*
         SAVE MESSAGE
       */
 
-      await supabase
-        .from("messages")
-        .insert({
+      const {
+        error: messageError,
+      } =
+        await supabase
+          .from("messages")
+          .insert({
 
-          sender_id:
-            currentUserId,
+            sender_id:
+              currentUserId,
 
-          receiver_id:
-            otherUserId,
+            receiver_id:
+              otherUserId,
 
-          image_url:
-            data.publicUrl,
+            message:
+              "",
 
-          seen: false,
-        });
+            image_url:
+              publicUrlData.publicUrl,
+
+            seen: false,
+
+            is_read: false,
+          });
+
+      if (messageError) {
+
+        console.log(
+          "MESSAGE ERROR:",
+          messageError
+        );
+
+        alert(
+          "Nachricht konnte nicht gespeichert werden"
+        );
+
+        return;
+      }
 
       /*
         PUSH
       */
 
-      await fetch(
-        "/api/send-push",
-        {
+      try {
 
-          method: "POST",
+        await fetch(
+          "/api/send-push",
+          {
 
-          headers: {
+            method: "POST",
 
-            "Content-Type":
-              "application/json",
-          },
+            headers: {
 
-          body: JSON.stringify({
+              "Content-Type":
+                "application/json",
+            },
 
-            userId:
-              otherUserId,
+            body: JSON.stringify({
 
-            title:
-              "Neues Bild",
+              userId:
+                otherUserId,
 
-            message:
-              "Du hast ein Bild erhalten",
-          }),
-        }
+              title:
+                "Neues Bild",
+
+              message:
+                "Du hast ein Bild erhalten",
+            }),
+          }
+        );
+
+      } catch (error) {
+
+        console.log(error);
+      }
+
+      /*
+        RELOAD
+      */
+
+      await loadMessages(
+        currentUserId
       );
+
+      scrollToBottom();
 
     } catch (error) {
 
-      console.log(error);
+      console.log(
+        "IMAGE ERROR:",
+        error
+      );
+
+      alert(
+        "Bild konnte nicht gesendet werden"
+      );
 
     } finally {
 
@@ -360,10 +462,6 @@ export default function ChatPage() {
 
     if (!newMessage.trim())
       return;
-
-    /*
-      SAVE MESSAGE
-    */
 
     const {
       error,
@@ -382,6 +480,8 @@ export default function ChatPage() {
             newMessage,
 
           seen: false,
+
+          is_read: false,
         });
 
     if (error) {
@@ -391,68 +491,13 @@ export default function ChatPage() {
       return;
     }
 
-    /*
-      STOP TYPING
-    */
-
-    await supabase
-      .from("typing_status")
-      .upsert({
-
-        user_id:
-          currentUserId,
-
-        receiver_id:
-          otherUserId,
-
-        typing: false,
-
-        updated_at:
-          new Date(),
-      });
-
-    /*
-      SEND PUSH
-    */
-
-    try {
-
-      await fetch(
-        "/api/send-push",
-        {
-
-          method: "POST",
-
-          headers: {
-
-            "Content-Type":
-              "application/json",
-          },
-
-          body: JSON.stringify({
-
-            userId:
-              otherUserId,
-
-            title:
-              "Neue Nachricht",
-
-            message:
-              newMessage,
-          }),
-        }
-      );
-
-    } catch (error) {
-
-      console.log(error);
-    }
-
-    /*
-      RESET
-    */
-
     setNewMessage("");
+
+    await loadMessages(
+      currentUserId
+    );
+
+    scrollToBottom();
   }
 
   function scrollToBottom() {
@@ -559,8 +604,6 @@ export default function ChatPage() {
               flex
               items-center
               justify-center
-              hover:bg-gray-200
-              transition
             "
           >
 
@@ -580,9 +623,6 @@ export default function ChatPage() {
               h-14
               rounded-full
               object-cover
-              border-2
-              border-white
-              shadow-md
             "
           />
 
@@ -688,67 +728,38 @@ export default function ChatPage() {
                   `}
                 >
 
-                  <div
-                    className="
-                      flex
-                      items-start
-                      gap-4
-                    "
-                  >
+                  {msg.image_url && (
+
+                    <img
+                      src={
+                        msg.image_url
+                      }
+                      className="
+                        rounded-2xl
+                        mb-3
+                        max-h-[320px]
+                        w-full
+                        object-cover
+                      "
+                    />
+
+                  )}
+
+                  {msg.message && (
 
                     <div
                       className="
-                        flex-1
                         break-words
                         text-[16px]
                         leading-7
                       "
                     >
 
-                      {msg.image_url && (
-
-                        <img
-                          src={
-                            msg.image_url
-                          }
-                          className="
-                            rounded-2xl
-                            mb-3
-                            max-h-[320px]
-                            object-cover
-                          "
-                        />
-
-                      )}
-
                       {msg.message}
 
                     </div>
 
-                    {isMine && (
-
-                      <button
-                        onClick={() =>
-                          deleteMessage(
-                            msg.id
-                          )
-                        }
-                        className="
-                          opacity-70
-                          hover:opacity-100
-                          transition
-                        "
-                      >
-
-                        <Trash2
-                          size={16}
-                        />
-
-                      </button>
-
-                    )}
-
-                  </div>
+                  )}
 
                   <div
                     className={`
@@ -769,27 +780,10 @@ export default function ChatPage() {
                       {
                         hour:
                           "2-digit",
+
                         minute:
                           "2-digit",
                       }
-                    )}
-
-                    {isMine && (
-
-                      <div
-                        className="
-                          mt-1
-                          text-[10px]
-                          font-bold
-                        "
-                      >
-
-                        {msg.seen
-                          ? "Gelesen"
-                          : "Gesendet"}
-
-                      </div>
-
                     )}
 
                   </div>
@@ -831,51 +825,11 @@ export default function ChatPage() {
 
           <input
             value={newMessage}
-            onChange={async (e) => {
-
+            onChange={(e) =>
               setNewMessage(
                 e.target.value
-              );
-
-              await supabase
-                .from("typing_status")
-                .upsert({
-
-                  user_id:
-                    currentUserId,
-
-                  receiver_id:
-                    otherUserId,
-
-                  typing: true,
-
-                  updated_at:
-                    new Date(),
-                });
-
-              setTimeout(
-                async () => {
-
-                  await supabase
-                    .from("typing_status")
-                    .upsert({
-
-                      user_id:
-                        currentUserId,
-
-                      receiver_id:
-                        otherUserId,
-
-                      typing: false,
-
-                      updated_at:
-                        new Date(),
-                    });
-
-                },
-                1500
-              );
-            }}
+              )
+            }
             onKeyDown={(e) => {
 
               if (
@@ -912,8 +866,6 @@ export default function ChatPage() {
               items-center
               justify-center
               cursor-pointer
-              hover:bg-gray-100
-              transition
             "
           >
 
@@ -951,8 +903,6 @@ export default function ChatPage() {
               flex
               items-center
               justify-center
-              hover:scale-105
-              transition
               shadow-lg
               disabled:opacity-50
             "
@@ -969,6 +919,5 @@ export default function ChatPage() {
       </div>
 
     </main>
-
   );
 }

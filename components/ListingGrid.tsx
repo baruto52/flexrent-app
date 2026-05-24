@@ -5,8 +5,13 @@ import {
   useState,
 } from "react";
 
-import { Sparkles }
-from "lucide-react";
+import {
+
+  Sparkles,
+
+  ArrowUpDown,
+
+} from "lucide-react";
 
 import { supabase }
 from "@/lib/supabase";
@@ -31,6 +36,8 @@ type Listing = {
   category?: string;
 
   active?: boolean;
+
+  created_at?: string;
 };
 
 interface Props {
@@ -40,6 +47,8 @@ interface Props {
   maxPrice?: string;
 
   category?: string;
+
+  location?: string;
 }
 
 export default function ListingGrid({
@@ -49,6 +58,8 @@ export default function ListingGrid({
   maxPrice = "",
 
   category = "Alle",
+
+  location = "",
 
 }: Props) {
 
@@ -60,6 +71,9 @@ export default function ListingGrid({
 
   const [debouncedSearch, setDebouncedSearch] =
     useState(search);
+
+  const [sortBy, setSortBy] =
+    useState("newest");
 
   useEffect(() => {
 
@@ -88,6 +102,10 @@ export default function ListingGrid({
     maxPrice,
 
     category,
+
+    location,
+
+    sortBy,
   ]);
 
   async function loadListings() {
@@ -103,13 +121,11 @@ export default function ListingGrid({
           .eq(
             "active",
             true
-          )
-          .order(
-            "created_at",
-            {
-              ascending: false,
-            }
           );
+
+      /*
+        SEARCH
+      */
 
       if (
         debouncedSearch.trim()
@@ -126,6 +142,10 @@ export default function ListingGrid({
           );
       }
 
+      /*
+        CATEGORY
+      */
+
       if (
 
         category &&
@@ -140,6 +160,25 @@ export default function ListingGrid({
           );
       }
 
+      /*
+        LOCATION
+      */
+
+      if (
+        location.trim()
+      ) {
+
+        query =
+          query.ilike(
+            "location",
+            `%${location}%`
+          );
+      }
+
+      /*
+        PRICE
+      */
+
       if (
         maxPrice &&
         !isNaN(
@@ -151,6 +190,45 @@ export default function ListingGrid({
           query.lte(
             "price",
             Number(maxPrice)
+          );
+      }
+
+      /*
+        SORT
+      */
+
+      if (
+        sortBy === "price_asc"
+      ) {
+
+        query =
+          query.order(
+            "price",
+            {
+              ascending: true,
+            }
+          );
+
+      } else if (
+        sortBy === "price_desc"
+      ) {
+
+        query =
+          query.order(
+            "price",
+            {
+              ascending: false,
+            }
+          );
+
+      } else {
+
+        query =
+          query.order(
+            "created_at",
+            {
+              ascending: false,
+            }
           );
       }
 
@@ -188,7 +266,9 @@ export default function ListingGrid({
     }
   }
 
-  /* LOADING */
+  /*
+    LOADING
+  */
 
   if (loading) {
 
@@ -264,7 +344,9 @@ export default function ListingGrid({
     );
   }
 
-  /* EMPTY */
+  /*
+    EMPTY
+  */
 
   if (listings.length === 0) {
 
@@ -310,7 +392,9 @@ export default function ListingGrid({
             mb-4
           "
         >
+
           Keine Listings gefunden
+
         </h2>
 
         <p
@@ -323,8 +407,10 @@ export default function ListingGrid({
             leading-relaxed
           "
         >
+
           Versuche andere Suchbegriffe
-          oder ändere deinen Preisfilter.
+          oder ändere deine Filter.
+
         </p>
 
       </div>
@@ -334,27 +420,121 @@ export default function ListingGrid({
 
   return (
 
-    <div
-      className="
-        grid
-        grid-cols-1
-        sm:grid-cols-2
-        xl:grid-cols-3
-        gap-5
-      "
-    >
+    <div>
 
-      {listings.map(
-        (listing) => (
+      {/* TOP BAR */}
 
-          <ListingCard
-            key={listing.id}
-            listing={listing}
+      <div
+        className="
+          flex
+          flex-col
+          md:flex-row
+          md:items-center
+          md:justify-between
+          gap-4
+          mb-8
+        "
+      >
+
+        <div
+          className="
+            text-gray-500
+            font-bold
+            text-lg
+          "
+        >
+
+          {listings.length}
+          {" "}
+          Listings gefunden
+
+        </div>
+
+        {/* SORT */}
+
+        <div
+          className="
+            flex
+            items-center
+            gap-3
+            bg-white
+            border
+            border-gray-100
+            rounded-2xl
+            px-4
+            h-14
+            shadow-sm
+          "
+        >
+
+          <ArrowUpDown
+            size={18}
           />
 
-        )
-      )}
+          <select
+            value={sortBy}
+            onChange={(e) =>
+              setSortBy(
+                e.target.value
+              )
+            }
+            className="
+              bg-transparent
+              font-bold
+              outline-none
+            "
+          >
+
+            <option value="newest">
+
+              Neueste
+
+            </option>
+
+            <option value="price_asc">
+
+              Preis aufsteigend
+
+            </option>
+
+            <option value="price_desc">
+
+              Preis absteigend
+
+            </option>
+
+          </select>
+
+        </div>
+
+      </div>
+
+      {/* GRID */}
+
+      <div
+        className="
+          grid
+          grid-cols-1
+          sm:grid-cols-2
+          xl:grid-cols-3
+          gap-5
+        "
+      >
+
+        {listings.map(
+          (listing) => (
+
+            <ListingCard
+              key={listing.id}
+              listing={listing}
+            />
+
+          )
+        )}
+
+      </div>
 
     </div>
+
   );
 }

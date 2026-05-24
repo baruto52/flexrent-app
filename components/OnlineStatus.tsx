@@ -11,78 +11,141 @@ export default function OnlineStatus() {
 
   useEffect(() => {
 
+    let interval:
+      NodeJS.Timeout;
+
+    let currentUserId = "";
+
     init();
 
-  }, []);
+    async function init() {
 
-  async function init() {
+      const {
+        data: { session },
+      } =
+        await supabase.auth.getSession();
 
-    const {
-      data: { session },
-    } =
-      await supabase.auth.getSession();
+      if (!session)
+        return;
 
-    if (!session)
-      return;
+      currentUserId =
+        session.user.id;
 
-    const userId =
-      session.user.id;
+      /*
+        SET ONLINE
+      */
 
-    /*
-      ONLINE
-    */
+      await setOnline();
 
-    await supabase
-      .from("profiles")
-      .update({
+      /*
+        HEARTBEAT
+      */
 
-        online: true,
+      interval =
+        setInterval(
+          async () => {
 
-        last_seen:
-          new Date(),
-      })
-      .eq(
-        "id",
-        userId
+            await setOnline();
+
+          },
+          30000
+        );
+
+      /*
+        PAGE HIDDEN
+      */
+
+      document.addEventListener(
+        "visibilitychange",
+        handleVisibility
       );
 
-    /*
-      OFFLINE
-    */
+      /*
+        TAB CLOSE
+      */
 
-    const handleOffline =
-      async () => {
+      window.addEventListener(
+        "beforeunload",
+        handleOffline
+      );
+    }
 
-        await supabase
-          .from("profiles")
-          .update({
+    async function setOnline() {
 
-            online: false,
+      if (!currentUserId)
+        return;
 
-            last_seen:
-              new Date(),
-          })
-          .eq(
-            "id",
-            userId
-          );
-      };
+      await supabase
+        .from("profiles")
+        .update({
 
-    window.addEventListener(
-      "beforeunload",
-      handleOffline
-    );
+          online: true,
+
+          last_seen:
+            new Date()
+              .toISOString(),
+        })
+        .eq(
+          "id",
+          currentUserId
+        );
+    }
+
+    async function handleOffline() {
+
+      if (!currentUserId)
+        return;
+
+      await supabase
+        .from("profiles")
+        .update({
+
+          online: false,
+
+          last_seen:
+            new Date()
+              .toISOString(),
+        })
+        .eq(
+          "id",
+          currentUserId
+        );
+    }
+
+    async function handleVisibility() {
+
+      if (
+        document.hidden
+      ) {
+
+        await handleOffline();
+
+      } else {
+
+        await setOnline();
+      }
+    }
 
     return () => {
 
-      handleOffline();
+      clearInterval(
+        interval
+      );
+
+      document.removeEventListener(
+        "visibilitychange",
+        handleVisibility
+      );
 
       window.removeEventListener(
         "beforeunload",
         handleOffline
       );
+
+      handleOffline();
     };
-  }
+
+  }, []);
 
   return null;
 }

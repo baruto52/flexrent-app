@@ -73,7 +73,22 @@ export default function SuccessPage() {
 
         endDate,
 
+        title,
+
       } = parsed;
+
+      /*
+        GET USER
+      */
+
+      const {
+        data: { user },
+      } =
+        await supabase.auth.getUser();
+
+      /*
+        CHECK EXISTING
+      */
 
       const {
         data: existing,
@@ -98,6 +113,10 @@ export default function SuccessPage() {
             endDate
           )
           .maybeSingle();
+
+      /*
+        INSERT BOOKING
+      */
 
       if (!existing) {
 
@@ -130,6 +149,48 @@ export default function SuccessPage() {
               "confirmed",
           });
       }
+
+      /*
+        SEND EMAIL
+      */
+
+      if (user?.email) {
+
+        await fetch(
+          "/api/send-booking-email",
+          {
+
+            method: "POST",
+
+            headers: {
+
+              "Content-Type":
+                "application/json",
+            },
+
+            body: JSON.stringify({
+
+              email:
+                user.email,
+
+              title:
+                title ||
+
+                "FlexRent Buchung",
+
+              startDate,
+
+              endDate,
+
+              totalPrice,
+            }),
+          }
+        );
+      }
+
+      /*
+        CLEANUP
+      */
 
       localStorage.removeItem(
         "pendingBooking"
@@ -407,7 +468,7 @@ export default function SuccessPage() {
               "
             >
 
-              Premium Support
+              Email versendet
 
             </h3>
 
@@ -418,7 +479,7 @@ export default function SuccessPage() {
               "
             >
 
-              FlexRent Marketplace
+              Buchungsbestätigung gesendet
 
             </p>
 
@@ -519,5 +580,6 @@ export default function SuccessPage() {
       </div>
 
     </main>
+
   );
 }

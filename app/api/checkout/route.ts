@@ -24,8 +24,12 @@ export async function POST(
 
     if (
       !body.title ||
-      !body.price ||
-      !body.listingId
+      !body.totalPrice ||
+      !body.listingId ||
+      !body.renterId ||
+      !body.ownerId ||
+      !body.startDate ||
+      !body.endDate
     ) {
 
       return NextResponse.json(
@@ -55,9 +59,16 @@ export async function POST(
           "card",
         ],
 
+        billing_address_collection:
+          "required",
+
+        customer_creation:
+          "always",
+
         line_items: [
 
           {
+
             quantity: 1,
 
             price_data: {
@@ -68,23 +79,21 @@ export async function POST(
 
                 name:
                   body.title,
+
+                description:
+                  `Buchung von ${body.startDate} bis ${body.endDate}`,
               },
 
               unit_amount:
                 Math.round(
+
                   Number(
-                    body.price
+                    body.totalPrice
                   ) * 100
                 ),
             },
           },
         ],
-
-        success_url:
-          `${process.env.NEXT_PUBLIC_SITE_URL}/bookings?success=true`,
-
-        cancel_url:
-          `${process.env.NEXT_PUBLIC_SITE_URL}/listing/${body.listingId}?canceled=true`,
 
         metadata: {
 
@@ -99,7 +108,22 @@ export async function POST(
 
           title:
             body.title,
+
+          startDate:
+            body.startDate,
+
+          endDate:
+            body.endDate,
+
+          totalPrice:
+            body.totalPrice,
         },
+
+        success_url:
+          `${process.env.NEXT_PUBLIC_SITE_URL}/success?session_id={CHECKOUT_SESSION_ID}`,
+
+        cancel_url:
+          `${process.env.NEXT_PUBLIC_SITE_URL}/cancel`,
       });
 
     return NextResponse.json({
@@ -118,6 +142,7 @@ export async function POST(
     return NextResponse.json(
 
       {
+
         error:
           error.message ||
           "Stripe Fehler",

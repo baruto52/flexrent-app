@@ -10,14 +10,22 @@ import Link from "next/link";
 import Image from "next/image";
 
 import Navbar from "@/components/Navbar";
-
 import Footer from "@/components/Footer";
 
 import {
+
   Heart,
+
   Trash2,
+
   MapPin,
+
   Sparkles,
+
+  Star,
+
+  ShieldCheck,
+
 } from "lucide-react";
 
 import { supabase }
@@ -34,6 +42,8 @@ type FavoriteListing = {
     id: string;
 
     title: string;
+
+    description?: string;
 
     price: number;
 
@@ -121,6 +131,7 @@ export default function FavoritesPage() {
             listings (
               id,
               title,
+              description,
               price,
               location,
               images,
@@ -209,14 +220,6 @@ export default function FavoritesPage() {
     favoriteId: string
   ) {
 
-    const confirmed =
-      confirm(
-        "Favorit entfernen?"
-      );
-
-    if (!confirmed)
-      return;
-
     try {
 
       await supabase
@@ -262,18 +265,29 @@ export default function FavoritesPage() {
           font-black
         "
       >
+
         Favoriten werden geladen...
+
       </div>
 
     );
   }
 
   return (
+
     <main className="min-h-screen bg-[#f5f7fb]">
 
       <Navbar />
 
-      <div className="max-w-7xl mx-auto px-4 py-10">
+      <div
+        className="
+          max-w-7xl
+          mx-auto
+          px-4
+          md:px-6
+          py-8
+        "
+      >
 
         {/* HEADER */}
 
@@ -282,56 +296,109 @@ export default function FavoritesPage() {
           <div
             className="
               flex
-              items-center
-              gap-5
-              mb-5
+              flex-col
+              md:flex-row
+              md:items-end
+              md:justify-between
+              gap-6
             "
           >
 
-            <div
-              className="
-                w-20
-                h-20
-                rounded-[28px]
-                bg-red-500
-                text-white
-                flex
-                items-center
-                justify-center
-                shadow-lg
-              "
-            >
-
-              <Heart
-                size={38}
-                fill="white"
-              />
-
-            </div>
-
             <div>
+
+              <div
+                className="
+                  inline-flex
+                  items-center
+                  gap-3
+                  px-5
+                  py-3
+                  rounded-full
+                  bg-red-500
+                  text-white
+                  font-black
+                  mb-6
+                "
+              >
+
+                <Heart
+                  size={20}
+                  fill="white"
+                />
+
+                Gespeicherte Listings
+
+              </div>
 
               <h1
                 className="
                   text-5xl
-                  md:text-6xl
+                  md:text-7xl
                   font-black
+                  leading-none
+                  tracking-tight
                 "
               >
+
                 Meine Favoriten
+
               </h1>
 
               <p
                 className="
                   text-gray-500
-                  text-xl
-                  mt-3
+                  text-lg
+                  md:text-2xl
+                  mt-5
+                  max-w-3xl
                 "
               >
+
+                Speichere interessante
+                Listings und finde sie
+                jederzeit schnell wieder.
+
+              </p>
+
+            </div>
+
+            <div
+              className="
+                bg-white
+                border
+                border-gray-100
+                rounded-3xl
+                px-8
+                py-6
+                shadow-sm
+                min-w-fit
+              "
+            >
+
+              <p
+                className="
+                  text-gray-400
+                  mb-2
+                "
+              >
+
+                Gespeichert
+
+              </p>
+
+              <h2
+                className="
+                  text-5xl
+                  font-black
+                  leading-none
+                "
+              >
+
                 {
                   favorites.length
-                } gespeicherte Listings
-              </p>
+                }
+
+              </h2>
 
             </div>
 
@@ -346,8 +413,9 @@ export default function FavoritesPage() {
           <div
             className="
               bg-white
-              rounded-[40px]
-              p-20
+              rounded-[44px]
+              p-10
+              md:p-24
               text-center
               shadow-sm
             "
@@ -355,8 +423,8 @@ export default function FavoritesPage() {
 
             <div
               className="
-                w-28
-                h-28
+                w-32
+                h-32
                 rounded-full
                 bg-red-500
                 text-white
@@ -365,11 +433,12 @@ export default function FavoritesPage() {
                 justify-center
                 mx-auto
                 mb-10
+                shadow-xl
               "
             >
 
               <Heart
-                size={50}
+                size={56}
                 fill="white"
               />
 
@@ -377,26 +446,61 @@ export default function FavoritesPage() {
 
             <h2
               className="
-                text-5xl
+                text-4xl
+                md:text-6xl
                 font-black
-                mb-5
+                mb-6
               "
             >
-              Keine Favoriten
+
+              Noch keine Favoriten
+
             </h2>
 
             <p
               className="
                 text-gray-500
-                text-2xl
-                max-w-2xl
+                text-lg
+                md:text-2xl
+                max-w-3xl
                 mx-auto
-                leading-10
+                leading-relaxed
               "
             >
-              Speichere Listings mit dem Herzsymbol,
-              um sie später schnell wiederzufinden.
+
+              Speichere Listings mit dem
+              Herzsymbol und entdecke
+              später schneller passende
+              Werkzeuge, Garagen,
+              Parkplätze oder Lagerräume.
+
             </p>
+
+            <Link
+              href="/"
+              className="
+                inline-flex
+                items-center
+                justify-center
+                gap-3
+                mt-10
+                h-16
+                px-8
+                rounded-2xl
+                bg-[#16d64d]
+                text-white
+                text-lg
+                font-black
+              "
+            >
+
+              <Sparkles
+                size={20}
+              />
+
+              Listings entdecken
+
+            </Link>
 
           </div>
 
@@ -426,16 +530,20 @@ export default function FavoritesPage() {
                     key={favorite.id}
                     className="
                       bg-white
-                      rounded-[36px]
+                      rounded-[40px]
                       overflow-hidden
                       shadow-sm
                       hover:shadow-2xl
                       transition-all
-                      duration-300
+                      duration-500
                       hover:-translate-y-2
+                      border
+                      border-gray-100
                       group
                     "
                   >
+
+                    {/* IMAGE */}
 
                     <Link
                       href={`/listing/${listing.id}`}
@@ -444,7 +552,7 @@ export default function FavoritesPage() {
                       <div
                         className="
                           relative
-                          h-80
+                          h-[320px]
                           overflow-hidden
                         "
                       >
@@ -460,11 +568,24 @@ export default function FavoritesPage() {
                           fill
                           className="
                             object-cover
-                            group-hover:scale-105
-                            transition
-                            duration-500
+                            group-hover:scale-110
+                            transition-all
+                            duration-700
                           "
                         />
+
+                        <div
+                          className="
+                            absolute
+                            inset-0
+                            bg-gradient-to-t
+                            from-black/40
+                            via-transparent
+                            to-transparent
+                          "
+                        />
+
+                        {/* CATEGORY */}
 
                         <div
                           className="
@@ -474,11 +595,12 @@ export default function FavoritesPage() {
                             px-4
                             py-2
                             rounded-full
-                            bg-black/70
-                            text-white
+                            bg-white/90
+                            backdrop-blur-md
+                            text-black
                             text-sm
-                            font-bold
-                            backdrop-blur
+                            font-black
+                            shadow-lg
                           "
                         >
 
@@ -489,7 +611,14 @@ export default function FavoritesPage() {
 
                         </div>
 
-                        <div
+                        {/* FAVORITE */}
+
+                        <button
+                          onClick={() =>
+                            removeFavorite(
+                              favorite.id
+                            )
+                          }
                           className="
                             absolute
                             top-5
@@ -498,10 +627,13 @@ export default function FavoritesPage() {
                             h-14
                             rounded-full
                             bg-white/90
-                            backdrop-blur
+                            backdrop-blur-md
                             flex
                             items-center
                             justify-center
+                            shadow-xl
+                            hover:scale-110
+                            transition
                           "
                         >
 
@@ -511,11 +643,58 @@ export default function FavoritesPage() {
                             color="red"
                           />
 
+                        </button>
+
+                        {/* PRICE */}
+
+                        <div
+                          className="
+                            absolute
+                            bottom-5
+                            left-5
+                            bg-white
+                            rounded-2xl
+                            px-5
+                            py-3
+                            shadow-2xl
+                          "
+                        >
+
+                          <p
+                            className="
+                              text-gray-400
+                              text-xs
+                              font-semibold
+                              mb-1
+                            "
+                          >
+
+                            Preis pro Tag
+
+                          </p>
+
+                          <h3
+                            className="
+                              text-3xl
+                              font-black
+                              leading-none
+                            "
+                          >
+
+                            €
+                            {
+                              listing.price
+                            }
+
+                          </h3>
+
                         </div>
 
                       </div>
 
                     </Link>
+
+                    {/* CONTENT */}
 
                     <div className="p-7">
 
@@ -524,123 +703,149 @@ export default function FavoritesPage() {
                           flex
                           items-start
                           justify-between
-                          gap-5
+                          gap-4
+                          mb-4
+                        "
+                      >
+
+                        <h2
+                          className="
+                            text-3xl
+                            font-black
+                            leading-tight
+                            line-clamp-2
+                          "
+                        >
+
+                          {
+                            listing.title
+                          }
+
+                        </h2>
+
+                        <div
+                          className="
+                            min-w-fit
+                            flex
+                            items-center
+                            gap-1
+                            bg-[#16d64d]/10
+                            text-[#16d64d]
+                            px-3
+                            py-2
+                            rounded-2xl
+                            font-black
+                            text-sm
+                          "
+                        >
+
+                          <Star
+                            size={14}
+                            fill="#16d64d"
+                          />
+
+                          4.9
+
+                        </div>
+
+                      </div>
+
+                      {/* LOCATION */}
+
+                      <div
+                        className="
+                          flex
+                          items-center
+                          gap-2
+                          text-gray-500
+                          mb-5
+                        "
+                      >
+
+                        <MapPin
+                          size={18}
+                        />
+
+                        <span className="line-clamp-1">
+
+                          {
+                            listing.location ||
+                            "Standort unbekannt"
+                          }
+
+                        </span>
+
+                      </div>
+
+                      {/* DESCRIPTION */}
+
+                      <p
+                        className="
+                          text-gray-600
+                          leading-7
+                          line-clamp-2
                           mb-6
                         "
                       >
 
-                        <div>
+                        {
+                          listing.description ||
+                          "Premium Listing auf FlexRent."
+                        }
 
-                          <h2
-                            className="
-                              text-3xl
-                              font-black
-                              mb-3
-                              line-clamp-1
-                            "
-                          >
-                            {
-                              listing.title
-                            }
-                          </h2>
+                      </p>
 
-                          <div
-                            className="
-                              flex
-                              items-center
-                              gap-2
-                              text-gray-500
-                            "
-                          >
-
-                            <MapPin
-                              size={18}
-                            />
-
-                            {
-                              listing.location ||
-                              "Unbekannt"
-                            }
-
-                          </div>
-
-                        </div>
-
-                        <button
-                          onClick={() =>
-                            removeFavorite(
-                              favorite.id
-                            )
-                          }
-                          className="
-                            w-14
-                            h-14
-                            rounded-2xl
-                            bg-red-500
-                            text-white
-                            flex
-                            items-center
-                            justify-center
-                            hover:scale-110
-                            transition
-                          "
-                        >
-
-                          <Trash2
-                            size={22}
-                          />
-
-                        </button>
-
-                      </div>
+                      {/* FOOTER */}
 
                       <div
                         className="
                           flex
                           items-center
                           justify-between
+                          pt-5
+                          border-t
+                          border-gray-100
                         "
                       >
 
-                        <div>
+                        <div
+                          className="
+                            flex
+                            items-center
+                            gap-2
+                            text-sm
+                            font-bold
+                            text-gray-700
+                          "
+                        >
 
-                          <p className="text-gray-500 mb-1">
-                            Preis
-                          </p>
-
-                          <h3
+                          <ShieldCheck
+                            size={18}
                             className="
-                              text-5xl
-                              font-black
+                              text-[#16d64d]
                             "
-                          >
-                            €
-                            {
-                              listing.price
-                            }
-                          </h3>
+                          />
+
+                          Verifiziert
 
                         </div>
 
                         <Link
                           href={`/listing/${listing.id}`}
                           className="
-                            h-14
-                            px-6
+                            h-12
+                            px-5
                             rounded-2xl
-                            bg-black
+                            bg-[#16d64d]
                             text-white
                             flex
                             items-center
                             justify-center
-                            gap-3
-                            font-bold
+                            text-sm
+                            font-black
+                            shadow-lg
                           "
                         >
-
-                          <Sparkles
-                            size={18}
-                          />
 
                           Öffnen
 
@@ -665,5 +870,6 @@ export default function FavoritesPage() {
       <Footer />
 
     </main>
+
   );
 }

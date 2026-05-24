@@ -17,6 +17,8 @@ import {
 
   Star,
 
+  ShieldCheck,
+
 } from "lucide-react";
 
 import { supabase }
@@ -135,20 +137,39 @@ export default function ListingCard({
     }
   }
 
+  const image =
+
+    Array.isArray(
+      listing.images
+    )
+
+      ? listing.images[0]
+
+      : typeof listing.images ===
+        "string"
+
+      ? JSON.parse(
+          listing.images || "[]"
+        )[0]
+
+      : "/placeholder.jpg";
+
   return (
 
     <Link
       href={`/listing/${listing.id}`}
       className="
+        group
         bg-white
-        rounded-[30px]
+        rounded-[34px]
         overflow-hidden
+        border
+        border-gray-100
         shadow-sm
         hover:shadow-2xl
         transition-all
-        duration-300
-        hover:-translate-y-1
-        group
+        duration-500
+        hover:-translate-y-2
       "
     >
 
@@ -157,71 +178,35 @@ export default function ListingCard({
       <div
         className="
           relative
-          h-60
+          h-[290px]
           overflow-hidden
         "
       >
 
         <Image
-          src={
-            Array.isArray(
-              listing.images
-            )
-              ? listing.images[0]
-              : typeof listing.images === "string"
-              ? JSON.parse(
-                  listing.images || "[]"
-                )[0]
-              : "/placeholder.jpg"
-          }
+          src={image}
           alt={listing.title}
           fill
           className="
             object-cover
-            group-hover:scale-105
-            transition
-            duration-500
+            group-hover:scale-110
+            transition-all
+            duration-700
           "
         />
 
-        {/* FAVORITE */}
+        {/* GRADIENT */}
 
-        <button
-          onClick={
-            toggleFavorite
-          }
+        <div
           className="
             absolute
-            top-4
-            right-4
-            w-11
-            h-11
-            rounded-full
-            bg-white/90
-            backdrop-blur
-            flex
-            items-center
-            justify-center
-            shadow-lg
-            z-10
+            inset-0
+            bg-gradient-to-t
+            from-black/40
+            via-transparent
+            to-transparent
           "
-        >
-
-          <Heart
-            size={20}
-            fill={
-              favorite
-                ? "red"
-                : "transparent"
-            }
-            color={
-              favorite
-                ? "red"
-                : "black"
-            }
-          />
-
-        </button>
+        />
 
         {/* CATEGORY */}
 
@@ -233,11 +218,12 @@ export default function ListingCard({
             px-4
             py-2
             rounded-full
-            bg-black/70
-            text-white
+            bg-white/90
+            backdrop-blur-md
+            text-black
             text-xs
-            font-bold
-            backdrop-blur
+            font-black
+            shadow-lg
             z-10
           "
         >
@@ -250,26 +236,159 @@ export default function ListingCard({
 
         </div>
 
+        {/* FAVORITE */}
+
+        <button
+          onClick={
+            toggleFavorite
+          }
+          className="
+            absolute
+            top-4
+            right-4
+            w-12
+            h-12
+            rounded-full
+            bg-white/90
+            backdrop-blur-md
+            flex
+            items-center
+            justify-center
+            shadow-xl
+            z-10
+            hover:scale-110
+            transition
+          "
+        >
+
+          <Heart
+            size={22}
+            fill={
+              favorite
+                ? "#ff0000"
+                : "transparent"
+            }
+            color={
+              favorite
+                ? "#ff0000"
+                : "#111"
+            }
+          />
+
+        </button>
+
+        {/* PRICE OVERLAY */}
+
+        <div
+          className="
+            absolute
+            bottom-5
+            left-5
+            bg-white
+            rounded-2xl
+            px-5
+            py-3
+            shadow-2xl
+            z-10
+          "
+        >
+
+          <p
+            className="
+              text-gray-400
+              text-xs
+              font-semibold
+              mb-1
+            "
+          >
+
+            Preis pro Tag
+
+          </p>
+
+          <div
+            className="
+              flex
+              items-end
+              gap-1
+            "
+          >
+
+            <span
+              className="
+                text-3xl
+                font-black
+                leading-none
+              "
+            >
+
+              €
+
+              {listing.price}
+
+            </span>
+
+          </div>
+
+        </div>
+
       </div>
 
       {/* CONTENT */}
 
-      <div className="p-5">
+      <div className="p-6">
 
         {/* TITLE */}
 
-        <h2
+        <div
           className="
-            text-2xl
-            font-black
-            line-clamp-1
-            mb-2
+            flex
+            items-start
+            justify-between
+            gap-3
+            mb-3
           "
         >
 
-          {listing.title}
+          <h2
+            className="
+              text-2xl
+              font-black
+              leading-tight
+              line-clamp-2
+            "
+          >
 
-        </h2>
+            {listing.title}
+
+          </h2>
+
+          <div
+            className="
+              min-w-fit
+              flex
+              items-center
+              gap-1
+              bg-[#16d64d]/10
+              text-[#16d64d]
+              px-3
+              py-2
+              rounded-2xl
+              font-black
+              text-sm
+            "
+          >
+
+            <Star
+              size={15}
+              fill="#16d64d"
+            />
+
+            4.9
+
+          </div>
+
+        </div>
 
         {/* LOCATION */}
 
@@ -280,11 +399,11 @@ export default function ListingCard({
             gap-2
             text-gray-500
             text-sm
-            mb-3
+            mb-4
           "
         >
 
-          <MapPin size={15} />
+          <MapPin size={16} />
 
           <span className="line-clamp-1">
 
@@ -300,7 +419,7 @@ export default function ListingCard({
           className="
             text-gray-600
             text-sm
-            leading-6
+            leading-7
             line-clamp-2
             mb-5
           "
@@ -310,70 +429,62 @@ export default function ListingCard({
 
         </p>
 
-        {/* BOTTOM */}
+        {/* FOOTER */}
 
         <div
           className="
             flex
-            items-end
+            items-center
             justify-between
+            pt-5
+            border-t
+            border-gray-100
           "
         >
 
-          {/* PRICE */}
-
-          <div>
-
-            <p
-              className="
-                text-gray-400
-                text-sm
-                mb-1
-              "
-            >
-
-              Preis pro Tag
-
-            </p>
-
-            <h3
-              className="
-                text-3xl
-                font-black
-              "
-            >
-
-              €
-
-              {listing.price}
-
-            </h3>
-
-          </div>
-
-          {/* RATING */}
+          {/* VERIFIED */}
 
           <div
             className="
               flex
               items-center
-              gap-1
-              bg-[#16d64d]/10
-              text-[#16d64d]
-              px-3
-              py-2
-              rounded-2xl
-              font-bold
+              gap-2
               text-sm
+              font-bold
+              text-gray-700
             "
           >
 
-            <Star
-              size={15}
-              fill="#16d64d"
+            <ShieldCheck
+              size={18}
+              className="
+                text-[#16d64d]
+              "
             />
 
-            4.9
+            Verifiziert
+
+          </div>
+
+          {/* BUTTON */}
+
+          <div
+            className="
+              h-11
+              px-5
+              rounded-2xl
+              bg-[#16d64d]
+              text-white
+              flex
+              items-center
+              justify-center
+              text-sm
+              font-black
+              shadow-lg
+            "
+          >
+
+            Anzeigen
 
           </div>
 

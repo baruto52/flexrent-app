@@ -10,21 +10,31 @@ import Link from "next/link";
 import Image from "next/image";
 
 import {
+
   Heart,
+
   MapPin,
+
   Star,
+
   ShieldCheck,
+
+  Eye,
+
 } from "lucide-react";
 
 import { supabase }
 from "@/lib/supabase";
 
 interface Props {
+
   listing: any;
 }
 
 export default function ListingCard({
+
   listing,
+
 }: Props) {
 
   const [user, setUser] =
@@ -32,6 +42,18 @@ export default function ListingCard({
 
   const [favorite, setFavorite] =
     useState(false);
+
+  const [favoritesCount, setFavoritesCount] =
+    useState(0);
+
+  const [verified, setVerified] =
+    useState(false);
+
+  const [rating, setRating] =
+    useState(0);
+
+  const [reviewsCount, setReviewsCount] =
+    useState(0);
 
   useEffect(() => {
 
@@ -46,15 +68,85 @@ export default function ListingCard({
     } =
       await supabase.auth.getSession();
 
-    if (!session)
+    if (session) {
+
+      setUser(
+        session.user
+      );
+
+      checkFavorite(
+        session.user.id
+      );
+    }
+
+    await Promise.all([
+
+      loadFavoritesCount(),
+
+      loadOwnerData(),
+    ]);
+  }
+
+  async function loadFavoritesCount() {
+
+    const {
+      count,
+    } =
+      await supabase
+        .from("favorites")
+        .select(
+          "*",
+          {
+            count: "exact",
+            head: true,
+          }
+        )
+        .eq(
+          "listing_id",
+          listing.id
+        );
+
+    setFavoritesCount(
+      count || 0
+    );
+  }
+
+  async function loadOwnerData() {
+
+    if (!listing.user_id)
       return;
 
-    setUser(
-      session.user
+    const {
+      data,
+    } =
+      await supabase
+        .from("profiles")
+        .select(`
+          verified,
+          rating,
+          reviews_count
+        `)
+        .eq(
+          "id",
+          listing.user_id
+        )
+        .maybeSingle();
+
+    if (!data)
+      return;
+
+    setVerified(
+      !!data.verified
     );
 
-    checkFavorite(
-      session.user.id
+    setRating(
+      Number(
+        data.rating || 0
+      )
+    );
+
+    setReviewsCount(
+      data.reviews_count || 0
     );
   }
 
@@ -65,7 +157,7 @@ export default function ListingCard({
     const { data } =
       await supabase
         .from("favorites")
-        .select("*")
+        .select("id")
         .eq(
           "user_id",
           userId
@@ -74,12 +166,11 @@ export default function ListingCard({
           "listing_id",
           listing.id
         )
-        .single();
+        .maybeSingle();
 
-    if (data) {
-
-      setFavorite(true);
-    }
+    setFavorite(
+      !!data
+    );
   }
 
   async function toggleFavorite(
@@ -87,6 +178,8 @@ export default function ListingCard({
   ) {
 
     e.preventDefault();
+
+    e.stopPropagation();
 
     if (!user) {
 
@@ -112,6 +205,15 @@ export default function ListingCard({
 
       setFavorite(false);
 
+      setFavoritesCount(
+        (prev) =>
+
+          Math.max(
+            prev - 1,
+            0
+          )
+      );
+
     } else {
 
       await supabase
@@ -126,6 +228,12 @@ export default function ListingCard({
         });
 
       setFavorite(true);
+
+      setFavoritesCount(
+        (prev) =>
+
+          prev + 1
+      );
     }
   }
 
@@ -195,7 +303,7 @@ export default function ListingCard({
       className="
         group
         bg-white
-        rounded-[34px]
+        rounded-[36px]
         overflow-hidden
         border
         border-gray-100
@@ -212,7 +320,7 @@ export default function ListingCard({
       <div
         className="
           relative
-          h-[290px]
+          h-[300px]
           overflow-hidden
           bg-gray-100
         "
@@ -238,7 +346,7 @@ export default function ListingCard({
             absolute
             inset-0
             bg-gradient-to-t
-            from-black/40
+            from-black/50
             via-transparent
             to-transparent
           "
@@ -255,11 +363,11 @@ export default function ListingCard({
             py-2
             rounded-full
             bg-white/90
-            backdrop-blur-md
+            backdrop-blur-xl
             text-black
             text-xs
             font-black
-            shadow-lg
+            shadow-xl
             z-10
           "
         >
@@ -281,14 +389,16 @@ export default function ListingCard({
             absolute
             top-4
             right-4
-            w-12
+            min-w-[52px]
             h-12
+            px-3
             rounded-full
             bg-white/90
-            backdrop-blur-md
+            backdrop-blur-xl
             flex
             items-center
             justify-center
+            gap-2
             shadow-xl
             z-10
             hover:scale-110
@@ -310,6 +420,23 @@ export default function ListingCard({
             }
           />
 
+          {favoritesCount > 0 && (
+
+            <span
+              className="
+                text-xs
+                font-black
+              "
+            >
+
+              {
+                favoritesCount
+              }
+
+            </span>
+
+          )}
+
         </button>
 
         {/* PRICE */}
@@ -320,9 +447,9 @@ export default function ListingCard({
             bottom-5
             left-5
             bg-white
-            rounded-2xl
+            rounded-3xl
             px-5
-            py-3
+            py-4
             shadow-2xl
             z-10
           "
@@ -379,7 +506,7 @@ export default function ListingCard({
             flex
             items-start
             justify-between
-            gap-3
+            gap-4
             mb-3
           "
         >
@@ -418,7 +545,13 @@ export default function ListingCard({
               fill="#16d64d"
             />
 
-            4.9
+            {
+              rating > 0
+
+                ? rating.toFixed(1)
+
+                : "Neu"
+            }
 
           </div>
 
@@ -489,32 +622,38 @@ export default function ListingCard({
 
             <ShieldCheck
               size={18}
-              className="
-                text-[#16d64d]
-              "
+              className={
+                verified
+
+                  ? "text-[#16d64d]"
+
+                  : "text-gray-300"
+              }
             />
 
-            Verifiziert
+            {verified
+
+              ? "Verifiziert"
+
+              : "Nicht verifiziert"}
 
           </div>
 
           <div
             className="
-              h-11
-              px-5
-              rounded-2xl
-              bg-[#16d64d]
-              text-white
               flex
               items-center
-              justify-center
+              gap-2
               text-sm
-              font-black
-              shadow-lg
+              font-bold
+              text-gray-500
             "
           >
 
-            Anzeigen
+            <Eye size={16} />
+
+            {reviewsCount}
+            Reviews
 
           </div>
 
@@ -523,5 +662,6 @@ export default function ListingCard({
       </div>
 
     </Link>
+
   );
 }

@@ -17,13 +17,11 @@ import {
 
   Sparkles,
 
-  ShieldCheck,
-
   CheckCircle2,
 
-  Clock3,
-
   XCircle,
+
+  Clock3,
 
 } from "lucide-react";
 
@@ -146,10 +144,9 @@ export default function BookingsPage() {
   ) {
 
     const channel =
-      supabase
-        .channel(
-          `bookings-${userId}`
-        );
+      supabase.channel(
+        `bookings-${userId}`
+      );
 
     channel.on(
 
@@ -245,13 +242,26 @@ export default function BookingsPage() {
     }
   }
 
+  /*
+    STATS
+  */
+
   const activeBookings =
 
     bookings.filter(
       (booking) =>
 
-        booking.status !==
-        "cancelled"
+        booking.status ===
+        "approved"
+    ).length;
+
+  const pendingBookings =
+
+    bookings.filter(
+      (booking) =>
+
+        booking.status ===
+        "pending"
     ).length;
 
   const cancelledBookings =
@@ -386,9 +396,9 @@ export default function BookingsPage() {
               "
             >
 
-              Verwalte deine aktiven
-              und vergangenen Buchungen
-              auf FlexRent.
+              Verwalte deine aktiven,
+              offenen und vergangenen
+              Buchungen auf FlexRent.
 
             </p>
 
@@ -400,10 +410,12 @@ export default function BookingsPage() {
             className="
               grid
               grid-cols-2
-              md:grid-cols-3
+              md:grid-cols-4
               gap-5
             "
           >
+
+            {/* ACTIVE */}
 
             <div
               className="
@@ -451,6 +463,56 @@ export default function BookingsPage() {
 
             </div>
 
+            {/* PENDING */}
+
+            <div
+              className="
+                bg-white
+                rounded-3xl
+                p-6
+                shadow-sm
+                border
+                border-gray-100
+                min-w-[170px]
+              "
+            >
+
+              <Clock3
+                size={30}
+                className="
+                  text-yellow-500
+                  mb-5
+                "
+              />
+
+              <p
+                className="
+                  text-gray-400
+                  mb-2
+                "
+              >
+
+                Offen
+
+              </p>
+
+              <h2
+                className="
+                  text-4xl
+                  font-black
+                "
+              >
+
+                {
+                  pendingBookings
+                }
+
+              </h2>
+
+            </div>
+
+            {/* CANCELLED */}
+
             <div
               className="
                 bg-white
@@ -496,6 +558,8 @@ export default function BookingsPage() {
               </h2>
 
             </div>
+
+            {/* TOTAL */}
 
             <div
               className="

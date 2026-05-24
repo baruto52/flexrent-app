@@ -21,9 +21,17 @@ import BookingCalendar from "@/components/BookingCalendar";
 import ListingMap from "@/components/ListingMap";
 
 import {
+
   MessageCircle,
+
   MapPin,
+
+  ShieldCheck,
+
   Star,
+
+  Clock3,
+
 } from "lucide-react";
 
 import { supabase }
@@ -307,28 +315,6 @@ export default function ListingPage() {
 
       setCheckoutLoading(true);
 
-      localStorage.setItem(
-        "pendingBooking",
-
-        JSON.stringify({
-
-          listingId:
-            listing.id,
-
-          renterId:
-            user.id,
-
-          ownerId:
-            listing.user_id,
-
-          totalPrice,
-
-          startDate,
-
-          endDate,
-        })
-      );
-
       const response =
         await fetch(
           "/api/checkout",
@@ -405,7 +391,16 @@ export default function ListingPage() {
 
     return (
 
-      <div className="min-h-screen flex items-center justify-center text-3xl font-black">
+      <div
+        className="
+          min-h-screen
+          flex
+          items-center
+          justify-center
+          text-3xl
+          font-black
+        "
+      >
 
         Listing wird geladen...
 
@@ -418,7 +413,16 @@ export default function ListingPage() {
 
     return (
 
-      <div className="min-h-screen flex items-center justify-center text-4xl font-black">
+      <div
+        className="
+          min-h-screen
+          flex
+          items-center
+          justify-center
+          text-4xl
+          font-black
+        "
+      >
 
         Listing nicht gefunden
 
@@ -429,256 +433,579 @@ export default function ListingPage() {
 
   return (
 
-    <main className="min-h-screen bg-[#f7f7f7]">
+    <main className="min-h-screen bg-[#f5f7fb]">
 
       <Navbar />
 
-      <div className="max-w-7xl mx-auto px-4 md:px-6 py-6 md:py-10">
+      <div
+        className="
+          max-w-7xl
+          mx-auto
+          px-4
+          md:px-6
+          py-6
+          md:py-10
+        "
+      >
 
-        <div className="grid lg:grid-cols-2 gap-8 md:gap-10">
+        {/* HEADER */}
+
+        <div className="mb-8">
+
+          <div
+            className="
+              flex
+              flex-wrap
+              items-center
+              gap-4
+              mb-5
+            "
+          >
+
+            <div
+              className="
+                px-4
+                py-2
+                rounded-full
+                bg-[#16d64d]
+                text-white
+                text-sm
+                font-black
+              "
+            >
+
+              {
+                listing.category ||
+                "Listing"
+              }
+
+            </div>
+
+            <div
+              className="
+                flex
+                items-center
+                gap-2
+                text-sm
+                font-bold
+                text-gray-600
+              "
+            >
+
+              <Star
+                size={16}
+                className="
+                  text-yellow-400
+                  fill-yellow-400
+                "
+              />
+
+              {averageRating}
+
+            </div>
+
+            <div
+              className="
+                flex
+                items-center
+                gap-2
+                text-sm
+                font-bold
+                text-gray-600
+              "
+            >
+
+              <ShieldCheck
+                size={16}
+                className="
+                  text-[#16d64d]
+                "
+              />
+
+              Verifiziert
+
+            </div>
+
+          </div>
+
+          <h1
+            className="
+              text-4xl
+              md:text-6xl
+              font-black
+              leading-tight
+              mb-5
+            "
+          >
+
+            {listing.title}
+
+          </h1>
+
+          <div
+            className="
+              flex
+              items-center
+              gap-3
+              text-gray-500
+              text-lg
+            "
+          >
+
+            <MapPin size={20} />
+
+            {
+              listing.location ||
+              "Standort unbekannt"
+            }
+
+          </div>
+
+        </div>
+
+        {/* MAIN GRID */}
+
+        <div
+          className="
+            grid
+            lg:grid-cols-[1.2fr_0.8fr]
+            gap-10
+          "
+        >
 
           {/* LEFT */}
 
-          <div>
+          <div className="space-y-10">
 
-            <ImageGallery
-              images={listing.images}
+            {/* GALLERY */}
+
+            <div
+              className="
+                bg-white
+                rounded-[40px]
+                p-3
+                shadow-sm
+              "
+            >
+
+              <ImageGallery
+                images={listing.images}
+              />
+
+            </div>
+
+            {/* DESCRIPTION */}
+
+            <div
+              className="
+                bg-white
+                rounded-[40px]
+                p-7
+                md:p-10
+                shadow-sm
+              "
+            >
+
+              <h2
+                className="
+                  text-3xl
+                  md:text-4xl
+                  font-black
+                  mb-8
+                "
+              >
+
+                Beschreibung
+
+              </h2>
+
+              <p
+                className="
+                  text-gray-700
+                  leading-9
+                  text-lg
+                "
+              >
+
+                {
+                  listing.description ||
+                  "Keine Beschreibung vorhanden."
+                }
+
+              </p>
+
+            </div>
+
+            {/* HOST */}
+
+            {owner && (
+
+              <div
+                className="
+                  bg-white
+                  rounded-[40px]
+                  p-7
+                  md:p-10
+                  shadow-sm
+                "
+              >
+
+                <h2
+                  className="
+                    text-3xl
+                    md:text-4xl
+                    font-black
+                    mb-8
+                  "
+                >
+
+                  Vermieter
+
+                </h2>
+
+                <Link
+                  href={`/user/${owner.id}`}
+                  className="
+                    flex
+                    items-center
+                    gap-5
+                  "
+                >
+
+                  <div
+                    className="
+                      relative
+                      w-24
+                      h-24
+                      rounded-full
+                      overflow-hidden
+                      bg-gray-100
+                    "
+                  >
+
+                    <Image
+                      src={
+                        owner.avatar_url ||
+                        "https://placehold.co/300x300/png"
+                      }
+                      alt="Host"
+                      fill
+                      className="
+                        object-cover
+                      "
+                      unoptimized
+                    />
+
+                  </div>
+
+                  <div>
+
+                    <h3
+                      className="
+                        text-2xl
+                        font-black
+                        mb-2
+                      "
+                    >
+
+                      {
+                        owner.full_name ||
+                        "Host"
+                      }
+
+                    </h3>
+
+                    <div
+                      className="
+                        flex
+                        items-center
+                        gap-2
+                        text-gray-500
+                      "
+                    >
+
+                      <Clock3 size={16} />
+
+                      Antwortet schnell
+
+                    </div>
+
+                  </div>
+
+                </Link>
+
+              </div>
+
+            )}
+
+            {/* MAP */}
+
+            <div
+              className="
+                bg-white
+                rounded-[40px]
+                p-5
+                md:p-8
+                shadow-sm
+              "
+            >
+
+              <h2
+                className="
+                  text-3xl
+                  md:text-4xl
+                  font-black
+                  mb-8
+                "
+              >
+
+                Standort
+
+              </h2>
+
+              <ListingMap
+                lat={
+                  listing.latitude ||
+                  52.52
+                }
+                lng={
+                  listing.longitude ||
+                  13.405
+                }
+              />
+
+            </div>
+
+            {/* REVIEWS */}
+
+            <ReviewsSection
+              listingId={listing.id}
             />
 
           </div>
 
           {/* RIGHT */}
 
-          <div className="bg-white rounded-[32px] md:rounded-[40px] p-6 md:p-10 shadow-sm h-fit lg:sticky lg:top-28">
+          <div>
 
-            <div className="flex items-start justify-between gap-5 mb-6">
+            <div
+              className="
+                sticky
+                top-28
+                bg-white
+                rounded-[40px]
+                p-6
+                md:p-8
+                shadow-xl
+                border
+                border-gray-100
+              "
+            >
 
-              <div>
+              {/* PRICE */}
 
-                <h1 className="text-4xl md:text-5xl font-black mb-5 leading-tight">
+              <div className="mb-8">
 
-                  {listing.title}
+                <p
+                  className="
+                    text-gray-400
+                    mb-2
+                  "
+                >
 
-                </h1>
+                  Preis pro Tag
 
-                <div className="flex items-center gap-3 text-gray-500 text-base md:text-lg mb-5">
+                </p>
 
-                  <MapPin size={20} />
+                <div
+                  className="
+                    flex
+                    items-end
+                    gap-2
+                  "
+                >
 
-                  {
-                    listing.location ||
-                    "Standort unbekannt"
-                  }
+                  <h2
+                    className="
+                      text-5xl
+                      md:text-6xl
+                      font-black
+                      leading-none
+                    "
+                  >
+
+                    €
+
+                    {listing.price}
+
+                  </h2>
+
+                  <span
+                    className="
+                      text-gray-500
+                      text-lg
+                      mb-1
+                    "
+                  >
+
+                    / Tag
+
+                  </span>
 
                 </div>
 
               </div>
 
-            </div>
+              {/* CALENDAR */}
 
-            <div className="flex items-center gap-3 mb-8">
+              <div className="mb-8">
 
-              <Star
-                size={22}
-                className="text-yellow-400 fill-yellow-400"
-              />
+                <BookingCalendar
+                  startDate={startDate}
+                  endDate={endDate}
+                  setStartDate={setStartDate}
+                  setEndDate={setEndDate}
+                  excludedDates={excludedDates}
+                />
 
-              <span className="font-black text-lg md:text-xl">
+              </div>
 
-                {averageRating} Bewertung
+              {/* TOTAL */}
 
-              </span>
+              {totalDays > 0 && (
 
-            </div>
+                <div
+                  className="
+                    bg-[#f5f7fb]
+                    rounded-3xl
+                    p-6
+                    mb-8
+                  "
+                >
 
-            <div className="mb-10">
+                  <div
+                    className="
+                      flex
+                      items-center
+                      justify-between
+                      mb-4
+                    "
+                  >
 
-              <p className="text-gray-500 mb-2">
+                    <span
+                      className="
+                        text-gray-500
+                      "
+                    >
 
-                Preis pro Tag
+                      Tage
 
-              </p>
+                    </span>
 
-              <h2 className="text-5xl md:text-6xl font-black">
+                    <span
+                      className="
+                        font-black
+                      "
+                    >
 
-                €{listing.price}
+                      {totalDays}
 
-              </h2>
+                    </span>
 
-            </div>
+                  </div>
 
-            <p className="text-gray-700 leading-8 text-base md:text-lg mb-10">
+                  <div
+                    className="
+                      flex
+                      items-center
+                      justify-between
+                    "
+                  >
 
-              {
-                listing.description ||
-                "Keine Beschreibung vorhanden."
-              }
+                    <span
+                      className="
+                        text-gray-500
+                      "
+                    >
 
-            </p>
+                      Gesamtpreis
 
-            {owner && (
+                    </span>
 
-              <Link
-                href={`/user/${owner.id}`}
-                className="flex items-center gap-5 bg-[#f5f7fb] rounded-[28px] p-5 md:p-6 mb-8"
-              >
+                    <span
+                      className="
+                        text-3xl
+                        font-black
+                      "
+                    >
 
-                <div className="relative w-16 h-16 md:w-20 md:h-20 rounded-full overflow-hidden bg-gray-100">
+                      €{totalPrice}
 
-                  <Image
-                    src={
-                      owner.avatar_url ||
-                      "https://placehold.co/300x300/png"
-                    }
-                    alt="Host"
-                    fill
-                    className="object-cover"
-                    unoptimized
+                    </span>
+
+                  </div>
+
+                </div>
+
+              )}
+
+              {/* BUTTONS */}
+
+              <div className="space-y-4">
+
+                <button
+                  onClick={handleCheckout}
+                  disabled={checkoutLoading}
+                  className="
+                    w-full
+                    h-16
+                    rounded-2xl
+                    bg-[#16d64d]
+                    text-white
+                    text-lg
+                    md:text-xl
+                    font-black
+                    hover:scale-[1.01]
+                    transition
+                  "
+                >
+
+                  Jetzt buchen
+
+                </button>
+
+                <button
+                  onClick={handleMessage}
+                  className="
+                    w-full
+                    h-16
+                    rounded-2xl
+                    border
+                    border-gray-200
+                    flex
+                    items-center
+                    justify-center
+                    gap-3
+                    text-lg
+                    font-bold
+                    hover:bg-gray-50
+                    transition
+                  "
+                >
+
+                  <MessageCircle
+                    size={22}
                   />
 
-                </div>
+                  Nachricht senden
 
-                <div>
-
-                  <h3 className="text-xl md:text-2xl font-black mb-1">
-
-                    {
-                      owner.full_name ||
-                      "Host"
-                    }
-
-                  </h3>
-
-                  <p className="text-gray-500 text-sm md:text-base">
-
-                    Profil ansehen
-
-                  </p>
-
-                </div>
-
-              </Link>
-
-            )}
-
-            <div className="mb-8">
-
-              <BookingCalendar
-                startDate={startDate}
-                endDate={endDate}
-                setStartDate={setStartDate}
-                setEndDate={setEndDate}
-                excludedDates={excludedDates}
-              />
-
-            </div>
-
-            {totalDays > 0 && (
-
-              <div className="bg-[#f5f7fb] rounded-3xl p-6 mb-8">
-
-                <div className="flex items-center justify-between mb-3">
-
-                  <span className="text-gray-500">
-
-                    Tage
-
-                  </span>
-
-                  <span className="font-bold">
-
-                    {totalDays}
-
-                  </span>
-
-                </div>
-
-                <div className="flex items-center justify-between">
-
-                  <span className="text-gray-500">
-
-                    Gesamtpreis
-
-                  </span>
-
-                  <span className="text-3xl font-black">
-
-                    €{totalPrice}
-
-                  </span>
-
-                </div>
+                </button>
 
               </div>
-
-            )}
-
-            <div className="space-y-4">
-
-              <button
-                onClick={handleCheckout}
-                disabled={checkoutLoading}
-                className="w-full h-14 md:h-16 rounded-2xl bg-[#16d64d] text-white text-lg md:text-xl font-black"
-              >
-
-                Jetzt buchen
-
-              </button>
-
-              <button
-                onClick={handleMessage}
-                className="w-full h-14 md:h-16 rounded-2xl border border-gray-200 flex items-center justify-center gap-3 text-base md:text-lg font-bold"
-              >
-
-                <MessageCircle size={22} />
-
-                Nachricht senden
-
-              </button>
 
             </div>
 
           </div>
-
-        </div>
-
-        {/* MAP */}
-
-        <div className="mt-16">
-
-          <h2
-            className="
-              text-3xl
-              md:text-4xl
-              font-black
-              mb-6
-            "
-          >
-
-            Standort
-
-          </h2>
-
-          <ListingMap
-            lat={
-              listing.latitude ||
-              52.52
-            }
-            lng={
-              listing.longitude ||
-              13.405
-            }
-          />
-
-        </div>
-
-        {/* REVIEWS */}
-
-        <div className="mt-16">
-
-          <ReviewsSection
-            listingId={listing.id}
-          />
 
         </div>
 

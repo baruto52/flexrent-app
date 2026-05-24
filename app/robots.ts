@@ -5,6 +5,7 @@ export default function robots():
 MetadataRoute.Robots {
 
   const baseUrl =
+
     process.env
       .NEXT_PUBLIC_SITE_URL ||
 
@@ -12,12 +13,25 @@ MetadataRoute.Robots {
 
   return {
 
-    rules: {
+    rules: [
 
-      userAgent: "*",
+      {
+        userAgent: "*",
 
-      allow: "/",
-    },
+        allow: "/",
+
+        disallow: [
+
+          "/admin",
+
+          "/api",
+
+          "/login",
+
+          "/register",
+        ],
+      },
+    ],
 
     sitemap:
       `${baseUrl}/sitemap.xml`,

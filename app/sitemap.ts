@@ -1,64 +1,97 @@
 import { MetadataRoute }
 from "next";
 
-export default function sitemap():
-MetadataRoute.Sitemap {
+import { supabase }
+from "@/lib/supabase";
+
+export default async function sitemap():
+Promise<MetadataRoute.Sitemap> {
 
   const baseUrl =
+
     process.env
       .NEXT_PUBLIC_SITE_URL ||
 
     "https://flexrent.de";
 
+  /*
+    STATIC PAGES
+  */
+
+  const staticPages = [
+
+    "",
+
+    "/map",
+
+    "/favorites",
+
+    "/bookings",
+
+    "/dashboard",
+
+    "/notifications",
+
+    "/messages",
+
+    "/create",
+  ].map((route) => ({
+
+    url:
+      `${baseUrl}${route}`,
+
+    lastModified:
+      new Date(),
+
+    changeFrequency:
+      "daily" as const,
+
+    priority:
+      1,
+  }));
+
+  /*
+    DYNAMIC LISTINGS
+  */
+
+  const {
+    data: listings,
+  } =
+    await supabase
+      .from("listings")
+      .select(
+        "id, updated_at"
+      )
+      .eq(
+        "active",
+        true
+      );
+
+  const listingPages =
+
+    listings?.map(
+      (listing) => ({
+
+        url:
+          `${baseUrl}/listing/${listing.id}`,
+
+        lastModified:
+          new Date(
+            listing.updated_at
+          ),
+
+        changeFrequency:
+          "daily" as const,
+
+        priority:
+          0.9,
+      })
+    ) || [];
+
   return [
 
-    {
-      url: baseUrl,
-      lastModified:
-        new Date(),
-      changeFrequency:
-        "daily",
-      priority: 1,
-    },
+    ...staticPages,
 
-    {
-      url:
-        `${baseUrl}/favorites`,
-      lastModified:
-        new Date(),
-      changeFrequency:
-        "weekly",
-      priority: 0.8,
-    },
-
-    {
-      url:
-        `${baseUrl}/bookings`,
-      lastModified:
-        new Date(),
-      changeFrequency:
-        "weekly",
-      priority: 0.8,
-    },
-
-    {
-      url:
-        `${baseUrl}/dashboard`,
-      lastModified:
-        new Date(),
-      changeFrequency:
-        "weekly",
-      priority: 0.7,
-    },
-
-    {
-      url:
-        `${baseUrl}/notifications`,
-      lastModified:
-        new Date(),
-      changeFrequency:
-        "daily",
-      priority: 0.7,
-    },
+    ...listingPages,
   ];
 }

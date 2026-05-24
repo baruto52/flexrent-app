@@ -5,9 +5,6 @@ import {
   useState,
 } from "react";
 
-import Image from "next/image";
-import Link from "next/link";
-
 import {
   useParams,
   useRouter,
@@ -427,10 +424,6 @@ export default function ListingPage() {
     );
   }
 
-  /*
-    REPORT LISTING
-  */
-
   async function submitReport() {
 
     if (!user) {
@@ -491,16 +484,7 @@ export default function ListingPage() {
 
     return (
 
-      <div
-        className="
-          min-h-screen
-          flex
-          items-center
-          justify-center
-          text-3xl
-          font-black
-        "
-      >
+      <div className="min-h-screen flex items-center justify-center text-3xl font-black">
 
         Listing wird geladen...
 
@@ -513,16 +497,7 @@ export default function ListingPage() {
 
     return (
 
-      <div
-        className="
-          min-h-screen
-          flex
-          items-center
-          justify-center
-          text-4xl
-          font-black
-        "
-      >
+      <div className="min-h-screen flex items-center justify-center text-4xl font-black">
 
         Listing nicht gefunden
 
@@ -533,335 +508,287 @@ export default function ListingPage() {
 
   return (
 
-    <>
+    <main className="min-h-screen bg-[#f5f7fb]">
 
-      <main className="min-h-screen bg-[#f5f7fb]">
+      <Navbar />
 
-        <Navbar />
+      <div className="max-w-7xl mx-auto px-4 md:px-6 py-6 md:py-10">
 
-        {/* REPORT MODAL */}
+        {/* HEADER */}
 
-        {reportOpen && (
+        <div className="mb-10">
 
-          <div
-            className="
-              fixed
-              inset-0
-              z-[100]
-              bg-black/50
-              backdrop-blur-sm
-              flex
-              items-center
-              justify-center
-              p-4
-            "
-          >
+          <div className="flex flex-wrap items-center gap-4 mb-5">
 
-            <div
-              className="
-                bg-white
-                rounded-[40px]
-                p-8
-                max-w-2xl
-                w-full
-              "
-            >
+            <div className="px-4 py-2 rounded-full bg-[#16d64d] text-white text-sm font-black">
 
-              <div
-                className="
-                  flex
-                  items-center
-                  justify-between
-                  mb-8
-                "
-              >
+              {listing.category || "Listing"}
 
-                <h2
-                  className="
-                    text-4xl
-                    font-black
-                  "
-                >
+            </div>
 
-                  Listing melden
+            <div className="flex items-center gap-2 text-sm font-bold text-gray-600">
 
-                </h2>
+              <Star
+                size={16}
+                className="text-yellow-400 fill-yellow-400"
+              />
 
-                <button
-                  onClick={() =>
-                    setReportOpen(false)
-                  }
-                >
+              {averageRating}
 
-                  <X size={30} />
+            </div>
 
-                </button>
+            <div className="flex items-center gap-2 text-sm font-bold text-gray-600">
 
-              </div>
+              <ShieldCheck
+                size={16}
+                className="text-[#16d64d]"
+              />
 
-              <div className="space-y-6">
-
-                <select
-                  value={reportReason}
-                  onChange={(e) =>
-                    setReportReason(
-                      e.target.value
-                    )
-                  }
-                  className="
-                    w-full
-                    h-16
-                    rounded-2xl
-                    border
-                    border-gray-200
-                    px-5
-                    text-lg
-                    outline-none
-                  "
-                >
-
-                  <option>
-                    Spam
-                  </option>
-
-                  <option>
-                    Betrug
-                  </option>
-
-                  <option>
-                    Falsche Bilder
-                  </option>
-
-                  <option>
-                    Verbotener Inhalt
-                  </option>
-
-                  <option>
-                    Sonstiges
-                  </option>
-
-                </select>
-
-                <textarea
-                  value={reportMessage}
-                  onChange={(e) =>
-                    setReportMessage(
-                      e.target.value
-                    )
-                  }
-                  placeholder="Beschreibe das Problem..."
-                  className="
-                    w-full
-                    h-40
-                    rounded-2xl
-                    border
-                    border-gray-200
-                    p-5
-                    outline-none
-                    resize-none
-                    text-lg
-                  "
-                />
-
-                <button
-                  onClick={
-                    submitReport
-                  }
-                  disabled={
-                    reportLoading
-                  }
-                  className="
-                    w-full
-                    h-16
-                    rounded-2xl
-                    bg-red-500
-                    text-white
-                    text-lg
-                    font-black
-                  "
-                >
-
-                  {reportLoading
-
-                    ? "Wird gesendet..."
-
-                    : "Listing melden"}
-
-                </button>
-
-              </div>
+              Verifiziert
 
             </div>
 
           </div>
 
-        )}
+          <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
 
-        {/* REST DEINER PAGE */}
+            <div>
 
-        <div
-          className="
-            max-w-7xl
-            mx-auto
-            px-4
-            md:px-6
-            py-6
-            md:py-10
-          "
-        >
+              <h1 className="text-4xl md:text-6xl font-black leading-tight mb-5">
 
-          {/* HEADER */}
+                {listing.title}
 
-          <div className="mb-8">
+              </h1>
 
-            <div
-              className="
-                flex
-                flex-wrap
-                items-center
-                gap-4
-                mb-5
-              "
-            >
+              <div className="flex items-center gap-3 text-gray-500 text-lg">
 
-              <div
-                className="
-                  px-4
-                  py-2
-                  rounded-full
-                  bg-[#16d64d]
-                  text-white
-                  text-sm
-                  font-black
-                "
-              >
+                <MapPin size={20} />
 
-                {
-                  listing.category ||
-                  "Listing"
-                }
-
-              </div>
-
-              <div
-                className="
-                  flex
-                  items-center
-                  gap-2
-                  text-sm
-                  font-bold
-                  text-gray-600
-                "
-              >
-
-                <Star
-                  size={16}
-                  className="
-                    text-yellow-400
-                    fill-yellow-400
-                  "
-                />
-
-                {averageRating}
-
-              </div>
-
-              <div
-                className="
-                  flex
-                  items-center
-                  gap-2
-                  text-sm
-                  font-bold
-                  text-gray-600
-                "
-              >
-
-                <ShieldCheck
-                  size={16}
-                  className="
-                    text-[#16d64d]
-                  "
-                />
-
-                Verifiziert
+                {listing.location || "Standort unbekannt"}
 
               </div>
 
             </div>
 
-            <div
-              className="
-                flex
-                flex-col
-                lg:flex-row
-                lg:items-start
-                lg:justify-between
-                gap-6
-              "
+            <button
+              onClick={() =>
+                setReportOpen(true)
+              }
+              className="h-14 px-6 rounded-2xl bg-red-500 text-white flex items-center justify-center gap-3 font-black"
             >
 
-              <div>
+              <Flag size={20} />
 
-                <h1
-                  className="
-                    text-4xl
-                    md:text-6xl
-                    font-black
-                    leading-tight
-                    mb-5
-                  "
-                >
+              Melden
 
-                  {listing.title}
+            </button>
 
-                </h1>
+          </div>
 
-                <div
-                  className="
-                    flex
-                    items-center
-                    gap-3
-                    text-gray-500
-                    text-lg
-                  "
-                >
+        </div>
 
-                  <MapPin size={20} />
+        {/* CONTENT */}
 
-                  {
-                    listing.location ||
-                    "Standort unbekannt"
-                  }
+        <div className="grid grid-cols-1 xl:grid-cols-[1.2fr_0.8fr] gap-10">
+
+          {/* LEFT */}
+
+          <div className="space-y-10">
+
+            <ImageGallery
+              images={listing.images}
+            />
+
+            <div className="bg-white rounded-[40px] p-8 shadow-sm">
+
+              <h2 className="text-4xl font-black mb-6">
+
+                Beschreibung
+
+              </h2>
+
+              <p className="text-gray-600 text-lg leading-10 whitespace-pre-line">
+
+                {listing.description}
+
+              </p>
+
+            </div>
+
+            {/* OWNER */}
+
+            <div className="bg-white rounded-[40px] p-8 shadow-sm">
+
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-8">
+
+                <div className="flex items-center gap-5">
+
+                  <img
+                    src={
+                      owner?.avatar_url ||
+
+                      "https://placehold.co/200x200/png"
+                    }
+                    className="w-24 h-24 rounded-full object-cover"
+                  />
+
+                  <div>
+
+                    <h3 className="text-3xl font-black mb-2">
+
+                      {owner?.full_name || "Gastgeber"}
+
+                    </h3>
+
+                    <div className="flex items-center gap-2 text-gray-500">
+
+                      <Clock3 size={18} />
+
+                      Antwortet schnell
+
+                    </div>
+
+                  </div>
 
                 </div>
 
+                <button
+                  onClick={handleMessage}
+                  className="h-16 px-8 rounded-2xl bg-black text-white flex items-center justify-center gap-3 font-black text-lg"
+                >
+
+                  <MessageCircle size={22} />
+
+                  Nachricht senden
+
+                </button>
+
               </div>
 
-              {/* REPORT BUTTON */}
+            </div>
+
+            {/* MAP */}
+
+            <div className="bg-white rounded-[40px] p-8 shadow-sm">
+
+              <h2 className="text-4xl font-black mb-8">
+
+                Standort
+
+              </h2>
+
+              <ListingMap
+                lat={listing.latitude}
+                lng={listing.longitude}
+                title={listing.title}
+                image={listing.images?.[0]}
+                price={listing.price}
+                location={listing.location}
+              />
+
+            </div>
+
+            {/* REVIEWS */}
+
+            <ReviewsSection
+              listingId={listing.id}
+              ownerId={listing.user_id}
+              user={user}
+            />
+
+          </div>
+
+          {/* RIGHT */}
+
+          <div className="xl:sticky xl:top-28 h-fit">
+
+            <div className="bg-white rounded-[40px] p-8 shadow-sm">
+
+              <div className="flex items-end gap-3 mb-8">
+
+                <span className="text-6xl font-black">
+
+                  €
+                  {listing.price}
+
+                </span>
+
+                <span className="text-gray-500 text-xl mb-2">
+
+                  / {listing.rental_type}
+
+                </span>
+
+              </div>
+
+              <BookingCalendar
+                startDate={startDate}
+                endDate={endDate}
+                setStartDate={setStartDate}
+                setEndDate={setEndDate}
+                excludedDates={excludedDates}
+              />
+
+              {totalDays > 0 && (
+
+                <div className="mt-8 space-y-5">
+
+                  <div className="flex items-center justify-between">
+
+                    <span className="text-gray-500">
+
+                      €
+                      {listing.price}
+                      {" "}
+                      ×
+                      {" "}
+                      {totalDays}
+                      {" "}
+                      Tage
+
+                    </span>
+
+                    <span className="font-black">
+
+                      €
+                      {totalPrice}
+
+                    </span>
+
+                  </div>
+
+                  <div className="border-t pt-5 flex items-center justify-between">
+
+                    <span className="text-2xl font-black">
+
+                      Gesamt
+
+                    </span>
+
+                    <span className="text-3xl font-black text-[#16d64d]">
+
+                      €
+                      {totalPrice}
+
+                    </span>
+
+                  </div>
+
+                </div>
+
+              )}
 
               <button
-                onClick={() =>
-                  setReportOpen(true)
-                }
-                className="
-                  h-14
-                  px-6
-                  rounded-2xl
-                  bg-red-500
-                  text-white
-                  flex
-                  items-center
-                  justify-center
-                  gap-3
-                  font-black
-                  min-w-fit
-                "
+                onClick={handleCheckout}
+                disabled={checkoutLoading}
+                className="w-full h-16 rounded-2xl bg-[#16d64d] text-white text-lg font-black mt-8"
               >
 
-                <Flag size={20} />
+                {checkoutLoading
 
-                Melden
+                  ? "Weiterleitung..."
+
+                  : "Jetzt buchen"}
 
               </button>
 
@@ -871,20 +798,11 @@ export default function ListingPage() {
 
         </div>
 
- {listing && (
+      </div>
 
-  <ReviewsSection
-    listingId={listing.id}
-    ownerId={listing.user_id}
-    user={user}
-  />
+      <Footer />
 
-)}
-        <Footer />
-
-      </main>
-
-    </>
+    </main>
 
   );
 }

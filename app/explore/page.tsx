@@ -1,37 +1,71 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 
 import Link from "next/link";
 
+import Image from "next/image";
+
 import {
+
   Search,
+
   MapPin,
+
   Star,
+
+  SlidersHorizontal,
+
+  Sparkles,
+
+  X,
+
 } from "lucide-react";
 
-import { supabase } from "@/lib/supabase";
+import Navbar
+from "@/components/Navbar";
+
+import Footer
+from "@/components/Footer";
+
+import FavoriteButton
+from "@/components/FavoriteButton";
+
+import { supabase }
+from "@/lib/supabase";
 
 type Listing = {
+
   id: string;
+
   title: string;
+
   description: string;
+
   price: number;
+
   location: string;
+
   rental_type: string;
+
+  category?: string;
+
   images: string[];
+
+  created_at: string;
 };
 
 export default function ExplorePage() {
 
-  const [listings, setListings] =
-    useState<Listing[]>([]);
-
-  const [filteredListings, setFilteredListings] =
-    useState<Listing[]>([]);
-
   const [loading, setLoading] =
     useState(true);
+
+  const [listings, setListings] =
+    useState<Listing[]>([]);
 
   const [search, setSearch] =
     useState("");
@@ -42,99 +76,115 @@ export default function ExplorePage() {
   const [rentalType, setRentalType] =
     useState("Alle");
 
+  const [sortBy, setSortBy] =
+    useState("Neueste");
+
+  const [maxPrice, setMaxPrice] =
+    useState(10000);
+
+  const [mobileFilters, setMobileFilters] =
+    useState(false);
+
   useEffect(() => {
 
     loadListings();
 
   }, []);
 
-  useEffect(() => {
+  async function loadListings() {
 
-    filterListings();
+    try {
 
-  }, [
-    search,
-    location,
-    rentalType,
-    listings,
-  ]);
+      const { data } =
+        await supabase
+          .from("listings")
+          .select("*")
+          .eq(
+            "active",
+            true
+          )
+          .order(
+            "created_at",
+            {
+              ascending: false,
+            }
+          );
 
-  const loadListings = async () => {
+      setListings(
+        data || []
+      );
 
-    const { data, error } =
-      await supabase
-        .from("listings")
-        .select("*")
-        .eq("active", true)
-        .order(
-          "created_at",
-          {
-            ascending: false,
-          }
-        );
-
-    if (error) {
+    } catch (error) {
 
       console.log(error);
 
+    } finally {
+
       setLoading(false);
-
-      return;
     }
+  }
 
-    setListings(data || []);
+  /*
+    FILTERS
+  */
 
-    setFilteredListings(
-      data || []
-    );
-
-    setLoading(false);
-  };
-
-  /* FILTER */
-
-  const filterListings =
-    () => {
+  const filteredListings =
+    useMemo(() => {
 
       let filtered =
         [...listings];
 
-      /* SEARCH */
+      /*
+        SEARCH
+      */
 
       if (search) {
 
         filtered =
           filtered.filter(
             (listing) =>
+
               listing.title
-                .toLowerCase()
+                ?.toLowerCase()
                 .includes(
                   search.toLowerCase()
                 ) ||
+
               listing.description
-                .toLowerCase()
+                ?.toLowerCase()
+                .includes(
+                  search.toLowerCase()
+                ) ||
+
+              listing.location
+                ?.toLowerCase()
                 .includes(
                   search.toLowerCase()
                 )
           );
       }
 
-      /* LOCATION */
+      /*
+        LOCATION
+      */
 
       if (location) {
 
         filtered =
           filtered.filter(
             (listing) =>
+
               listing.location
-                .toLowerCase()
+                ?.toLowerCase()
                 .includes(
                   location.toLowerCase()
                 )
           );
       }
 
-      /* RENTAL TYPE */
+      /*
+        RENTAL TYPE
+      */
 
       if (
         rentalType !==
@@ -144,64 +194,218 @@ export default function ExplorePage() {
         filtered =
           filtered.filter(
             (listing) =>
+
               listing.rental_type ===
               rentalType
           );
       }
 
-      setFilteredListings(
-        filtered
-      );
-    };
+      /*
+        PRICE
+      */
+
+      filtered =
+        filtered.filter(
+          (listing) =>
+
+            Number(
+              listing.price
+            ) <= maxPrice
+        );
+
+      /*
+        SORT
+      */
+
+      switch (sortBy) {
+
+        case "Preis niedrig":
+
+          filtered.sort(
+            (a, b) =>
+
+              a.price -
+              b.price
+          );
+
+          break;
+
+        case "Preis hoch":
+
+          filtered.sort(
+            (a, b) =>
+
+              b.price -
+              a.price
+          );
+
+          break;
+
+        default:
+
+          filtered.sort(
+            (
+              a,
+              b
+            ) =>
+
+              new Date(
+                b.created_at
+              ).getTime() -
+
+              new Date(
+                a.created_at
+              ).getTime()
+          );
+      }
+
+      return filtered;
+
+    }, [
+
+      listings,
+
+      search,
+
+      location,
+
+      rentalType,
+
+      sortBy,
+
+      maxPrice,
+    ]);
 
   return (
-    <main className="min-h-screen bg-[#f4f7fb]">
+
+    <main className="min-h-screen bg-[#f5f7fb]">
+
+      <Navbar />
 
       {/* HERO */}
 
-      <section className="px-6 pt-10">
+      <section className="px-4 pt-10">
+
+        <div className="max-w-7xl mx-auto">
+
+          <div
+            className="
+              relative
+              overflow-hidden
+              rounded-[50px]
+              bg-gradient-to-br
+              from-[#16d64d]
+              to-[#0ca336]
+              p-10
+              md:p-16
+              text-white
+            "
+          >
+
+            <div
+              className="
+                absolute
+                top-0
+                right-0
+                opacity-10
+                text-[240px]
+                font-black
+                leading-none
+              "
+            >
+
+              FLEX
+
+            </div>
+
+            <div className="relative z-10">
+
+              <div
+                className="
+                  inline-flex
+                  items-center
+                  gap-3
+                  px-5
+                  py-3
+                  rounded-full
+                  bg-white/15
+                  backdrop-blur
+                  mb-7
+                  font-black
+                "
+              >
+
+                <Sparkles
+                  size={20}
+                />
+
+                Premium Explore
+
+              </div>
+
+              <h1
+                className="
+                  text-5xl
+                  md:text-7xl
+                  font-black
+                  tracking-[-4px]
+                  leading-[0.95]
+                  max-w-4xl
+                "
+              >
+
+                Entdecke einzigartige Listings
+
+              </h1>
+
+              <p
+                className="
+                  text-white/90
+                  text-xl
+                  mt-8
+                  max-w-2xl
+                  leading-9
+                "
+              >
+
+                Werkzeuge, Fahrzeuge,
+                Immobilien und vieles mehr —
+                alles in einer modernen
+                Marketplace Plattform.
+
+              </p>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </section>
+
+      {/* SEARCH */}
+
+      <section className="px-4 mt-8">
 
         <div className="max-w-7xl mx-auto">
 
           <div
             className="
               bg-white
-              rounded-[50px]
-              p-10
+              rounded-[40px]
+              p-5
               shadow-sm
             "
           >
 
-            <h1
-              className="
-                text-6xl
-                font-black
-                tracking-[-3px]
-              "
-            >
-              Entdecken
-            </h1>
-
-            <p
-              className="
-                text-gray-500
-                text-xl
-                mt-5
-              "
-            >
-              Finde Werkzeuge,
-              Fahrzeuge,
-              Immobilien und mehr.
-            </p>
-
-            {/* FILTERS */}
+            {/* TOP */}
 
             <div
               className="
-                grid
-                lg:grid-cols-4
+                flex
+                flex-col
+                xl:flex-row
                 gap-5
-                mt-10
               "
             >
 
@@ -209,9 +413,10 @@ export default function ExplorePage() {
 
               <div
                 className="
+                  flex-1
                   h-16
                   rounded-2xl
-                  bg-gray-100
+                  bg-[#f5f7fb]
                   px-5
                   flex
                   items-center
@@ -219,7 +424,9 @@ export default function ExplorePage() {
                 "
               >
 
-                <Search size={22} />
+                <Search
+                  size={22}
+                />
 
                 <input
                   type="text"
@@ -229,10 +436,11 @@ export default function ExplorePage() {
                       e.target.value
                     )
                   }
-                  placeholder="Suchen..."
+                  placeholder="Nach Listings suchen..."
                   className="
                     bg-transparent
                     w-full
+                    text-lg
                   "
                 />
 
@@ -242,9 +450,10 @@ export default function ExplorePage() {
 
               <div
                 className="
+                  flex-1
                   h-16
                   rounded-2xl
-                  bg-gray-100
+                  bg-[#f5f7fb]
                   px-5
                   flex
                   items-center
@@ -252,7 +461,9 @@ export default function ExplorePage() {
                 "
               >
 
-                <MapPin size={22} />
+                <MapPin
+                  size={22}
+                />
 
                 <input
                   type="text"
@@ -266,12 +477,58 @@ export default function ExplorePage() {
                   className="
                     bg-transparent
                     w-full
+                    text-lg
                   "
                 />
 
               </div>
 
-              {/* RENTAL TYPE */}
+              {/* FILTER BUTTON */}
+
+              <button
+                onClick={() =>
+                  setMobileFilters(
+                    true
+                  )
+                }
+                className="
+                  xl:hidden
+                  h-16
+                  px-6
+                  rounded-2xl
+                  bg-black
+                  text-white
+                  flex
+                  items-center
+                  justify-center
+                  gap-3
+                  font-black
+                "
+              >
+
+                <SlidersHorizontal
+                  size={22}
+                />
+
+                Filter
+
+              </button>
+
+            </div>
+
+            {/* DESKTOP FILTERS */}
+
+            <div
+              className="
+                hidden
+                xl:grid
+                grid-cols-4
+                gap-5
+                mt-5
+              "
+            >
+
+              {/* TYPE */}
 
               <select
                 value={rentalType}
@@ -282,9 +539,9 @@ export default function ExplorePage() {
                 }
                 className="
                   h-16
-                  px-5
                   rounded-2xl
-                  bg-gray-100
+                  bg-[#f5f7fb]
+                  px-5
                 "
               >
 
@@ -310,13 +567,89 @@ export default function ExplorePage() {
 
               </select>
 
-              {/* RESULT COUNT */}
+              {/* SORT */}
+
+              <select
+                value={sortBy}
+                onChange={(e) =>
+                  setSortBy(
+                    e.target.value
+                  )
+                }
+                className="
+                  h-16
+                  rounded-2xl
+                  bg-[#f5f7fb]
+                  px-5
+                "
+              >
+
+                <option>
+                  Neueste
+                </option>
+
+                <option>
+                  Preis niedrig
+                </option>
+
+                <option>
+                  Preis hoch
+                </option>
+
+              </select>
+
+              {/* PRICE */}
+
+              <div
+                className="
+                  rounded-2xl
+                  bg-[#f5f7fb]
+                  px-5
+                  flex
+                  items-center
+                  gap-5
+                "
+              >
+
+                <input
+                  type="range"
+                  min="0"
+                  max="10000"
+                  value={maxPrice}
+                  onChange={(e) =>
+                    setMaxPrice(
+                      Number(
+                        e.target.value
+                      )
+                    )
+                  }
+                  className="
+                    w-full
+                  "
+                />
+
+                <span
+                  className="
+                    font-black
+                    min-w-fit
+                  "
+                >
+
+                  €
+                  {maxPrice}
+
+                </span>
+
+              </div>
+
+              {/* RESULTS */}
 
               <div
                 className="
                   h-16
                   rounded-2xl
-                  bg-[#00e01a]
+                  bg-[#16d64d]
+                  text-white
                   flex
                   items-center
                   justify-center
@@ -324,8 +657,13 @@ export default function ExplorePage() {
                   text-lg
                 "
               >
-                {filteredListings.length}
+
+                {
+                  filteredListings.length
+                }
+                {" "}
                 Ergebnisse
+
               </div>
 
             </div>
@@ -336,27 +674,249 @@ export default function ExplorePage() {
 
       </section>
 
+      {/* MOBILE FILTER MODAL */}
+
+      {mobileFilters && (
+
+        <div
+          className="
+            fixed
+            inset-0
+            z-50
+            bg-black/50
+            backdrop-blur-sm
+            p-4
+            flex
+            items-end
+          "
+        >
+
+          <div
+            className="
+              bg-white
+              rounded-t-[40px]
+              p-8
+              w-full
+              space-y-6
+            "
+          >
+
+            <div
+              className="
+                flex
+                items-center
+                justify-between
+              "
+            >
+
+              <h2
+                className="
+                  text-3xl
+                  font-black
+                "
+              >
+
+                Filter
+
+              </h2>
+
+              <button
+                onClick={() =>
+                  setMobileFilters(
+                    false
+                  )
+                }
+              >
+
+                <X
+                  size={28}
+                />
+
+              </button>
+
+            </div>
+
+            <select
+              value={rentalType}
+              onChange={(e) =>
+                setRentalType(
+                  e.target.value
+                )
+              }
+              className="
+                w-full
+                h-16
+                rounded-2xl
+                bg-[#f5f7fb]
+                px-5
+              "
+            >
+
+              <option>
+                Alle
+              </option>
+
+              <option>
+                Stunde
+              </option>
+
+              <option>
+                Tag
+              </option>
+
+              <option>
+                Woche
+              </option>
+
+              <option>
+                Monat
+              </option>
+
+            </select>
+
+            <select
+              value={sortBy}
+              onChange={(e) =>
+                setSortBy(
+                  e.target.value
+                )
+              }
+              className="
+                w-full
+                h-16
+                rounded-2xl
+                bg-[#f5f7fb]
+                px-5
+              "
+            >
+
+              <option>
+                Neueste
+              </option>
+
+              <option>
+                Preis niedrig
+              </option>
+
+              <option>
+                Preis hoch
+              </option>
+
+            </select>
+
+            <div>
+
+              <div
+                className="
+                  flex
+                  items-center
+                  justify-between
+                  mb-4
+                "
+              >
+
+                <span
+                  className="
+                    font-black
+                    text-lg
+                  "
+                >
+                  Max Preis
+                </span>
+
+                <span
+                  className="
+                    font-black
+                    text-[#16d64d]
+                    text-xl
+                  "
+                >
+
+                  €
+                  {maxPrice}
+
+                </span>
+
+              </div>
+
+              <input
+                type="range"
+                min="0"
+                max="10000"
+                value={maxPrice}
+                onChange={(e) =>
+                  setMaxPrice(
+                    Number(
+                      e.target.value
+                    )
+                  )
+                }
+                className="
+                  w-full
+                "
+              />
+
+            </div>
+
+            <button
+              onClick={() =>
+                setMobileFilters(
+                  false
+                )
+              }
+              className="
+                w-full
+                h-16
+                rounded-2xl
+                bg-[#16d64d]
+                text-white
+                font-black
+                text-lg
+              "
+            >
+
+              {
+                filteredListings.length
+              }
+              {" "}
+              Ergebnisse anzeigen
+
+            </button>
+
+          </div>
+
+        </div>
+
+      )}
+
       {/* LISTINGS */}
 
-      <section className="px-6 py-14">
+      <section className="px-4 py-12">
 
         <div className="max-w-7xl mx-auto">
 
           {loading ? (
 
-            <div className="text-2xl">
-              Lade Anzeigen...
+            <div
+              className="
+                text-3xl
+                font-black
+              "
+            >
+
+              Listings werden geladen...
+
             </div>
 
-          ) : filteredListings.length ===
-            0 ? (
+          ) : filteredListings.length === 0 ? (
 
             <div
               className="
                 bg-white
                 rounded-[40px]
-                p-16
+                p-20
                 text-center
+                shadow-sm
               "
             >
 
@@ -367,11 +927,21 @@ export default function ExplorePage() {
                   mb-5
                 "
               >
-                Keine Anzeigen gefunden
+
+                Keine Listings gefunden
+
               </h2>
 
-              <p className="text-gray-500 text-lg">
-                Versuche andere Filter.
+              <p
+                className="
+                  text-gray-500
+                  text-xl
+                "
+              >
+
+                Versuche andere Filter
+                oder Suchbegriffe.
+
               </p>
 
             </div>
@@ -383,7 +953,7 @@ export default function ExplorePage() {
                 grid
                 grid-cols-1
                 sm:grid-cols-2
-                lg:grid-cols-3
+                xl:grid-cols-3
                 gap-8
               "
             >
@@ -395,6 +965,7 @@ export default function ExplorePage() {
                     href={`/listing/${listing.id}`}
                     key={listing.id}
                     className="
+                      group
                       bg-white
                       rounded-[36px]
                       overflow-hidden
@@ -402,24 +973,42 @@ export default function ExplorePage() {
                       hover:shadow-2xl
                       hover:-translate-y-2
                       transition-all
+                      duration-300
                     "
                   >
 
                     {/* IMAGE */}
 
-                    <div className="h-[260px]">
+                    <div
+                      className="
+                        relative
+                        h-[300px]
+                        overflow-hidden
+                      "
+                    >
 
-                      <img
+                      <Image
                         src={
                           listing.images?.[0] ||
-                          "https://images.unsplash.com/photo-1504307651254-35680f356dfd?q=80&w=1400&auto=format&fit=crop"
+
+                          "https://placehold.co/1200x900/png"
                         }
-                        alt=""
+                        alt={
+                          listing.title
+                        }
+                        fill
                         className="
-                          w-full
-                          h-full
                           object-cover
+                          group-hover:scale-110
+                          transition-transform
+                          duration-700
                         "
+                      />
+
+                      <FavoriteButton
+                        listingId={
+                          listing.id
+                        }
                       />
 
                     </div>
@@ -439,16 +1028,19 @@ export default function ExplorePage() {
 
                         <div
                           className="
-                            bg-[#00e01a]/10
-                            text-[#00b718]
                             px-4
                             py-2
                             rounded-full
-                            text-sm
-                            font-bold
+                            bg-[#16d64d]/10
+                            text-[#16d64d]
+                            font-black
                           "
                         >
-                          {listing.rental_type}
+
+                          {
+                            listing.rental_type
+                          }
+
                         </div>
 
                         <div
@@ -456,31 +1048,38 @@ export default function ExplorePage() {
                             flex
                             items-center
                             gap-2
+                            font-black
                           "
                         >
 
                           <Star
                             size={18}
-                            fill="black"
+                            className="
+                              fill-yellow-400
+                              text-yellow-400
+                            "
                           />
 
-                          <span className="font-bold">
-                            4.9
-                          </span>
+                          4.9
 
                         </div>
 
                       </div>
 
-                      <h3
+                      <h2
                         className="
                           text-3xl
                           font-black
                           line-clamp-1
+                          mb-4
                         "
                       >
-                        {listing.title}
-                      </h3>
+
+                        {
+                          listing.title
+                        }
+
+                      </h2>
 
                       <div
                         className="
@@ -488,37 +1087,75 @@ export default function ExplorePage() {
                           items-center
                           gap-2
                           text-gray-500
-                          mt-4
+                          mb-5
                         "
                       >
 
-                        <MapPin size={18} />
+                        <MapPin
+                          size={18}
+                        />
 
-                        {listing.location}
+                        {
+                          listing.location
+                        }
 
                       </div>
 
                       <p
                         className="
                           text-gray-500
-                          mt-5
+                          leading-8
                           line-clamp-2
-                          min-h-[52px]
+                          min-h-[64px]
                         "
                       >
+
                         {
                           listing.description
                         }
+
                       </p>
 
                       <div
                         className="
+                          flex
+                          items-end
+                          justify-between
                           mt-8
-                          text-5xl
-                          font-black
                         "
                       >
-                        €{listing.price}
+
+                        <div>
+
+                          <span
+                            className="
+                              text-5xl
+                              font-black
+                            "
+                          >
+
+                            €
+                            {
+                              listing.price
+                            }
+
+                          </span>
+
+                          <span
+                            className="
+                              text-gray-500
+                              ml-2
+                            "
+                          >
+
+                            / {
+                              listing.rental_type
+                            }
+
+                          </span>
+
+                        </div>
+
                       </div>
 
                     </div>
@@ -536,6 +1173,9 @@ export default function ExplorePage() {
 
       </section>
 
+      <Footer />
+
     </main>
+
   );
 }

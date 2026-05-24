@@ -12,7 +12,19 @@ import Footer
 from "@/components/Footer";
 
 import {
+
   CalendarDays,
+
+  Sparkles,
+
+  ShieldCheck,
+
+  CheckCircle2,
+
+  Clock3,
+
+  XCircle,
+
 } from "lucide-react";
 
 import { supabase }
@@ -190,6 +202,9 @@ export default function BookingsPage() {
 
           payment_status:
             "Storniert",
+
+          status:
+            "cancelled",
         })
         .eq(
           "id",
@@ -211,6 +226,9 @@ export default function BookingsPage() {
 
                     payment_status:
                       "Storniert",
+
+                    status:
+                      "cancelled",
                   }
 
                 : booking
@@ -227,6 +245,43 @@ export default function BookingsPage() {
     }
   }
 
+  const activeBookings =
+
+    bookings.filter(
+      (booking) =>
+
+        booking.status !==
+        "cancelled"
+    ).length;
+
+  const cancelledBookings =
+
+    bookings.filter(
+      (booking) =>
+
+        booking.status ===
+        "cancelled"
+    ).length;
+
+  const totalSpent =
+
+    bookings.reduce(
+
+      (
+        acc,
+        booking
+      ) =>
+
+        acc +
+        (
+          Number(
+            booking.total_price
+          ) || 0
+        ),
+
+      0
+    );
+
   if (loading) {
 
     return (
@@ -241,75 +296,249 @@ export default function BookingsPage() {
           font-black
         "
       >
-        Lade Buchungen...
+
+        Buchungen werden geladen...
+
       </div>
 
     );
   }
 
   return (
+
     <main className="min-h-screen bg-[#f5f7fb]">
 
       <Navbar />
 
-      <div className="max-w-7xl mx-auto px-4 py-10">
+      <div
+        className="
+          max-w-7xl
+          mx-auto
+          px-4
+          md:px-6
+          py-8
+        "
+      >
 
         {/* HEADER */}
 
-        <div className="mb-14">
+        <div
+          className="
+            flex
+            flex-col
+            lg:flex-row
+            lg:items-end
+            lg:justify-between
+            gap-8
+            mb-12
+          "
+        >
+
+          <div>
+
+            <div
+              className="
+                inline-flex
+                items-center
+                gap-3
+                px-5
+                py-3
+                rounded-full
+                bg-[#16d64d]
+                text-white
+                font-black
+                mb-6
+              "
+            >
+
+              <CalendarDays
+                size={20}
+              />
+
+              Meine Buchungen
+
+            </div>
+
+            <h1
+              className="
+                text-5xl
+                md:text-7xl
+                font-black
+                leading-none
+                tracking-tight
+              "
+            >
+
+              Deine
+              <br />
+
+              Buchungen
+
+            </h1>
+
+            <p
+              className="
+                text-gray-500
+                text-lg
+                md:text-2xl
+                mt-5
+                max-w-3xl
+              "
+            >
+
+              Verwalte deine aktiven
+              und vergangenen Buchungen
+              auf FlexRent.
+
+            </p>
+
+          </div>
+
+          {/* STATS */}
 
           <div
             className="
-              flex
-              items-center
+              grid
+              grid-cols-2
+              md:grid-cols-3
               gap-5
-              mb-5
             "
           >
 
             <div
               className="
-                w-20
-                h-20
-                rounded-[28px]
-                bg-[#16d64d]
-                text-white
-                flex
-                items-center
-                justify-center
-                shadow-lg
+                bg-white
+                rounded-3xl
+                p-6
+                shadow-sm
+                border
+                border-gray-100
+                min-w-[170px]
               "
             >
 
-              <CalendarDays
-                size={36}
-              />
-
-            </div>
-
-            <div>
-
-              <h1
+              <CheckCircle2
+                size={30}
                 className="
-                  text-5xl
-                  md:text-6xl
-                  font-black
+                  text-[#16d64d]
+                  mb-5
                 "
-              >
-                Meine Buchungen
-              </h1>
+              />
 
               <p
                 className="
-                  text-gray-500
-                  text-xl
-                  mt-3
+                  text-gray-400
+                  mb-2
                 "
               >
-                {
-                  bookings.length
-                } aktive Buchungen
+
+                Aktiv
+
               </p>
+
+              <h2
+                className="
+                  text-4xl
+                  font-black
+                "
+              >
+
+                {
+                  activeBookings
+                }
+
+              </h2>
+
+            </div>
+
+            <div
+              className="
+                bg-white
+                rounded-3xl
+                p-6
+                shadow-sm
+                border
+                border-gray-100
+                min-w-[170px]
+              "
+            >
+
+              <XCircle
+                size={30}
+                className="
+                  text-red-500
+                  mb-5
+                "
+              />
+
+              <p
+                className="
+                  text-gray-400
+                  mb-2
+                "
+              >
+
+                Storniert
+
+              </p>
+
+              <h2
+                className="
+                  text-4xl
+                  font-black
+                "
+              >
+
+                {
+                  cancelledBookings
+                }
+
+              </h2>
+
+            </div>
+
+            <div
+              className="
+                bg-white
+                rounded-3xl
+                p-6
+                shadow-sm
+                border
+                border-gray-100
+                min-w-[170px]
+              "
+            >
+
+              <Sparkles
+                size={30}
+                className="
+                  text-yellow-500
+                  mb-5
+                "
+              />
+
+              <p
+                className="
+                  text-gray-400
+                  mb-2
+                "
+              >
+
+                Gesamt
+
+              </p>
+
+              <h2
+                className="
+                  text-4xl
+                  font-black
+                "
+              >
+
+                €
+                {totalSpent}
+
+              </h2>
 
             </div>
 
@@ -324,8 +553,9 @@ export default function BookingsPage() {
           <div
             className="
               bg-white
-              rounded-[40px]
-              p-20
+              rounded-[44px]
+              p-12
+              md:p-24
               text-center
               shadow-sm
             "
@@ -333,8 +563,8 @@ export default function BookingsPage() {
 
             <div
               className="
-                w-28
-                h-28
+                w-32
+                h-32
                 rounded-full
                 bg-[#16d64d]
                 text-white
@@ -343,32 +573,44 @@ export default function BookingsPage() {
                 justify-center
                 mx-auto
                 mb-10
+                shadow-xl
               "
             >
 
               <CalendarDays
-                size={50}
+                size={56}
               />
 
             </div>
 
             <h2
               className="
-                text-5xl
+                text-4xl
+                md:text-6xl
                 font-black
-                mb-5
+                mb-6
               "
             >
+
               Keine Buchungen
+
             </h2>
 
             <p
               className="
                 text-gray-500
-                text-2xl
+                text-lg
+                md:text-2xl
+                max-w-3xl
+                mx-auto
+                leading-relaxed
               "
             >
-              Deine Buchungen erscheinen hier.
+
+              Deine Buchungen erscheinen
+              hier sobald du Listings
+              erfolgreich buchst.
+
             </p>
 
           </div>

@@ -33,6 +33,10 @@ import {
 
   MessageCircle,
 
+  Clock3,
+
+  BadgeCheck,
+
 } from "lucide-react";
 
 import { supabase }
@@ -57,6 +61,12 @@ export default function UserProfilePage() {
   const [bookingsCount, setBookingsCount] =
     useState(0);
 
+  const [reviewsCount, setReviewsCount] =
+    useState(0);
+
+  const [averageRating, setAverageRating] =
+    useState(0);
+
   const [loading, setLoading] =
     useState(true);
 
@@ -76,7 +86,9 @@ export default function UserProfilePage() {
       id: string
     ) => {
 
-      /* PROFILE */
+      /*
+        PROFILE
+      */
 
       const {
         data: profileData,
@@ -87,7 +99,9 @@ export default function UserProfilePage() {
           .eq("id", id)
           .maybeSingle();
 
-      /* LISTINGS */
+      /*
+        LISTINGS
+      */
 
       const {
         data: listingsData,
@@ -110,10 +124,12 @@ export default function UserProfilePage() {
             }
           );
 
-      /* BOOKINGS */
+      /*
+        BOOKINGS
+      */
 
       const {
-        count,
+        count: bookings,
       } =
         await supabase
           .from("bookings")
@@ -129,6 +145,43 @@ export default function UserProfilePage() {
             id
           );
 
+      /*
+        REVIEWS
+      */
+
+      const {
+        data: reviews,
+      } =
+        await supabase
+          .from("reviews")
+          .select("rating")
+          .eq(
+            "owner_id",
+            id
+          );
+
+      let avg = 0;
+
+      if (
+        reviews &&
+        reviews.length > 0
+      ) {
+
+        avg =
+          reviews.reduce(
+            (
+              acc,
+              review
+            ) =>
+
+              acc +
+              review.rating,
+
+            0
+          ) /
+          reviews.length;
+      }
+
       setProfile(
         profileData
       );
@@ -138,7 +191,17 @@ export default function UserProfilePage() {
       );
 
       setBookingsCount(
-        count || 0
+        bookings || 0
+      );
+
+      setReviewsCount(
+        reviews?.length || 0
+      );
+
+      setAverageRating(
+        Number(
+          avg.toFixed(1)
+        )
       );
 
       setLoading(false);
@@ -185,21 +248,41 @@ export default function UserProfilePage() {
   }
 
   return (
+
     <main className="min-h-screen bg-[#f5f7fb]">
 
       <Navbar />
 
-      <div className="max-w-7xl mx-auto px-4 py-10">
+      {/* HERO */}
 
-        {/* PROFILE */}
+      <div
+        className="
+          relative
+          overflow-hidden
+          bg-gradient-to-br
+          from-[#16d64d]
+          to-[#0ca336]
+          text-white
+        "
+      >
 
         <div
           className="
-            bg-white
-            rounded-[40px]
-            p-10
-            shadow-sm
-            mb-10
+            absolute
+            inset-0
+            opacity-10
+            bg-[url('/noise.png')]
+          "
+        />
+
+        <div
+          className="
+            max-w-7xl
+            mx-auto
+            px-4
+            py-20
+            relative
+            z-10
           "
         >
 
@@ -208,7 +291,7 @@ export default function UserProfilePage() {
               flex
               flex-col
               lg:flex-row
-              gap-10
+              gap-12
               items-center
             "
           >
@@ -219,13 +302,14 @@ export default function UserProfilePage() {
 
               <div
                 className="
-                  w-44
-                  h-44
+                  w-52
+                  h-52
                   rounded-full
                   overflow-hidden
-                  border-4
-                  border-[#16d64d]
-                  bg-gray-100
+                  border-[6px]
+                  border-white
+                  shadow-2xl
+                  bg-white
                 "
               >
 
@@ -235,8 +319,8 @@ export default function UserProfilePage() {
                     "https://placehold.co/400x400/png"
                   }
                   alt="Avatar"
-                  width={400}
-                  height={400}
+                  width={500}
+                  height={500}
                   className="
                     w-full
                     h-full
@@ -246,28 +330,25 @@ export default function UserProfilePage() {
 
               </div>
 
-              {/* VERIFIED */}
-
               <div
                 className="
                   absolute
-                  bottom-2
-                  right-2
-                  w-14
-                  h-14
+                  bottom-3
+                  right-3
+                  w-16
+                  h-16
                   rounded-full
-                  bg-[#16d64d]
-                  text-white
+                  bg-black
+                  border-4
+                  border-white
                   flex
                   items-center
                   justify-center
-                  border-4
-                  border-white
                 "
               >
 
                 <ShieldCheck
-                  size={26}
+                  size={30}
                 />
 
               </div>
@@ -284,33 +365,46 @@ export default function UserProfilePage() {
                   flex-wrap
                   items-center
                   gap-4
-                  mb-5
+                  mb-6
                 "
               >
 
                 <h1
                   className="
-                    text-5xl
+                    text-6xl
                     font-black
                   "
                 >
+
                   {
                     profile.full_name ||
-                    "Unbekannter Nutzer"
+                    "Gastgeber"
                   }
+
                 </h1>
 
                 <div
                   className="
-                    px-4
-                    py-2
+                    px-5
+                    py-3
                     rounded-full
-                    bg-[#16d64d]/10
-                    text-[#16d64d]
+                    bg-white/15
+                    backdrop-blur
+                    border
+                    border-white/20
+                    flex
+                    items-center
+                    gap-2
                     font-bold
                   "
                 >
-                  Verifiziert
+
+                  <BadgeCheck
+                    size={18}
+                  />
+
+                  Verifizierter Host
+
                 </div>
 
               </div>
@@ -323,9 +417,9 @@ export default function UserProfilePage() {
                   flex-wrap
                   items-center
                   gap-6
-                  text-gray-500
                   text-lg
-                  mb-6
+                  text-white/90
+                  mb-8
                 "
               >
 
@@ -362,12 +456,30 @@ export default function UserProfilePage() {
                   <Star
                     size={20}
                     className="
-                      fill-yellow-400
-                      text-yellow-400
+                      fill-yellow-300
+                      text-yellow-300
                     "
                   />
 
-                  4.9 Bewertung
+                  {
+                    averageRating || 0
+                  } Bewertung
+
+                </div>
+
+                <div
+                  className="
+                    flex
+                    items-center
+                    gap-2
+                  "
+                >
+
+                  <Clock3
+                    size={20}
+                  />
+
+                  Antwortet meist innerhalb 1 Stunde
 
                 </div>
 
@@ -377,196 +489,58 @@ export default function UserProfilePage() {
 
               <p
                 className="
-                  text-lg
-                  text-gray-700
-                  leading-9
-                  max-w-3xl
+                  text-xl
+                  leading-10
+                  max-w-4xl
+                  text-white/90
                 "
               >
 
                 {
                   profile.bio ||
-                  "Noch keine Beschreibung vorhanden."
+
+                  "Dieser Gastgeber hat noch keine Beschreibung hinzugefügt."
                 }
 
               </p>
 
-              {/* BUTTON */}
-
-              <div className="mt-8">
-
-                <Link
-                  href={`/messages/${userId}`}
-                  className="
-                    inline-flex
-                    h-14
-                    px-7
-                    rounded-2xl
-                    bg-black
-                    text-white
-                    items-center
-                    justify-center
-                    gap-3
-                    font-bold
-                  "
-                >
-
-                  <MessageCircle
-                    size={20}
-                  />
-
-                  Nachricht senden
-
-                </Link>
-
-              </div>
-
-              {/* STATS */}
+              {/* BUTTONS */}
 
               <div
                 className="
-                  grid
-                  md:grid-cols-3
+                  flex
+                  flex-wrap
                   gap-5
                   mt-10
                 "
               >
 
-                {/* LISTINGS */}
-
-                <div
+                <Link
+                  href={`/messages/${userId}`}
                   className="
-                    bg-[#f5f7fb]
-                    rounded-3xl
-                    px-6
-                    py-5
+                    h-16
+                    px-8
+                    rounded-2xl
+                    bg-black
+                    text-white
+                    inline-flex
+                    items-center
+                    justify-center
+                    gap-3
+                    text-lg
+                    font-black
+                    hover:scale-[1.03]
+                    transition
                   "
                 >
 
-                  <div
-                    className="
-                      flex
-                      items-center
-                      gap-3
-                      mb-2
-                    "
-                  >
+                  <MessageCircle
+                    size={22}
+                  />
 
-                    <Package
-                      size={22}
-                      className="
-                        text-[#16d64d]
-                      "
-                    />
+                  Nachricht senden
 
-                    <p className="text-gray-500">
-                      Listings
-                    </p>
-
-                  </div>
-
-                  <h3
-                    className="
-                      text-4xl
-                      font-black
-                    "
-                  >
-                    {
-                      listings.length
-                    }
-                  </h3>
-
-                </div>
-
-                {/* BOOKINGS */}
-
-                <div
-                  className="
-                    bg-[#f5f7fb]
-                    rounded-3xl
-                    px-6
-                    py-5
-                  "
-                >
-
-                  <div
-                    className="
-                      flex
-                      items-center
-                      gap-3
-                      mb-2
-                    "
-                  >
-
-                    <CalendarDays
-                      size={22}
-                      className="
-                        text-black
-                      "
-                    />
-
-                    <p className="text-gray-500">
-                      Buchungen
-                    </p>
-
-                  </div>
-
-                  <h3
-                    className="
-                      text-4xl
-                      font-black
-                    "
-                  >
-                    {
-                      bookingsCount
-                    }
-                  </h3>
-
-                </div>
-
-                {/* RATING */}
-
-                <div
-                  className="
-                    bg-[#f5f7fb]
-                    rounded-3xl
-                    px-6
-                    py-5
-                  "
-                >
-
-                  <div
-                    className="
-                      flex
-                      items-center
-                      gap-3
-                      mb-2
-                    "
-                  >
-
-                    <Star
-                      size={22}
-                      className="
-                        text-yellow-500
-                      "
-                    />
-
-                    <p className="text-gray-500">
-                      Bewertung
-                    </p>
-
-                  </div>
-
-                  <h3
-                    className="
-                      text-4xl
-                      font-black
-                    "
-                  >
-                    4.9
-                  </h3>
-
-                </div>
+                </Link>
 
               </div>
 
@@ -576,23 +550,242 @@ export default function UserProfilePage() {
 
         </div>
 
+      </div>
+
+      {/* CONTENT */}
+
+      <div className="max-w-7xl mx-auto px-4 py-12">
+
+        {/* STATS */}
+
+        <div
+          className="
+            grid
+            grid-cols-2
+            lg:grid-cols-4
+            gap-6
+            mb-14
+          "
+        >
+
+          {/* LISTINGS */}
+
+          <div
+            className="
+              bg-white
+              rounded-[32px]
+              p-8
+              shadow-sm
+            "
+          >
+
+            <div
+              className="
+                flex
+                items-center
+                gap-3
+                mb-3
+              "
+            >
+
+              <Package
+                size={24}
+                className="
+                  text-[#16d64d]
+                "
+              />
+
+              <p className="text-gray-500">
+                Listings
+              </p>
+
+            </div>
+
+            <h3
+              className="
+                text-5xl
+                font-black
+              "
+            >
+
+              {
+                listings.length
+              }
+
+            </h3>
+
+          </div>
+
+          {/* BOOKINGS */}
+
+          <div
+            className="
+              bg-white
+              rounded-[32px]
+              p-8
+              shadow-sm
+            "
+          >
+
+            <div
+              className="
+                flex
+                items-center
+                gap-3
+                mb-3
+              "
+            >
+
+              <CalendarDays
+                size={24}
+              />
+
+              <p className="text-gray-500">
+                Buchungen
+              </p>
+
+            </div>
+
+            <h3
+              className="
+                text-5xl
+                font-black
+              "
+            >
+
+              {
+                bookingsCount
+              }
+
+            </h3>
+
+          </div>
+
+          {/* REVIEWS */}
+
+          <div
+            className="
+              bg-white
+              rounded-[32px]
+              p-8
+              shadow-sm
+            "
+          >
+
+            <div
+              className="
+                flex
+                items-center
+                gap-3
+                mb-3
+              "
+            >
+
+                <Star
+                size={24}
+                className="
+                  text-yellow-500
+                "
+              />
+
+              <p className="text-gray-500">
+                Reviews
+              </p>
+
+            </div>
+
+            <h3
+              className="
+                text-5xl
+                font-black
+              "
+            >
+
+              {
+                reviewsCount
+              }
+
+            </h3>
+
+          </div>
+
+          {/* RATING */}
+
+          <div
+            className="
+              bg-white
+              rounded-[32px]
+              p-8
+              shadow-sm
+            "
+          >
+
+            <div
+              className="
+                flex
+                items-center
+                gap-3
+                mb-3
+              "
+            >
+
+              <ShieldCheck
+                size={24}
+                className="
+                  text-[#16d64d]
+                "
+              />
+
+              <p className="text-gray-500">
+                Bewertung
+              </p>
+
+            </div>
+
+            <h3
+              className="
+                text-5xl
+                font-black
+              "
+            >
+
+              {
+                averageRating || 0
+              }
+
+            </h3>
+
+          </div>
+
+        </div>
+
         {/* LISTINGS */}
 
-        <div className="mb-10">
+        <div>
 
-          <h2
+          <div
             className="
-              text-4xl
-              font-black
+              flex
+              items-center
+              justify-between
               mb-8
             "
           >
 
-            Anzeigen von {
-              profile.full_name
-            }
+            <h2
+              className="
+                text-5xl
+                font-black
+              "
+            >
 
-          </h2>
+              Anzeigen von {
+                profile.full_name
+              }
+
+            </h2>
+
+          </div>
 
           {listings.length === 0 ? (
 
@@ -600,7 +793,7 @@ export default function UserProfilePage() {
               className="
                 bg-white
                 rounded-[32px]
-                p-20
+                p-24
                 text-center
                 shadow-sm
               "
@@ -608,17 +801,21 @@ export default function UserProfilePage() {
 
               <h3
                 className="
-                  text-3xl
+                  text-4xl
                   font-black
                   mb-4
                 "
               >
-                Keine Anzeigen
+
+                Keine aktiven Listings
+
               </h3>
 
               <p className="text-gray-500">
-                Dieser Nutzer hat noch
-                keine aktiven Anzeigen erstellt.
+
+                Dieser Nutzer hat aktuell
+                keine aktiven Anzeigen.
+
               </p>
 
             </div>
@@ -657,5 +854,6 @@ export default function UserProfilePage() {
       <Footer />
 
     </main>
+
   );
 }

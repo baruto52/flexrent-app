@@ -14,6 +14,12 @@ import {
 
   XCircle,
 
+  CalendarDays,
+
+  Receipt,
+
+  ShieldCheck,
+
 } from "lucide-react";
 
 interface Props {
@@ -35,6 +41,89 @@ export default function BookingCard({
 
   const listing =
     booking.listings;
+
+  /*
+    DATES
+  */
+
+  const startDate =
+    booking.start_date
+
+      ? new Date(
+          booking.start_date
+        )
+
+      : null;
+
+  const endDate =
+    booking.end_date
+
+      ? new Date(
+          booking.end_date
+        )
+
+      : null;
+
+  /*
+    DAYS
+  */
+
+  const totalDays =
+
+    startDate &&
+    endDate
+
+      ? Math.max(
+
+          1,
+
+          Math.ceil(
+
+            (
+              endDate.getTime() -
+              startDate.getTime()
+            ) /
+
+            (
+              1000 *
+              60 *
+              60 *
+              24
+            )
+          )
+        )
+
+      : 1;
+
+  /*
+    PRICES
+  */
+
+  const dayPrice =
+    Number(
+      listing?.price || 0
+    );
+
+  const subtotal =
+    dayPrice *
+    totalDays;
+
+  const serviceFee =
+    Math.round(
+      subtotal * 0.12
+    );
+
+  const cleaningFee =
+    25;
+
+  const total =
+    subtotal +
+    serviceFee +
+    cleaningFee;
+
+  /*
+    STATUS
+  */
 
   function getStatusColor(
     status: string
@@ -62,330 +151,710 @@ export default function BookingCard({
 
   return (
 
-    <div
-      className="
-        bg-white
-        rounded-[40px]
-        overflow-hidden
-        shadow-sm
-        hover:shadow-xl
-        transition
-      "
-    >
+    <>
 
       <div
         className="
-          grid
-          lg:grid-cols-3
+          bg-white
+          rounded-[40px]
+          overflow-hidden
+          shadow-sm
+          hover:shadow-2xl
+          transition-all
+          duration-300
         "
       >
 
-        {/* IMAGE */}
-
         <div
           className="
-            relative
-            h-[340px]
+            grid
+            xl:grid-cols-3
           "
         >
 
-          <Image
-            src={
-              listing?.images?.[0] ||
-
-              "https://placehold.co/1200x900/png"
-            }
-            alt={
-              listing?.title ||
-
-              "Listing"
-            }
-            fill
-            className="
-              object-cover
-            "
-          />
-
-          {/* STATUS */}
+          {/* IMAGE */}
 
           <div
-            className={`
-              absolute
-              top-5
-              left-5
-              px-5
-              py-3
-              rounded-full
-              text-white
-              font-black
-              flex
-              items-center
-              gap-2
-              ${getStatusColor(
-                booking.payment_status
-              )}
-            `}
+            className="
+              relative
+              h-[360px]
+            "
           >
 
-            <CheckCircle2
-              size={18}
+            <Image
+              src={
+                listing?.images?.[0] ||
+
+                "https://placehold.co/1200x900/png"
+              }
+              alt={
+                listing?.title ||
+
+                "Listing"
+              }
+              fill
+              className="
+                object-cover
+              "
             />
 
-            {
-              booking.payment_status ||
+            {/* STATUS */}
 
-              "Bezahlt"
-            }
+            <div
+              className={`
+                absolute
+                top-5
+                left-5
+                px-5
+                py-3
+                rounded-full
+                text-white
+                font-black
+                flex
+                items-center
+                gap-2
+                backdrop-blur-xl
+                shadow-xl
 
-          </div>
+                ${getStatusColor(
+                  booking.payment_status
+                )}
+              `}
+            >
 
-        </div>
+              <CheckCircle2
+                size={18}
+              />
 
-        {/* CONTENT */}
+              {
+                booking.payment_status ||
 
-        <div
-          className="
-            lg:col-span-2
-            p-10
-            flex
-            flex-col
-            justify-between
-          "
-        >
+                "Bezahlt"
+              }
 
-          <div>
+            </div>
+
+            {/* VERIFIED */}
 
             <div
               className="
+                absolute
+                bottom-5
+                left-5
+                bg-white/90
+                backdrop-blur-xl
+                rounded-2xl
+                px-4
+                py-3
+                shadow-xl
                 flex
-                flex-col
-                lg:flex-row
-                lg:items-start
-                lg:justify-between
-                gap-6
-                mb-6
+                items-center
+                gap-2
+                font-black
               "
             >
 
-              <div>
+              <ShieldCheck
+                size={18}
+                className="
+                  text-[#16d64d]
+                "
+              />
 
-                <h2
-                  className="
-                    text-5xl
-                    font-black
-                    mb-4
-                  "
-                >
+              Verifiziert
 
-                  {
-                    listing?.title
-                  }
+            </div>
 
-                </h2>
+          </div>
+
+          {/* CONTENT */}
+
+          <div
+            className="
+              xl:col-span-2
+              p-8
+              md:p-10
+              flex
+              flex-col
+              justify-between
+            "
+          >
+
+            {/* TOP */}
+
+            <div>
+
+              <div
+                className="
+                  flex
+                  flex-col
+                  xl:flex-row
+                  xl:items-start
+                  xl:justify-between
+                  gap-8
+                  mb-8
+                "
+              >
+
+                {/* LEFT */}
+
+                <div>
+
+                  <h2
+                    className="
+                      text-4xl
+                      md:text-5xl
+                      font-black
+                      mb-5
+                      leading-tight
+                    "
+                  >
+
+                    {
+                      listing?.title
+                    }
+
+                  </h2>
+
+                  <div
+                    className="
+                      flex
+                      items-center
+                      gap-3
+                      text-gray-500
+                      text-lg
+                      mb-6
+                    "
+                  >
+
+                    <MapPin
+                      size={20}
+                    />
+
+                    {
+                      listing?.location ||
+
+                      "Unbekannt"
+                    }
+
+                  </div>
+
+                  <p
+                    className="
+                      text-gray-600
+                      text-lg
+                      leading-9
+                      line-clamp-3
+                      max-w-3xl
+                    "
+                  >
+
+                    {
+                      listing?.description ||
+
+                      "Keine Beschreibung"
+                    }
+
+                  </p>
+
+                </div>
+
+                {/* PRICE CARD */}
 
                 <div
                   className="
-                    flex
-                    items-center
-                    gap-3
-                    text-gray-500
-                    text-lg
-                    mb-5
+                    bg-[#f5f7fb]
+                    rounded-[32px]
+                    p-7
+                    min-w-[280px]
+                    border
+                    border-gray-100
                   "
                 >
 
-                  <MapPin
-                    size={20}
-                  />
+                  <div
+                    className="
+                      flex
+                      items-center
+                      gap-3
+                      mb-6
+                    "
+                  >
 
-                  {
-                    listing?.location ||
+                    <Receipt
+                      size={24}
+                      className="
+                        text-[#16d64d]
+                      "
+                    />
 
-                    "Unbekannt"
-                  }
+                    <h3
+                      className="
+                        text-2xl
+                        font-black
+                      "
+                    >
+
+                      Preisübersicht
+
+                    </h3>
+
+                  </div>
+
+                  <div className="space-y-4">
+
+                    <div
+                      className="
+                        flex
+                        items-center
+                        justify-between
+                        text-gray-600
+                      "
+                    >
+
+                      <span>
+
+                        €
+                        {dayPrice}
+                        {" "}
+                        ×
+                        {" "}
+                        {totalDays}
+                        {" "}
+                        Tage
+
+                      </span>
+
+                      <span
+                        className="
+                          font-bold
+                        "
+                      >
+
+                        €
+                        {subtotal}
+
+                      </span>
+
+                    </div>
+
+                    <div
+                      className="
+                        flex
+                        items-center
+                        justify-between
+                        text-gray-600
+                      "
+                    >
+
+                      <span>
+
+                        Servicegebühr
+
+                      </span>
+
+                      <span
+                        className="
+                          font-bold
+                        "
+                      >
+
+                        €
+                        {serviceFee}
+
+                      </span>
+
+                    </div>
+
+                    <div
+                      className="
+                        flex
+                        items-center
+                        justify-between
+                        text-gray-600
+                      "
+                    >
+
+                      <span>
+
+                        Reinigung
+
+                      </span>
+
+                      <span
+                        className="
+                          font-bold
+                        "
+                      >
+
+                        €
+                        {cleaningFee}
+
+                      </span>
+
+                    </div>
+
+                    {/* TOTAL */}
+
+                    <div
+                      className="
+                        border-t
+                        pt-5
+                        flex
+                        items-center
+                        justify-between
+                      "
+                    >
+
+                      <div>
+
+                        <p
+                          className="
+                            text-gray-500
+                            text-sm
+                            mb-1
+                          "
+                        >
+                          Gesamtpreis
+                        </p>
+
+                        <span
+                          className="
+                            text-xl
+                            font-black
+                          "
+                        >
+                          Gesamt
+                        </span>
+
+                      </div>
+
+                      <div className="text-right">
+
+                        <div
+                          className="
+                            text-3xl
+                            font-black
+                            text-[#16d64d]
+                            drop-shadow-[0_0_12px_rgba(22,214,77,0.35)]
+                          "
+                        >
+
+                          €
+                          {total}
+
+                        </div>
+
+                        <p
+                          className="
+                            text-xs
+                            text-gray-400
+                            mt-1
+                          "
+                        >
+                          inkl. Gebühren
+                        </p>
+
+                      </div>
+
+                    </div>
+
+                  </div>
 
                 </div>
 
               </div>
 
+              {/* DATES */}
+
               <div
                 className="
-                  bg-[#f5f7fb]
-                  rounded-3xl
-                  px-7
-                  py-5
-                  min-w-[180px]
+                  grid
+                  md:grid-cols-2
+                  gap-5
                 "
               >
 
-                <p
-                  className="
-                    text-gray-500
-                    mb-2
-                  "
-                >
-                  Bezahlt
-                </p>
+                {/* START */}
 
-                <h3
+                <div
                   className="
-                    text-5xl
-                    font-black
+                    bg-[#f5f7fb]
+                    rounded-[28px]
+                    p-6
+                    border
+                    border-gray-100
                   "
                 >
 
-                  €
-                  {
-                    booking.total_price ||
+                  <div
+                    className="
+                      flex
+                      items-center
+                      gap-4
+                    "
+                  >
 
-                    listing?.price
-                  }
+                    <div
+                      className="
+                        w-14
+                        h-14
+                        rounded-2xl
+                        bg-[#16d64d]/10
+                        text-[#16d64d]
+                        flex
+                        items-center
+                        justify-center
+                      "
+                    >
 
-                </h3>
+                      <CalendarDays
+                        size={24}
+                      />
+
+                    </div>
+
+                    <div>
+
+                      <p
+                        className="
+                          text-gray-500
+                          mb-1
+                        "
+                      >
+
+                        Check-In
+
+                      </p>
+
+                      <h4
+                        className="
+                          font-black
+                          text-lg
+                        "
+                      >
+
+                        {startDate
+                          ?.toLocaleDateString(
+                            "de-DE"
+                          ) || "-"}
+
+                      </h4>
+
+                    </div>
+
+                  </div>
+
+                </div>
+
+                {/* END */}
+
+                <div
+                  className="
+                    bg-[#f5f7fb]
+                    rounded-[28px]
+                    p-6
+                    border
+                    border-gray-100
+                  "
+                >
+
+                  <div
+                    className="
+                      flex
+                      items-center
+                      gap-4
+                    "
+                  >
+
+                    <div
+                      className="
+                        w-14
+                        h-14
+                        rounded-2xl
+                        bg-black/10
+                        text-black
+                        flex
+                        items-center
+                        justify-center
+                      "
+                    >
+
+                      <CalendarDays
+                        size={24}
+                      />
+
+                    </div>
+
+                    <div>
+
+                      <p
+                        className="
+                          text-gray-500
+                          mb-1
+                        "
+                      >
+
+                        Check-Out
+
+                      </p>
+
+                      <h4
+                        className="
+                          font-black
+                          text-lg
+                        "
+                      >
+
+                        {endDate
+                          ?.toLocaleDateString(
+                            "de-DE"
+                          ) || "-"}
+
+                      </h4>
+
+                    </div>
+
+                  </div>
+
+                </div>
 
               </div>
 
             </div>
 
-            <p
-              className="
-                text-gray-600
-                text-lg
-                leading-9
-                line-clamp-3
-              "
-            >
-
-              {
-                listing?.description ||
-
-                "Keine Beschreibung"
-              }
-
-            </p>
-
-          </div>
-
-          <div
-            className="
-              mt-10
-              flex
-              flex-col
-              lg:flex-row
-              lg:items-center
-              lg:justify-between
-              gap-6
-            "
-          >
+            {/* FOOTER */}
 
             <div
               className="
+                mt-10
                 flex
-                items-center
-                gap-4
+                flex-col
+                xl:flex-row
+                xl:items-center
+                xl:justify-between
+                gap-6
               "
             >
+
+              {/* BOOKED */}
 
               <div
                 className="
-                  w-14
-                  h-14
-                  rounded-2xl
-                  bg-[#16d64d]/10
-                  text-[#16d64d]
                   flex
                   items-center
-                  justify-center
+                  gap-4
                 "
               >
 
-                <Clock3
-                  size={24}
-                />
-
-              </div>
-
-              <div>
-
-                <p className="text-gray-500">
-                  Gebucht am
-                </p>
-
-                <h4
+                <div
                   className="
-                    font-black
-                    text-lg
+                    w-14
+                    h-14
+                    rounded-2xl
+                    bg-[#16d64d]/10
+                    text-[#16d64d]
+                    flex
+                    items-center
+                    justify-center
                   "
                 >
 
-                  {new Date(
-                    booking.created_at
-                  ).toLocaleDateString(
-                    "de-DE"
-                  )}
+                  <Clock3
+                    size={24}
+                  />
 
-                </h4>
+                </div>
+
+                <div>
+
+                  <p className="text-gray-500">
+                    Gebucht am
+                  </p>
+
+                  <h4
+                    className="
+                      font-black
+                      text-lg
+                    "
+                  >
+
+                    {new Date(
+                      booking.created_at
+                    ).toLocaleDateString(
+                      "de-DE"
+                    )}
+
+                  </h4>
+
+                </div>
 
               </div>
 
-            </div>
+              {/* ACTIONS */}
 
-            <div
-              className="
-                flex
-                gap-4
-              "
-            >
-
-              <Link
-                href={`/listing/${listing?.id}`}
+              <div
                 className="
-                  h-14
-                  px-7
-                  rounded-2xl
-                  bg-black
-                  text-white
                   flex
-                  items-center
-                  justify-center
-                  font-bold
+                  flex-col
+                  sm:flex-row
+                  gap-4
                 "
               >
-                Listing öffnen
-              </Link>
 
-              {booking.payment_status !==
-                "Storniert" && (
-
-                <button
-                  onClick={() =>
-                    onCancel(
-                      booking.id
-                    )
-                  }
+                <Link
+                  href={`/listing/${listing?.id}`}
                   className="
                     h-14
                     px-7
                     rounded-2xl
-                    bg-red-500
+                    bg-black
                     text-white
                     flex
                     items-center
                     justify-center
-                    gap-3
                     font-bold
                   "
                 >
 
-                  <XCircle
-                    size={20}
-                  />
+                  Listing öffnen
 
-                  Stornieren
+                </Link>
 
-                </button>
+                {booking.payment_status !==
+                  "Storniert" && (
 
-              )}
+                  <button
+                    onClick={() =>
+                      onCancel(
+                        booking.id
+                      )
+                    }
+                    className="
+                      h-14
+                      px-7
+                      rounded-2xl
+                      bg-red-500
+                      text-white
+                      flex
+                      items-center
+                      justify-center
+                      gap-3
+                      font-bold
+                    "
+                  >
+
+                    <XCircle
+                      size={20}
+                    />
+
+                    Stornieren
+
+                  </button>
+
+                )}
+
+              </div>
 
             </div>
 
@@ -395,6 +864,85 @@ export default function BookingCard({
 
       </div>
 
-    </div>
+      {/* MOBILE STICKY CTA */}
+
+      <div
+        className="
+          xl:hidden
+          fixed
+          bottom-24
+          left-4
+          right-4
+          z-40
+        "
+      >
+
+        <div
+          className="
+            bg-white/95
+            backdrop-blur-2xl
+            border
+            border-white/40
+            shadow-[0_20px_60px_rgba(0,0,0,0.18)]
+            rounded-[32px]
+            p-5
+            flex
+            items-center
+            justify-between
+          "
+        >
+
+          <div>
+
+            <p
+              className="
+                text-gray-500
+                text-sm
+              "
+            >
+              Gesamtpreis
+            </p>
+
+            <h3
+              className="
+                text-3xl
+                font-black
+                text-[#16d64d]
+              "
+            >
+
+              €
+              {total}
+
+            </h3>
+
+          </div>
+
+          <Link
+            href={`/listing/${listing?.id}`}
+            className="
+              h-14
+              px-7
+              rounded-2xl
+              bg-[#16d64d]
+              text-white
+              flex
+              items-center
+              justify-center
+              font-black
+              shadow-[0_10px_30px_rgba(22,214,77,0.35)]
+            "
+          >
+
+            Anzeigen
+
+          </Link>
+
+        </div>
+
+      </div>
+
+    </>
+
   );
 }

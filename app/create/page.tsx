@@ -113,8 +113,6 @@ export default function CreatePage() {
 
   }, []);
 
-  /* IMAGES */
-
   const handleImages =
     (
       e: React.ChangeEvent<HTMLInputElement>
@@ -149,8 +147,6 @@ export default function CreatePage() {
           )
       );
     };
-
-  /* UPLOAD */
 
   const uploadImages =
     async () => {
@@ -220,8 +216,6 @@ export default function CreatePage() {
 
       return uploaded;
     };
-
-  /* CREATE */
 
   const createListing =
     async () => {
@@ -334,19 +328,34 @@ export default function CreatePage() {
 
   return (
 
-    <main className="min-h-screen bg-[#f5f7fb]">
+    <main
+      className="
+        min-h-screen
+        bg-[#f5f7fb]
+      "
+    >
 
       <Navbar />
 
-      <div className="max-w-6xl mx-auto px-4 py-10">
+      <div
+        className="
+          max-w-7xl
+          mx-auto
+          px-4
+          md:px-8
+          py-10
+        "
+      >
 
         <div
           className="
             bg-white
-            rounded-[40px]
-            p-6
+            rounded-[42px]
+            p-5
             md:p-10
             shadow-sm
+            border
+            border-gray-100
           "
         >
 
@@ -390,9 +399,12 @@ export default function CreatePage() {
                     text-4xl
                     md:text-6xl
                     font-black
+                    leading-none
                   "
                 >
+
                   Neues Listing
+
                 </h1>
 
                 <p
@@ -403,9 +415,11 @@ export default function CreatePage() {
                     mt-3
                   "
                 >
+
                   Vermiete Werkzeuge,
                   Keller, Garagen,
                   Parkplätze & mehr.
+
                 </p>
 
               </div>
@@ -416,7 +430,7 @@ export default function CreatePage() {
 
           {/* FORM */}
 
-          <div className="space-y-8">
+          <div className="space-y-10">
 
             {/* TITLE */}
 
@@ -430,7 +444,9 @@ export default function CreatePage() {
                   mb-3
                 "
               >
+
                 Titel
+
               </label>
 
               <input
@@ -469,7 +485,9 @@ export default function CreatePage() {
                   mb-3
                 "
               >
+
                 Beschreibung
+
               </label>
 
               <textarea
@@ -483,13 +501,14 @@ export default function CreatePage() {
                 disabled={loading}
                 className="
                   w-full
-                  h-44
+                  h-48
                   rounded-3xl
                   border
                   border-gray-200
                   p-5
                   text-lg
                   outline-none
+                  resize-none
                 "
               />
 
@@ -515,7 +534,9 @@ export default function CreatePage() {
                     mb-3
                   "
                 >
+
                   Preis
+
                 </label>
 
                 <input
@@ -552,7 +573,9 @@ export default function CreatePage() {
                     mb-3
                   "
                 >
+
                   Einheit
+
                 </label>
 
                 <select
@@ -610,7 +633,9 @@ export default function CreatePage() {
                   mb-4
                 "
               >
+
                 Standort
+
               </label>
 
               <LocationPicker
@@ -634,16 +659,18 @@ export default function CreatePage() {
                   mb-5
                 "
               >
+
                 Kategorie
+
               </label>
 
               <div
                 className="
                   flex
-                  gap-4
+                  gap-5
                   overflow-x-auto
                   scrollbar-hide
-                  pb-3
+                  pb-4
                 "
               >
 
@@ -663,9 +690,9 @@ export default function CreatePage() {
                           setCategory(item)
                         }
                         className={`
-                          min-w-[140px]
-                          h-[140px]
-                          rounded-[32px]
+                          min-w-[160px]
+                          h-[160px]
+                          rounded-[36px]
                           border
                           transition-all
                           duration-300
@@ -673,7 +700,7 @@ export default function CreatePage() {
                           flex-col
                           items-center
                           justify-center
-                          gap-4
+                          gap-5
                           shadow-sm
                           hover:-translate-y-1
                           hover:shadow-xl
@@ -687,13 +714,13 @@ export default function CreatePage() {
 
                         <div
                           className={`
-                            w-16
-                            h-16
-                            rounded-[22px]
+                            w-20
+                            h-20
+                            rounded-[26px]
                             flex
                             items-center
                             justify-center
-                            text-2xl
+                            text-3xl
                             ${
                               active
                                 ? "bg-white/20"
@@ -721,12 +748,15 @@ export default function CreatePage() {
                         <span
                           className="
                             font-black
-                            text-sm
+                            text-base
                             text-center
                             px-2
+                            whitespace-nowrap
                           "
                         >
+
                           {item}
+
                         </span>
 
                       </button>
@@ -739,7 +769,7 @@ export default function CreatePage() {
 
             </div>
 
-            {/* UPLOAD */}
+            {/* IMAGE UPLOAD */}
 
             <div>
 
@@ -751,7 +781,9 @@ export default function CreatePage() {
                   mb-4
                 "
               >
+
                 Bilder
+
               </label>
 
               <label
@@ -759,9 +791,9 @@ export default function CreatePage() {
                   border-2
                   border-dashed
                   border-gray-300
-                  rounded-[36px]
+                  rounded-[40px]
                   p-10
-                  md:p-14
+                  md:p-16
                   flex
                   flex-col
                   items-center
@@ -801,17 +833,20 @@ export default function CreatePage() {
                     mb-3
                   "
                 >
+
                   Bilder hochladen
+
                 </h3>
 
                 <p
                   className="
                     text-gray-500
                     text-lg
-                    md:text-xl
                   "
                 >
+
                   Maximal 10 Bilder
+
                 </p>
 
                 <input
@@ -819,9 +854,7 @@ export default function CreatePage() {
                   hidden
                   multiple
                   accept="image/*"
-                  onChange={
-                    handleImages
-                  }
+                  onChange={handleImages}
                 />
 
               </label>
@@ -851,8 +884,7 @@ export default function CreatePage() {
                       key={index}
                       className="
                         relative
-                        h-40
-                        md:h-48
+                        h-44
                         rounded-3xl
                         overflow-hidden
                       "
@@ -871,9 +903,7 @@ export default function CreatePage() {
                       <button
                         type="button"
                         onClick={() =>
-                          removeImage(
-                            index
-                          )
+                          removeImage(index)
                         }
                         className="
                           absolute
@@ -908,26 +938,24 @@ export default function CreatePage() {
             {/* BUTTON */}
 
             <button
-              onClick={
-                createListing
-              }
+              onClick={createListing}
               disabled={loading}
               className="
                 w-full
-                h-16
-                rounded-2xl
+                h-20
+                rounded-[30px]
                 bg-[#16d64d]
                 text-white
-                text-xl
+                text-2xl
                 font-black
                 hover:scale-[1.01]
-                transition
+                transition-all
               "
             >
 
               {loading
                 ? "Listing wird erstellt..."
-                : "Listing erstellen"}
+                : "Anzeige veröffentlichen"}
 
             </button>
 

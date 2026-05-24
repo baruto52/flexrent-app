@@ -12,25 +12,14 @@ import {
 } from "next/navigation";
 
 import {
-
   Bell,
-
   Heart,
-
   Inbox,
-
   LogOut,
-
-  Map,
-
   Menu,
-
   Plus,
-
   User,
-
   X,
-
 } from "lucide-react";
 
 import toast
@@ -268,8 +257,6 @@ export default function Navbar() {
 
     <>
 
-      {/* TOP NAVBAR */}
-
       <header
         className="
           sticky
@@ -286,7 +273,7 @@ export default function Navbar() {
           className="
             max-w-7xl
             mx-auto
-            px-4
+            px-6
             h-20
             flex
             items-center
@@ -343,10 +330,6 @@ export default function Navbar() {
               Vermieter
             </Link>
 
-            <Link href="/messages">
-              Nachrichten
-            </Link>
-
           </nav>
 
           {/* RIGHT */}
@@ -355,7 +338,7 @@ export default function Navbar() {
             className="
               flex
               items-center
-              gap-2
+              gap-3
             "
           >
 
@@ -401,26 +384,6 @@ export default function Navbar() {
             >
 
               <Heart size={20} />
-
-            </Link>
-
-            {/* MAP */}
-
-            <Link
-              href="/map"
-              className="
-                relative
-                w-12
-                h-12
-                rounded-2xl
-                bg-gray-100
-                flex
-                items-center
-                justify-center
-              "
-            >
-
-              <Map size={20} />
 
             </Link>
 
@@ -579,8 +542,6 @@ export default function Navbar() {
 
             )}
 
-            {/* LOGIN */}
-
             {!user && (
 
               <Link
@@ -641,286 +602,7 @@ export default function Navbar() {
 
         </div>
 
-        {/* MOBILE MENU */}
-
-        {menuOpen && (
-
-          <div
-            className="
-              lg:hidden
-              bg-white/95
-              backdrop-blur-xl
-              border-t
-              border-gray-100
-              px-4
-              py-6
-            "
-          >
-
-            <div
-              className="
-                flex
-                flex-col
-                gap-4
-              "
-            >
-
-              <Link
-                href="/"
-                onClick={closeMenu}
-                className="font-bold"
-              >
-
-                Home
-
-              </Link>
-
-              <Link
-                href="/favorites"
-                onClick={closeMenu}
-                className="font-bold"
-              >
-
-                Favoriten
-
-              </Link>
-
-              <Link
-                href="/map"
-                onClick={closeMenu}
-                className="font-bold"
-              >
-
-                Karte
-
-              </Link>
-
-              <Link
-                href="/bookings"
-                onClick={closeMenu}
-                className="font-bold"
-              >
-
-                Buchungen
-
-              </Link>
-
-              <Link
-                href="/host/bookings"
-                onClick={closeMenu}
-                className="font-bold"
-              >
-
-                Vermieter Dashboard
-
-              </Link>
-
-              <Link
-                href="/messages"
-                onClick={closeMenu}
-                className="font-bold"
-              >
-
-                Nachrichten
-
-              </Link>
-
-              <Link
-                href="/profile"
-                onClick={closeMenu}
-                className="font-bold"
-              >
-
-                Profil
-
-              </Link>
-
-              {user && (
-
-                <button
-                  onClick={logout}
-                  className="
-                    h-14
-                    rounded-2xl
-                    bg-red-500
-                    text-white
-                    font-bold
-                  "
-                >
-
-                  Logout
-
-                </button>
-
-              )}
-
-            </div>
-
-          </div>
-
-        )}
-
       </header>
-
-      {/* MOBILE BOTTOM NAV */}
-
-      <div
-        className="
-          md:hidden
-          fixed
-          bottom-0
-          left-0
-          right-0
-          z-50
-          bg-white/95
-          backdrop-blur-xl
-          border-t
-          border-gray-200
-          h-16
-          flex
-          items-center
-          justify-around
-          px-2
-        "
-      >
-
-        <Link
-          href="/"
-          className={`
-            flex
-            flex-col
-            items-center
-            text-xs
-            ${
-              pathname === "/"
-                ? "text-[#16d64d] font-black"
-                : "text-gray-500"
-            }
-          `}
-        >
-
-          🏠
-
-          <span>
-            Home
-          </span>
-
-        </Link>
-
-        <Link
-          href="/favorites"
-          className={`
-            flex
-            flex-col
-            items-center
-            text-xs
-            ${
-              pathname === "/favorites"
-                ? "text-[#16d64d] font-black"
-                : "text-gray-500"
-            }
-          `}
-        >
-
-          ❤️
-
-          <span>
-            Favoriten
-          </span>
-
-        </Link>
-
-        <Link
-          href="/map"
-          className={`
-            flex
-            flex-col
-            items-center
-            text-xs
-            ${
-              pathname === "/map"
-                ? "text-[#16d64d] font-black"
-                : "text-gray-500"
-            }
-          `}
-        >
-
-          🗺️
-
-          <span>
-            Karte
-          </span>
-
-        </Link>
-
-        <Link
-          href="/create"
-          className="
-            -mt-8
-            w-14
-            h-14
-            rounded-full
-            bg-[#16d64d]
-            text-white
-            flex
-            items-center
-            justify-center
-            text-3xl
-            shadow-xl
-          "
-        >
-
-          +
-
-        </Link>
-
-        <Link
-          href="/messages"
-          className={`
-            flex
-            flex-col
-            items-center
-            text-xs
-            ${
-              pathname === "/messages"
-                ? "text-[#16d64d] font-black"
-                : "text-gray-500"
-            }
-          `}
-        >
-
-          💬
-
-          <span>
-            Nachrichten
-          </span>
-
-        </Link>
-
-        <Link
-          href="/profile"
-          className={`
-            flex
-            flex-col
-            items-center
-            text-xs
-            ${
-              pathname === "/profile"
-                ? "text-[#16d64d] font-black"
-                : "text-gray-500"
-            }
-          `}
-        >
-
-          👤
-
-          <span>
-            Profil
-          </span>
-
-        </Link>
-
-      </div>
 
     </>
 

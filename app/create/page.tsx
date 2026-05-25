@@ -65,6 +65,11 @@ export default function CreatePage() {
   const [description, setDescription] =
     useState("");
 
+  const [
+    descriptionLoading,
+    setDescriptionLoading,
+  ] = useState(false);
+
   const [price, setPrice] =
     useState("");
 
@@ -175,6 +180,60 @@ export default function CreatePage() {
     }
   }
 
+  /*
+    AI DESCRIPTION
+  */
+
+  async function generateDescription() {
+
+    if (!title || !category)
+      return;
+
+    try {
+
+      setDescriptionLoading(true);
+
+      const res =
+        await fetch(
+          "/api/ai/generate-description",
+          {
+            method: "POST",
+
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
+
+            body: JSON.stringify({
+              title,
+              category,
+            }),
+          }
+        );
+
+      const data =
+        await res.json();
+
+      if (
+        data?.description
+      ) {
+
+        setDescription(
+          data.description
+        );
+      }
+
+    } catch (error) {
+
+      console.log(error);
+
+    } finally {
+
+      setDescriptionLoading(false);
+
+    }
+  }
+
   const handleImages =
     (
       e: React.ChangeEvent<HTMLInputElement>
@@ -211,7 +270,7 @@ export default function CreatePage() {
     };
 
   /*
-    OPTIMIZED IMAGE UPLOAD
+    IMAGE UPLOAD
   */
 
   const uploadImages =
@@ -296,6 +355,10 @@ export default function CreatePage() {
 
       return uploaded;
     };
+
+  /*
+    CREATE LISTING
+  */
 
   const createListing =
     async () => {
@@ -621,23 +684,74 @@ export default function CreatePage() {
 
             {/* DESCRIPTION */}
 
-            <textarea
-              value={description}
-              onChange={(e) =>
-                setDescription(
-                  e.target.value
-                )
-              }
-              placeholder="Beschreibung"
-              className="
-                w-full
-                h-48
-                rounded-3xl
-                border
-                border-gray-200
-                p-5
-              "
-            />
+            <div className="space-y-4">
+
+              <div
+                className="
+                  flex
+                  items-center
+                  justify-between
+                  gap-4
+                "
+              >
+
+                <h2
+                  className="
+                    text-lg
+                    font-black
+                  "
+                >
+
+                  Beschreibung
+
+                </h2>
+
+                <button
+                  type="button"
+                  onClick={
+                    generateDescription
+                  }
+                  disabled={
+                    descriptionLoading
+                  }
+                  className="
+                    h-11
+                    px-5
+                    rounded-2xl
+                    bg-[#16d64d]
+                    text-white
+                    text-sm
+                    font-black
+                  "
+                >
+
+                  {descriptionLoading
+                    ? "AI generiert..."
+                    : "AI Beschreibung"}
+
+                </button>
+
+              </div>
+
+              <textarea
+                value={description}
+                onChange={(e) =>
+                  setDescription(
+                    e.target.value
+                  )
+                }
+                placeholder="Beschreibung"
+                className="
+                  w-full
+                  h-48
+                  rounded-3xl
+                  border
+                  border-gray-200
+                  p-5
+                "
+              />
+
+            </div>
 
             {/* PRICE */}
 

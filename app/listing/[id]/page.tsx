@@ -12,6 +12,8 @@ import {
 
 import Link from "next/link";
 
+import Image from "next/image";
+
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ReviewsSection from "@/components/ReviewsSection";
@@ -37,8 +39,6 @@ import {
   X,
 
   BadgeCheck,
-
-  CalendarDays,
 
   Sparkles,
 
@@ -97,7 +97,7 @@ export default function ListingPage() {
     useState<Date[]>([]);
 
   /*
-    REPORT SYSTEM
+    REPORT
   */
 
   const [reportOpen, setReportOpen] =
@@ -112,22 +112,56 @@ export default function ListingPage() {
   const [reportLoading, setReportLoading] =
     useState(false);
 
-  const totalDays =
-    startDate && endDate
+  /*
+    DAYS
+  */
 
-      ? Math.ceil(
-          (
-            endDate.getTime() -
-            startDate.getTime()
-          ) /
-            (1000 * 60 * 60 * 24)
-        ) + 1
+  const totalDays =
+
+    startDate &&
+    endDate
+
+      ? Math.max(
+
+          1,
+
+          Math.ceil(
+            (
+              endDate.getTime() -
+              startDate.getTime()
+            ) /
+              (
+                1000 *
+                60 *
+                60 *
+                24
+              )
+          ) + 1
+        )
 
       : 0;
 
-  const totalPrice =
+  /*
+    PRICES
+  */
+
+  const subtotal =
     totalDays *
     (listing?.price || 0);
+
+  const serviceFee =
+    Math.round(
+      subtotal * 0.12
+    );
+
+  const cleaningFee =
+    25;
+
+  const totalPrice =
+
+    subtotal +
+    serviceFee +
+    cleaningFee;
 
   useEffect(() => {
 
@@ -447,6 +481,12 @@ export default function ListingPage() {
               title:
                 listing.title,
 
+              subtotal,
+
+              serviceFee,
+
+              cleaningFee,
+
               totalPrice,
 
               listingId:
@@ -624,30 +664,6 @@ export default function ListingPage() {
 
             </div>
 
-            {owner?.verified_identity && (
-
-              <div className="flex items-center gap-2 text-sm font-bold text-[#16d64d]">
-
-                <ShieldCheck
-                  size={16}
-                />
-
-                Verifiziert
-
-              </div>
-
-            )}
-
-            {listing.ai_verified && (
-
-              <div className="px-4 py-2 rounded-full bg-[#16d64d]/10 text-[#16d64d] text-sm font-black">
-
-                ✓ AI Verified
-
-              </div>
-
-            )}
-
           </div>
 
           <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
@@ -674,7 +690,7 @@ export default function ListingPage() {
               onClick={() =>
                 setReportOpen(true)
               }
-              className="h-14 px-6 rounded-2xl bg-red-500 text-white flex items-center justify-center gap-3 font-black hover:scale-[1.02] transition-all"
+              className="h-14 px-6 rounded-2xl bg-red-500 text-white flex items-center justify-center gap-3 font-black"
             >
 
               <Flag size={20} />
@@ -686,8 +702,6 @@ export default function ListingPage() {
           </div>
 
         </div>
-
-        {/* CONTENT */}
 
         <div className="grid grid-cols-1 xl:grid-cols-[1.2fr_0.8fr] gap-10">
 
@@ -733,13 +747,21 @@ export default function ListingPage() {
 
                 <div className="flex items-center gap-5">
 
-                  <img
+                  <Image
                     src={
                       owner?.avatar_url ||
 
                       "https://placehold.co/200x200/png"
                     }
-                    className="w-24 h-24 rounded-full object-cover"
+                    alt=""
+                    width={200}
+                    height={200}
+                    className="
+                      w-24
+                      h-24
+                      rounded-full
+                      object-cover
+                    "
                   />
 
                   <div>
@@ -788,7 +810,7 @@ export default function ListingPage() {
 
                 <button
                   onClick={handleMessage}
-                  className="h-16 px-8 rounded-2xl bg-black text-white flex items-center justify-center gap-3 font-black text-lg hover:scale-[1.02] transition-all"
+                  className="h-16 px-8 rounded-2xl bg-black text-white flex items-center justify-center gap-3 font-black text-lg"
                 >
 
                   <MessageCircle size={22} />
@@ -800,88 +822,6 @@ export default function ListingPage() {
               </div>
 
             </div>
-
-            {/* MAP */}
-
-            <div className="bg-white rounded-[40px] p-8 shadow-sm">
-
-              <div className="flex items-center gap-3 mb-8">
-
-                <MapPin
-                  className="text-[#16d64d]"
-                />
-
-                <h2 className="text-4xl font-black">
-
-                  Standort
-
-                </h2>
-
-              </div>
-
-              <ListingMap
-                lat={listing.latitude}
-                lng={listing.longitude}
-                title={listing.title}
-                image={listing.images?.[0]}
-                price={listing.price}
-                location={listing.location}
-              />
-
-            </div>
-
-            {/* REVIEWS */}
-
-            <ReviewsSection
-              listingId={listing.id}
-              ownerId={listing.user_id}
-              user={user}
-            />
-
-            {/* RECOMMENDATIONS */}
-
-            {recommendations.length > 0 && (
-
-              <section className="mt-24">
-
-                <div className="flex items-end justify-between mb-8">
-
-                  <div>
-
-                    <h2 className="text-4xl font-black">
-
-                      Ähnliche Listings
-
-                    </h2>
-
-                    <p className="text-gray-500 mt-2">
-
-                      AI Empfehlungen für dich
-
-                    </p>
-
-                  </div>
-
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
-
-                  {recommendations.map(
-                    (item) => (
-
-                      <ListingCard
-                        key={item.id}
-                        listing={item}
-                      />
-
-                    )
-                  )}
-
-                </div>
-
-              </section>
-
-            )}
 
           </div>
 
@@ -938,7 +878,41 @@ export default function ListingPage() {
                     <span className="font-black">
 
                       €
-                      {totalPrice}
+                      {subtotal}
+
+                    </span>
+
+                  </div>
+
+                  <div className="flex items-center justify-between">
+
+                    <span className="text-gray-500">
+
+                      Servicegebühr
+
+                    </span>
+
+                    <span className="font-black">
+
+                      €
+                      {serviceFee}
+
+                    </span>
+
+                  </div>
+
+                  <div className="flex items-center justify-between">
+
+                    <span className="text-gray-500">
+
+                      Reinigung
+
+                    </span>
+
+                    <span className="font-black">
+
+                      €
+                      {cleaningFee}
 
                     </span>
 
@@ -968,7 +942,7 @@ export default function ListingPage() {
               <button
                 onClick={handleCheckout}
                 disabled={checkoutLoading}
-                className="w-full h-16 rounded-2xl bg-[#16d64d] text-white text-lg font-black mt-8 hover:scale-[1.01] transition-all"
+                className="w-full h-16 rounded-2xl bg-[#16d64d] text-white text-lg font-black mt-8"
               >
 
                 {checkoutLoading
@@ -979,16 +953,6 @@ export default function ListingPage() {
 
               </button>
 
-              <div className="flex items-center justify-center gap-2 mt-6 text-sm text-gray-400">
-
-                <ShieldCheck
-                  size={16}
-                />
-
-                Sichere Zahlung mit Stripe
-
-              </div>
-
             </div>
 
           </div>
@@ -997,97 +961,77 @@ export default function ListingPage() {
 
       </div>
 
-      {/* REPORT MODAL */}
+      {/* MOBILE CTA */}
 
-      {reportOpen && (
+      <div
+        className="
+          xl:hidden
+          fixed
+          bottom-[110px]
+          pb-safe
+          left-4
+          right-4
+          z-40
+        "
+      >
 
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+        <div
+          className="
+            bg-white/95
+            backdrop-blur-2xl
+            border
+            border-white/40
+            shadow-[0_20px_60px_rgba(0,0,0,0.18)]
+            rounded-[32px]
+            p-5
+            flex
+            items-center
+            justify-between
+          "
+        >
 
-          <div className="bg-white w-full max-w-xl rounded-[40px] p-8 relative">
+          <div>
 
-            <button
-              onClick={() =>
-                setReportOpen(false)
-              }
-              className="absolute top-6 right-6 w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center"
-            >
+            <p className="text-gray-500 text-sm">
 
-              <X size={20} />
+              Gesamtpreis
 
-            </button>
+            </p>
 
-            <h2 className="text-4xl font-black mb-8">
+            <h3 className="text-3xl font-black text-[#16d64d]">
 
-              Listing melden
+              €
+              {totalPrice}
 
-            </h2>
-
-            <div className="space-y-5">
-
-              <select
-                value={reportReason}
-                onChange={(e) =>
-                  setReportReason(
-                    e.target.value
-                  )
-                }
-                className="w-full h-16 rounded-2xl border border-gray-200 px-5"
-              >
-
-                <option>
-                  Spam
-                </option>
-
-                <option>
-                  Betrug
-                </option>
-
-                <option>
-                  Fake Listing
-                </option>
-
-                <option>
-                  Illegale Inhalte
-                </option>
-
-              </select>
-
-              <textarea
-                value={reportMessage}
-                onChange={(e) =>
-                  setReportMessage(
-                    e.target.value
-                  )
-                }
-                placeholder="Beschreibe das Problem..."
-                className="w-full h-52 rounded-2xl border border-gray-200 p-5 resize-none"
-              />
-
-            </div>
-
-            <button
-              onClick={submitReport}
-              disabled={reportLoading}
-              className="w-full h-16 rounded-2xl bg-red-500 text-white font-black text-lg mt-8"
-            >
-
-              {reportLoading
-
-                ? "Wird gesendet..."
-
-                : "Listing melden"}
-
-            </button>
+            </h3>
 
           </div>
 
+          <button
+            onClick={handleCheckout}
+            className="
+              h-14
+              px-7
+              rounded-2xl
+              bg-[#16d64d]
+              text-white
+              flex
+              items-center
+              justify-center
+              font-black
+            "
+          >
+
+            Buchen
+
+          </button>
+
         </div>
 
-      )}
+      </div>
 
       <Footer />
 
     </main>
-
   );
 }

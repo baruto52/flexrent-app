@@ -870,8 +870,8 @@ export default function BookingCard({
         className="
           xl:hidden
           fixed
-          bottom-24
-          left-4
+bottom-[110px]
+pb-safe          left-4
           right-4
           z-40
         "

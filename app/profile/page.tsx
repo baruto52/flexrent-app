@@ -5,18 +5,32 @@ import {
   useState,
 } from "react";
 
+import Image from "next/image";
+
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ProfileStats from "@/components/ProfileStats";
 
 import {
+
   Camera,
+
   MapPin,
+
   User,
+
   FileText,
+
+  ShieldCheck,
+
+  Star,
+
+  CalendarDays,
+
 } from "lucide-react";
 
-import { supabase } from "@/lib/supabase";
+import { supabase }
+from "@/lib/supabase";
 
 export default function ProfilePage() {
 
@@ -227,7 +241,10 @@ export default function ProfilePage() {
             .from("avatars")
             .upload(
               fileName,
-              file
+              file,
+              {
+                upsert: true,
+              }
             );
 
         if (uploadError) {
@@ -374,6 +391,8 @@ export default function ProfilePage() {
 
       <div className="max-w-6xl mx-auto px-4 py-10">
 
+        {/* HERO */}
+
         <div
           className="
             bg-white
@@ -393,6 +412,8 @@ export default function ProfilePage() {
               gap-10
             "
           >
+
+            {/* AVATAR */}
 
             <div
               className="
@@ -415,12 +436,15 @@ export default function ProfilePage() {
                 "
               >
 
-                <img
+                <Image
                   src={
                     avatar ||
                     "https://placehold.co/400x400/png"
                   }
                   alt="Avatar"
+                  width={400}
+                  height={400}
+                  quality={85}
                   className="
                     w-full
                     h-full
@@ -464,6 +488,8 @@ export default function ProfilePage() {
               </label>
 
             </div>
+
+            {/* INFO */}
 
             <div className="flex-1">
 
@@ -517,11 +543,93 @@ export default function ProfilePage() {
 
               </p>
 
+              {/* TRUST */}
+
+              <div
+                className="
+                  flex
+                  flex-wrap
+                  items-center
+                  gap-4
+                  mt-6
+                "
+              >
+
+                <div
+                  className="
+                    h-12
+                    px-5
+                    rounded-2xl
+                    bg-[#16d64d]/10
+                    text-[#16d64d]
+                    flex
+                    items-center
+                    gap-2
+                    font-black
+                  "
+                >
+
+                  <ShieldCheck
+                    size={18}
+                  />
+
+                  Verifiziert
+
+                </div>
+
+                <div
+                  className="
+                    h-12
+                    px-5
+                    rounded-2xl
+                    bg-yellow-100
+                    text-yellow-700
+                    flex
+                    items-center
+                    gap-2
+                    font-black
+                  "
+                >
+
+                  <Star
+                    size={18}
+                  />
+
+                  5.0 Bewertung
+
+                </div>
+
+                <div
+                  className="
+                    h-12
+                    px-5
+                    rounded-2xl
+                    bg-gray-100
+                    text-black
+                    flex
+                    items-center
+                    gap-2
+                    font-black
+                  "
+                >
+
+                  <CalendarDays
+                    size={18}
+                  />
+
+                  Mitglied seit 2025
+
+                </div>
+
+              </div>
+
             </div>
 
           </div>
 
         </div>
+
+        {/* STATS */}
 
         <ProfileStats
 
@@ -539,6 +647,8 @@ export default function ProfilePage() {
 
         />
 
+        {/* FORM */}
+
         <div
           className="
             bg-white
@@ -549,6 +659,32 @@ export default function ProfilePage() {
         >
 
           <div className="space-y-8">
+
+            <a
+              href={`/user/${userId}`}
+              target="_blank"
+              className="
+                w-full
+                h-16
+                rounded-2xl
+                border
+                border-gray-200
+                flex
+                items-center
+                justify-center
+                font-black
+                text-lg
+                hover:bg-gray-50
+                transition-all
+                mb-5
+              "
+            >
+
+              Öffentliches Profil ansehen
+
+            </a>
+
+            {/* NAME */}
 
             <div>
 
@@ -607,6 +743,8 @@ export default function ProfilePage() {
 
             </div>
 
+            {/* LOCATION */}
+
             <div>
 
               <label
@@ -664,6 +802,8 @@ export default function ProfilePage() {
 
             </div>
 
+            {/* BIO */}
+
             <div>
 
               <label
@@ -719,6 +859,8 @@ export default function ProfilePage() {
               </div>
 
             </div>
+
+            {/* SAVE */}
 
             <button
               onClick={

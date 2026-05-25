@@ -67,6 +67,9 @@ export default function UserProfilePage() {
   const [averageRating, setAverageRating] =
     useState(0);
 
+  const [reviews, setReviews] =
+    useState<any[]>([]);
+
   const [loading, setLoading] =
     useState(true);
 
@@ -152,7 +155,7 @@ export default function UserProfilePage() {
         */
 
         const {
-          data: reviews,
+          data: reviewsData,
         } =
           await supabase
             .from("reviews")
@@ -160,17 +163,23 @@ export default function UserProfilePage() {
             .eq(
               "reviewed_user_id",
               id
+            )
+            .order(
+              "created_at",
+              {
+                ascending: false,
+              }
             );
 
         let avg = 0;
 
         if (
-          reviews &&
-          reviews.length > 0
+          reviewsData &&
+          reviewsData.length > 0
         ) {
 
           avg =
-            reviews.reduce(
+            reviewsData.reduce(
               (
                 acc,
                 review
@@ -183,7 +192,7 @@ export default function UserProfilePage() {
 
               0
             ) /
-            reviews.length;
+            reviewsData.length;
         }
 
         setProfile(
@@ -199,13 +208,17 @@ export default function UserProfilePage() {
         );
 
         setReviewsCount(
-          reviews?.length || 0
+          reviewsData?.length || 0
         );
 
         setAverageRating(
           Number(
             avg.toFixed(1)
           )
+        );
+
+        setReviews(
+          reviewsData || []
         );
 
       } catch (error) {
@@ -643,6 +656,178 @@ export default function UserProfilePage() {
             label="Bewertung"
             value={averageRating || 0}
           />
+
+        </div>
+
+        {/* REVIEWS */}
+
+        <div className="mb-16">
+
+          <div
+            className="
+              flex
+              items-center
+              justify-between
+              mb-8
+            "
+          >
+
+            <h2
+              className="
+                text-4xl
+                md:text-5xl
+                font-black
+              "
+            >
+
+              Bewertungen
+
+            </h2>
+
+          </div>
+
+          {reviews.length === 0 ? (
+
+            <div
+              className="
+                bg-white
+                rounded-[32px]
+                p-16
+                text-center
+                shadow-sm
+              "
+            >
+
+              <h3
+                className="
+                  text-3xl
+                  font-black
+                  mb-4
+                "
+              >
+
+                Noch keine Bewertungen
+
+              </h3>
+
+              <p className="text-gray-500">
+
+                Dieser Nutzer hat noch keine Reviews erhalten.
+
+              </p>
+
+            </div>
+
+          ) : (
+
+            <div className="space-y-6">
+
+              {reviews.map(
+                (review) => (
+
+                  <div
+                    key={review.id}
+                    className="
+                      bg-white
+                      rounded-[32px]
+                      p-8
+                      shadow-sm
+                    "
+                  >
+
+                    <div
+                      className="
+                        flex
+                        items-center
+                        justify-between
+                        mb-5
+                      "
+                    >
+
+                      <div>
+
+                        <h3
+                          className="
+                            text-2xl
+                            font-black
+                            mb-2
+                          "
+                        >
+
+                          Bewertung
+
+                        </h3>
+
+                        <div
+                          className="
+                            flex
+                            items-center
+                            gap-1
+                          "
+                        >
+
+                          {Array.from({
+                            length: 5,
+                          }).map(
+                            (_, i) => (
+
+                              <Star
+                                key={i}
+                                size={18}
+                                className={
+                                  i <
+                                  review.rating
+
+                                    ? "text-yellow-500 fill-yellow-500"
+
+                                    : "text-gray-300"
+                                }
+                              />
+
+                            )
+                          )}
+
+                        </div>
+
+                      </div>
+
+                      <p
+                        className="
+                          text-gray-400
+                          font-semibold
+                        "
+                      >
+
+                        {new Date(
+                          review.created_at
+                        ).toLocaleDateString()}
+
+                      </p>
+
+                    </div>
+
+                    <p
+                      className="
+                        text-lg
+                        leading-8
+                        text-gray-700
+                      "
+                    >
+
+                      {review.comment ||
+
+                        "Keine Beschreibung"}
+
+                    </p>
+
+                  </div>
+
+                )
+              )}
+
+            </div>
+
+          )}
 
         </div>
 

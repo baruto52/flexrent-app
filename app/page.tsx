@@ -31,6 +31,9 @@ from "@/components/CTASection";
 import Footer
 from "@/components/Footer";
 
+import AISupportModal
+from "@/components/AISupportModal";
+
 import {
 
   SlidersHorizontal,
@@ -57,6 +60,9 @@ function HomeContent() {
 
   const [location, setLocation] =
     useState("");
+
+  const [openAI, setOpenAI] =
+    useState(false);
 
   useEffect(() => {
 
@@ -360,24 +366,27 @@ function HomeContent() {
 
           </div>
 
-          <div
+          <button
+            onClick={() =>
+              setOpenAI(true)
+            }
             className="
-              bg-white
+              bg-[#16d64d]
               rounded-2xl
-              px-5
+              px-6
               py-4
-              shadow-sm
-              border
-              border-gray-100
+              shadow-lg
               text-sm
-              font-bold
-              text-gray-500
+              font-black
+              text-white
+              hover:scale-[1.02]
+              transition
             "
           >
 
-            Premium Marketplace
+            LOQARO AI
 
-          </div>
+          </button>
 
         </div>
 
@@ -418,6 +427,14 @@ function HomeContent() {
       </div>
 
       <Footer />
+
+      {openAI && (
+        <AISupportModal
+          onClose={() =>
+            setOpenAI(false)
+          }
+        />
+      )}
 
     </main>
 

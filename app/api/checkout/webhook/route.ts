@@ -127,7 +127,7 @@ export async function POST(
           renter_id:
             metadata?.renterId,
 
-          owner_id:
+          reviewed_user_id:
             metadata?.ownerId,
 
           total_price:

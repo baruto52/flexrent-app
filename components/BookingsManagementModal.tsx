@@ -44,7 +44,7 @@ export default function BookingsManagementModal({
         .from("bookings")
         .select("*")
         .or(
-          `owner_id.eq.${user?.id},renter_id.eq.${user?.id}`
+          `reviewed_user_id.eq.${user?.id},renter_id.eq.${user?.id}`
         )
         .order(
           "created_at",

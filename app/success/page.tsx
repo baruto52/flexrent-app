@@ -130,7 +130,7 @@ export default function SuccessPage() {
             renter_id:
               renterId,
 
-            owner_id:
+            reviewed_user_id:
               ownerId,
 
             total_price:

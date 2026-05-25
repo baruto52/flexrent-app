@@ -90,7 +90,7 @@ export default function ReviewsModal({
         reviewer_id:
           user?.id,
 
-        owner_id:
+        reviewed_user_id:
           listing.user_id,
 
         rating,

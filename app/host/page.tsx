@@ -72,7 +72,7 @@ export default function HostPage() {
               )
             `)
             .eq(
-              "owner_id",
+              "reviewed_user_id",
               session.user.id
             )
             .order(

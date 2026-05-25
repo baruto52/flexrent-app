@@ -50,7 +50,7 @@ export default function HostBookingsPage() {
           renter:profiles!bookings_renter_id_fkey (*)
         `)
         .eq(
-          "owner_id",
+          "reviewed_user_id",
           userId
         )
         .order(

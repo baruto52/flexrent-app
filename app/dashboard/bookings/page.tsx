@@ -78,7 +78,7 @@ export default function OwnerBookingsPage() {
             )
           `)
           .eq(
-            "owner_id",
+            "reviewed_user_id",
             ownerId
           )
           .order(

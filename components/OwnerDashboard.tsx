@@ -73,7 +73,7 @@ export default function OwnerDashboard({
         .from("bookings")
         .select("*")
         .eq(
-          "owner_id",
+          "reviewed_user_id",
           user?.id
         );
 

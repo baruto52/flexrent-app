@@ -71,7 +71,7 @@ export default function BookingsModal({
           renter_id:
             user?.id,
 
-          owner_id:
+          reviewed_user_id:
             listing.user_id,
 
           start_date:

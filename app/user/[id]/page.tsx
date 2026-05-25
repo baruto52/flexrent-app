@@ -141,7 +141,7 @@ export default function UserProfilePage() {
             }
           )
           .eq(
-            "owner_id",
+            "reviewed_user_id",
             id
           );
 
@@ -156,7 +156,7 @@ export default function UserProfilePage() {
           .from("reviews")
           .select("rating")
           .eq(
-            "owner_id",
+            "reviewed_user_id",
             id
           );
 

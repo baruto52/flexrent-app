@@ -84,7 +84,7 @@ export default function EarningsPage() {
             )
           `)
           .eq(
-            "owner_id",
+            "reviewed_user_id",
             ownerId
           )
           .eq(

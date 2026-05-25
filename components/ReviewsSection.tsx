@@ -236,7 +236,7 @@ export default function ReviewsSection({
             reviewer_id:
               user.id,
 
-            owner_id:
+            reviewed_user_id:
               ownerId,
 
             rating,
@@ -265,7 +265,7 @@ export default function ReviewsSection({
           .from("reviews")
           .select("rating")
           .eq(
-            "owner_id",
+            "reviewed_user_id",
             ownerId
           );
 

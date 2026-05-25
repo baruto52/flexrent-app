@@ -86,125 +86,136 @@ export default function UserProfilePage() {
       id: string
     ) => {
 
-      /*
-        PROFILE
-      */
+      try {
 
-      const {
-        data: profileData,
-      } =
-        await supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", id)
-          .maybeSingle();
+        /*
+          PROFILE
+        */
 
-      /*
-        LISTINGS
-      */
+        const {
+          data: profileData,
+        } =
+          await supabase
+            .from("profiles")
+            .select("*")
+            .eq("id", id)
+            .maybeSingle();
 
-      const {
-        data: listingsData,
-      } =
-        await supabase
-          .from("listings")
-          .select("*")
-          .eq(
-            "user_id",
-            id
+        /*
+          LISTINGS
+        */
+
+        const {
+          data: listingsData,
+        } =
+          await supabase
+            .from("listings")
+            .select("*")
+            .eq(
+              "user_id",
+              id
+            )
+            .eq(
+              "active",
+              true
+            )
+            .order(
+              "created_at",
+              {
+                ascending: false,
+              }
+            );
+
+        /*
+          BOOKINGS
+        */
+
+        const {
+          count: bookings,
+        } =
+          await supabase
+            .from("bookings")
+            .select(
+              "*",
+              {
+                count: "exact",
+                head: true,
+              }
+            )
+            .eq(
+              "owner_id",
+              id
+            );
+
+        /*
+          REVIEWS
+        */
+
+        const {
+          data: reviews,
+        } =
+          await supabase
+            .from("reviews")
+            .select("*")
+            .eq(
+              "reviewed_user_id",
+              id
+            );
+
+        let avg = 0;
+
+        if (
+          reviews &&
+          reviews.length > 0
+        ) {
+
+          avg =
+            reviews.reduce(
+              (
+                acc,
+                review
+              ) =>
+
+                acc +
+                Number(
+                  review.rating
+                ),
+
+              0
+            ) /
+            reviews.length;
+        }
+
+        setProfile(
+          profileData
+        );
+
+        setListings(
+          listingsData || []
+        );
+
+        setBookingsCount(
+          bookings || 0
+        );
+
+        setReviewsCount(
+          reviews?.length || 0
+        );
+
+        setAverageRating(
+          Number(
+            avg.toFixed(1)
           )
-          .eq(
-            "active",
-            true
-          )
-          .order(
-            "created_at",
-            {
-              ascending: false,
-            }
-          );
+        );
 
-      /*
-        BOOKINGS
-      */
+      } catch (error) {
 
-      const {
-        count: bookings,
-      } =
-        await supabase
-          .from("bookings")
-          .select(
-            "*",
-            {
-              count: "exact",
-              head: true,
-            }
-          )
-          .eq(
-            "reviewed_user_id",
-            id
-          );
+        console.log(error);
 
-      /*
-        REVIEWS
-      */
+      } finally {
 
-      const {
-        data: reviews,
-      } =
-        await supabase
-          .from("reviews")
-          .select("rating")
-          .eq(
-            "reviewed_user_id",
-            id
-          );
-
-      let avg = 0;
-
-      if (
-        reviews &&
-        reviews.length > 0
-      ) {
-
-        avg =
-          reviews.reduce(
-            (
-              acc,
-              review
-            ) =>
-
-              acc +
-              review.rating,
-
-            0
-          ) /
-          reviews.length;
+        setLoading(false);
       }
-
-      setProfile(
-        profileData
-      );
-
-      setListings(
-        listingsData || []
-      );
-
-      setBookingsCount(
-        bookings || 0
-      );
-
-      setReviewsCount(
-        reviews?.length || 0
-      );
-
-      setAverageRating(
-        Number(
-          avg.toFixed(1)
-        )
-      );
-
-      setLoading(false);
     };
 
   if (loading) {
@@ -221,7 +232,9 @@ export default function UserProfilePage() {
           font-black
         "
       >
+
         Profil wird geladen...
+
       </div>
 
     );
@@ -241,7 +254,9 @@ export default function UserProfilePage() {
           font-black
         "
       >
+
         Profil nicht gefunden
+
       </div>
 
     );
@@ -330,28 +345,33 @@ export default function UserProfilePage() {
 
               </div>
 
-              <div
-                className="
-                  absolute
-                  bottom-3
-                  right-3
-                  w-16
-                  h-16
-                  rounded-full
-                  bg-black
-                  border-4
-                  border-white
-                  flex
-                  items-center
-                  justify-center
-                "
-              >
+              {profile
+                ?.verified_identity && (
 
-                <ShieldCheck
-                  size={30}
-                />
+                <div
+                  className="
+                    absolute
+                    bottom-3
+                    right-3
+                    w-16
+                    h-16
+                    rounded-full
+                    bg-black
+                    border-4
+                    border-white
+                    flex
+                    items-center
+                    justify-center
+                  "
+                >
 
-              </div>
+                  <ShieldCheck
+                    size={30}
+                  />
+
+                </div>
+
+              )}
 
             </div>
 
@@ -371,7 +391,8 @@ export default function UserProfilePage() {
 
                 <h1
                   className="
-                    text-6xl
+                    text-5xl
+                    md:text-6xl
                     font-black
                   "
                 >
@@ -383,29 +404,34 @@ export default function UserProfilePage() {
 
                 </h1>
 
-                <div
-                  className="
-                    px-5
-                    py-3
-                    rounded-full
-                    bg-white/15
-                    backdrop-blur
-                    border
-                    border-white/20
-                    flex
-                    items-center
-                    gap-2
-                    font-bold
-                  "
-                >
+                {profile
+                  ?.verified_identity && (
 
-                  <BadgeCheck
-                    size={18}
-                  />
+                  <div
+                    className="
+                      px-5
+                      py-3
+                      rounded-full
+                      bg-white/15
+                      backdrop-blur
+                      border
+                      border-white/20
+                      flex
+                      items-center
+                      gap-2
+                      font-bold
+                    "
+                  >
 
-                  Verifizierter Host
+                    <BadgeCheck
+                      size={18}
+                    />
 
-                </div>
+                    Verifizierter Host
+
+                  </div>
+
+                )}
 
               </div>
 
@@ -489,8 +515,9 @@ export default function UserProfilePage() {
 
               <p
                 className="
-                  text-xl
-                  leading-10
+                  text-lg
+                  md:text-xl
+                  leading-9
                   max-w-4xl
                   text-white/90
                 "
@@ -568,194 +595,54 @@ export default function UserProfilePage() {
           "
         >
 
-          {/* LISTINGS */}
-
-          <div
-            className="
-              bg-white
-              rounded-[32px]
-              p-8
-              shadow-sm
-            "
-          >
-
-            <div
-              className="
-                flex
-                items-center
-                gap-3
-                mb-3
-              "
-            >
-
+          <StatCard
+            icon={
               <Package
                 size={24}
                 className="
                   text-[#16d64d]
                 "
               />
+            }
+            label="Listings"
+            value={listings.length}
+          />
 
-              <p className="text-gray-500">
-                Listings
-              </p>
-
-            </div>
-
-            <h3
-              className="
-                text-5xl
-                font-black
-              "
-            >
-
-              {
-                listings.length
-              }
-
-            </h3>
-
-          </div>
-
-          {/* BOOKINGS */}
-
-          <div
-            className="
-              bg-white
-              rounded-[32px]
-              p-8
-              shadow-sm
-            "
-          >
-
-            <div
-              className="
-                flex
-                items-center
-                gap-3
-                mb-3
-              "
-            >
-
+          <StatCard
+            icon={
               <CalendarDays
                 size={24}
               />
+            }
+            label="Buchungen"
+            value={bookingsCount}
+          />
 
-              <p className="text-gray-500">
-                Buchungen
-              </p>
-
-            </div>
-
-            <h3
-              className="
-                text-5xl
-                font-black
-              "
-            >
-
-              {
-                bookingsCount
-              }
-
-            </h3>
-
-          </div>
-
-          {/* REVIEWS */}
-
-          <div
-            className="
-              bg-white
-              rounded-[32px]
-              p-8
-              shadow-sm
-            "
-          >
-
-            <div
-              className="
-                flex
-                items-center
-                gap-3
-                mb-3
-              "
-            >
-
-                <Star
+          <StatCard
+            icon={
+              <Star
                 size={24}
                 className="
                   text-yellow-500
                 "
               />
+            }
+            label="Reviews"
+            value={reviewsCount}
+          />
 
-              <p className="text-gray-500">
-                Reviews
-              </p>
-
-            </div>
-
-            <h3
-              className="
-                text-5xl
-                font-black
-              "
-            >
-
-              {
-                reviewsCount
-              }
-
-            </h3>
-
-          </div>
-
-          {/* RATING */}
-
-          <div
-            className="
-              bg-white
-              rounded-[32px]
-              p-8
-              shadow-sm
-            "
-          >
-
-            <div
-              className="
-                flex
-                items-center
-                gap-3
-                mb-3
-              "
-            >
-
+          <StatCard
+            icon={
               <ShieldCheck
                 size={24}
                 className="
                   text-[#16d64d]
                 "
               />
-
-              <p className="text-gray-500">
-                Bewertung
-              </p>
-
-            </div>
-
-            <h3
-              className="
-                text-5xl
-                font-black
-              "
-            >
-
-              {
-                averageRating || 0
-              }
-
-            </h3>
-
-          </div>
+            }
+            label="Bewertung"
+            value={averageRating || 0}
+          />
 
         </div>
 
@@ -774,7 +661,8 @@ export default function UserProfilePage() {
 
             <h2
               className="
-                text-5xl
+                text-4xl
+                md:text-5xl
                 font-black
               "
             >
@@ -793,7 +681,8 @@ export default function UserProfilePage() {
               className="
                 bg-white
                 rounded-[32px]
-                p-24
+                p-16
+                md:p-24
                 text-center
                 shadow-sm
               "
@@ -801,7 +690,8 @@ export default function UserProfilePage() {
 
               <h3
                 className="
-                  text-4xl
+                  text-3xl
+                  md:text-4xl
                   font-black
                   mb-4
                 "
@@ -854,6 +744,58 @@ export default function UserProfilePage() {
       <Footer />
 
     </main>
+
+  );
+}
+
+function StatCard({
+  icon,
+  label,
+  value,
+}: any) {
+
+  return (
+
+    <div
+      className="
+        bg-white
+        rounded-[32px]
+        p-8
+        shadow-sm
+      "
+    >
+
+      <div
+        className="
+          flex
+          items-center
+          gap-3
+          mb-3
+        "
+      >
+
+        {icon}
+
+        <p className="text-gray-500">
+
+          {label}
+
+        </p>
+
+      </div>
+
+      <h3
+        className="
+          text-5xl
+          font-black
+        "
+      >
+
+        {value}
+
+      </h3>
+
+    </div>
 
   );
 }

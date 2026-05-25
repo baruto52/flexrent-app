@@ -90,7 +90,33 @@ export default function ChatPage() {
 
   useEffect(() => {
 
-    init();
+    let mounted = true;
+
+    let cleanup:
+      (() => void) | undefined;
+
+    async function setup() {
+
+      const fn =
+        await init();
+
+      cleanup = fn;
+    }
+
+    if (mounted) {
+
+      setup();
+    }
+
+    return () => {
+
+      mounted = false;
+
+      if (cleanup) {
+
+        cleanup();
+      }
+    };
 
   }, []);
 
@@ -138,15 +164,24 @@ export default function ChatPage() {
       loadProfile(),
     ]);
 
-    listenMessages(
-      userId
-    );
+    const messagesChannel =
+      listenMessages(userId);
 
-    listenTyping(
-      userId
-    );
+    const typingChannel =
+      listenTyping(userId);
 
     setLoading(false);
+
+    return () => {
+
+      supabase.removeChannel(
+        messagesChannel
+      );
+
+      supabase.removeChannel(
+        typingChannel
+      );
+    };
   }
 
   /*
@@ -162,7 +197,8 @@ export default function ChatPage() {
           id,
           full_name,
           avatar_url,
-          online
+          online,
+          verified_identity
         `)
         .eq(
           "id",
@@ -280,6 +316,8 @@ export default function ChatPage() {
         }
       )
       .subscribe();
+
+    return channel;
   }
 
   /*
@@ -325,6 +363,8 @@ export default function ChatPage() {
         }
       )
       .subscribe();
+
+    return channel;
   }
 
   /*
@@ -340,10 +380,6 @@ export default function ChatPage() {
       newMessage;
 
     setNewMessage("");
-
-    /*
-      OPTIMISTIC UI
-    */
 
     const optimisticMessage = {
 
@@ -409,11 +445,32 @@ export default function ChatPage() {
 
     try {
 
-      setUploading(true);
+      if (
+        !file.type.startsWith(
+          "image/"
+        )
+      ) {
 
-      /*
-        COMPRESS
-      */
+        alert(
+          "Nur Bilder erlaubt"
+        );
+
+        return;
+      }
+
+      if (
+        file.size >
+        10 * 1024 * 1024
+      ) {
+
+        alert(
+          "Bild zu groß"
+        );
+
+        return;
+      }
+
+      setUploading(true);
 
       const compressedFile =
         await imageCompression(
@@ -437,10 +494,6 @@ export default function ChatPage() {
         `${Date.now()}-${Math.random()
           .toString(36)
           .substring(2)}.${extension}`;
-
-      /*
-        UPLOAD
-      */
 
       const {
         error: uploadError,
@@ -472,10 +525,6 @@ export default function ChatPage() {
         return;
       }
 
-      /*
-        PUBLIC URL
-      */
-
       const {
         data: publicUrlData,
       } =
@@ -484,10 +533,6 @@ export default function ChatPage() {
           .getPublicUrl(
             fileName
           );
-
-      /*
-        SAVE
-      */
 
       await supabase
         .from("messages")
@@ -536,24 +581,11 @@ export default function ChatPage() {
     }, 100);
   }
 
-  /*
-    LOADING
-  */
-
   if (loading) {
 
     return (
 
-      <div
-        className="
-          min-h-screen
-          flex
-          items-center
-          justify-center
-          text-3xl
-          font-black
-        "
-      >
+      <div className="min-h-screen flex items-center justify-center text-3xl font-black">
 
         Chat wird geladen...
 
@@ -564,41 +596,13 @@ export default function ChatPage() {
 
   return (
 
-    <main
-      className="
-        h-screen
-        bg-[#f5f7fb]
-        flex
-        flex-col
-      "
-    >
+    <main className="h-screen bg-[#f5f7fb] flex flex-col">
 
       {/* HEADER */}
 
-      <div
-        className="
-          bg-white
-          border-b
-          border-gray-100
-          px-4
-          md:px-6
-          py-4
-          flex
-          items-center
-          justify-between
-          sticky
-          top-0
-          z-40
-        "
-      >
+      <div className="bg-white border-b border-gray-100 px-4 md:px-6 py-4 flex items-center justify-between sticky top-0 z-40">
 
-        <div
-          className="
-            flex
-            items-center
-            gap-4
-          "
-        >
+        <div className="flex items-center gap-4">
 
           <button
             onClick={() =>
@@ -606,20 +610,10 @@ export default function ChatPage() {
                 "/messages"
               )
             }
-            className="
-              w-12
-              h-12
-              rounded-2xl
-              bg-[#f5f7fb]
-              flex
-              items-center
-              justify-center
-            "
+            className="w-12 h-12 rounded-2xl bg-[#f5f7fb] flex items-center justify-center"
           >
 
-            <ArrowLeft
-              size={22}
-            />
+            <ArrowLeft size={22} />
 
           </button>
 
@@ -632,30 +626,14 @@ export default function ChatPage() {
             width={56}
             height={56}
             loading="lazy"
-            className="
-              rounded-full
-              object-cover
-              w-14
-              h-14
-            "
+            className="rounded-full object-cover w-14 h-14"
           />
 
           <div>
 
-            <div
-              className="
-                flex
-                items-center
-                gap-2
-              "
-            >
+            <div className="flex items-center gap-2">
 
-              <h1
-                className="
-                  font-black
-                  text-xl
-                "
-              >
+              <h1 className="font-black text-xl">
 
                 {
                   profile?.full_name ||
@@ -664,22 +642,18 @@ export default function ChatPage() {
 
               </h1>
 
-              <ShieldCheck
-                size={18}
-                className="
-                  text-[#16d64d]
-                "
-              />
+              {profile?.verified_identity && (
+
+                <ShieldCheck
+                  size={18}
+                  className="text-[#16d64d]"
+                />
+
+              )}
 
             </div>
 
-            <p
-              className="
-                text-[#16d64d]
-                text-sm
-                font-semibold
-              "
-            >
+            <p className="text-[#16d64d] text-sm font-semibold">
 
               {otherTyping
                 ? "schreibt gerade..."
@@ -697,16 +671,7 @@ export default function ChatPage() {
 
       {/* CHAT */}
 
-      <div
-        className="
-          flex-1
-          overflow-y-auto
-          px-4
-          md:px-6
-          py-6
-          space-y-5
-        "
-      >
+      <div className="flex-1 overflow-y-auto px-4 md:px-6 py-6 space-y-5">
 
         {messages.map(
           (msg) => {
@@ -753,26 +718,14 @@ export default function ChatPage() {
                       height={500}
                       loading="lazy"
                       quality={75}
-                      className="
-                        rounded-2xl
-                        mb-3
-                        max-h-[320px]
-                        w-full
-                        object-cover
-                      "
+                      className="rounded-2xl mb-3 max-h-[320px] w-full object-cover"
                     />
 
                   )}
 
                   {msg.message && (
 
-                    <div
-                      className="
-                        break-words
-                        text-[16px]
-                        leading-7
-                      "
-                    >
+                    <div className="break-words text-[16px] leading-7">
 
                       {msg.message}
 
@@ -780,17 +733,18 @@ export default function ChatPage() {
 
                   )}
 
-                  <div
-                    className={`
-                      text-[11px]
-                      mt-3
-                      ${
-                        isMine
-                          ? "text-green-100"
-                          : "text-gray-400"
-                      }
-                    `}
-                  >
+                  <div className={`
+                    text-[11px]
+                    mt-3
+                    flex
+                    items-center
+                    gap-2
+                    ${
+                      isMine
+                        ? "text-green-100"
+                        : "text-gray-400"
+                    }
+                  `}>
 
                     {new Date(
                       msg.created_at
@@ -803,6 +757,18 @@ export default function ChatPage() {
                         minute:
                           "2-digit",
                       }
+                    )}
+
+                    {isMine && (
+
+                      <span>
+
+                        {msg.seen
+                          ? "✓✓"
+                          : "✓"}
+
+                      </span>
+
                     )}
 
                   </div>
@@ -821,26 +787,9 @@ export default function ChatPage() {
 
       {/* INPUT */}
 
-      <div
-        className="
-          bg-white
-          border-t
-          border-gray-100
-          p-4
-          sticky
-          bottom-0
-        "
-      >
+      <div className="bg-white border-t border-gray-100 p-4 sticky bottom-0">
 
-        <div
-          className="
-            flex
-            items-center
-            gap-3
-            max-w-5xl
-            mx-auto
-          "
-        >
+        <div className="flex items-center gap-3 max-w-5xl mx-auto">
 
           <input
             value={newMessage}
@@ -852,45 +801,22 @@ export default function ChatPage() {
             onKeyDown={(e) => {
 
               if (
-                e.key ===
-                "Enter"
+                e.key === "Enter" &&
+                !e.shiftKey
               ) {
+
+                e.preventDefault();
 
                 sendMessage();
               }
             }}
             placeholder="Nachricht schreiben..."
-            className="
-              flex-1
-              h-16
-              rounded-2xl
-              border
-              border-gray-200
-              px-5
-              outline-none
-              text-lg
-              bg-[#f5f7fb]
-            "
+            className="flex-1 h-16 rounded-2xl border border-gray-200 px-5 outline-none text-lg bg-[#f5f7fb]"
           />
 
-          <label
-            className="
-              w-16
-              h-16
-              rounded-2xl
-              bg-white
-              border
-              border-gray-200
-              flex
-              items-center
-              justify-center
-              cursor-pointer
-            "
-          >
+          <label className="w-16 h-16 rounded-2xl bg-white border border-gray-200 flex items-center justify-center cursor-pointer">
 
-            <ImageIcon
-              size={22}
-            />
+            <ImageIcon size={22} />
 
             <input
               type="file"
@@ -913,23 +839,10 @@ export default function ChatPage() {
           <button
             onClick={sendMessage}
             disabled={uploading}
-            className="
-              w-16
-              h-16
-              rounded-2xl
-              bg-[#16d64d]
-              text-white
-              flex
-              items-center
-              justify-center
-              shadow-lg
-              disabled:opacity-50
-            "
+            className="w-16 h-16 rounded-2xl bg-[#16d64d] text-white flex items-center justify-center shadow-lg disabled:opacity-50"
           >
 
-            <Send
-              size={22}
-            />
+            <Send size={22} />
 
           </button>
 

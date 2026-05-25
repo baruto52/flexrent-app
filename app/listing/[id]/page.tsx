@@ -10,6 +10,8 @@ import {
   useRouter,
 } from "next/navigation";
 
+import Link from "next/link";
+
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ReviewsSection from "@/components/ReviewsSection";
@@ -33,6 +35,12 @@ import {
   Flag,
 
   X,
+
+  BadgeCheck,
+
+  CalendarDays,
+
+  Sparkles,
 
 } from "lucide-react";
 
@@ -72,6 +80,9 @@ export default function ListingPage() {
 
   const [averageRating, setAverageRating] =
     useState("0.0");
+
+  const [reviewsCount, setReviewsCount] =
+    useState(0);
 
   const [checkoutLoading, setCheckoutLoading] =
     useState(false);
@@ -216,6 +227,10 @@ export default function ListingPage() {
 
     setListing(data);
 
+    /*
+      OWNER
+    */
+
     const {
       data: ownerData,
     } =
@@ -230,12 +245,16 @@ export default function ListingPage() {
 
     setOwner(ownerData);
 
+    /*
+      REVIEWS
+    */
+
     const {
       data: reviews,
     } =
       await supabase
         .from("reviews")
-        .select("rating")
+        .select("*")
         .eq(
           "listing_id",
           data.id
@@ -264,9 +283,15 @@ export default function ListingPage() {
 
       setAverageRating(avg);
 
+      setReviewsCount(
+        reviews.length
+      );
+
     } else {
 
       setAverageRating("0.0");
+
+      setReviewsCount(0);
     }
 
     return data;
@@ -594,19 +619,24 @@ export default function ListingPage() {
               />
 
               {averageRating}
+              {" "}
+              ({reviewsCount})
 
             </div>
 
-            <div className="flex items-center gap-2 text-sm font-bold text-gray-600">
+            {owner?.verified_identity && (
 
-              <ShieldCheck
-                size={16}
-                className="text-[#16d64d]"
-              />
+              <div className="flex items-center gap-2 text-sm font-bold text-[#16d64d]">
 
-              Verifiziert
+                <ShieldCheck
+                  size={16}
+                />
 
-            </div>
+                Verifiziert
+
+              </div>
+
+            )}
 
             {listing.ai_verified && (
 
@@ -644,7 +674,7 @@ export default function ListingPage() {
               onClick={() =>
                 setReportOpen(true)
               }
-              className="h-14 px-6 rounded-2xl bg-red-500 text-white flex items-center justify-center gap-3 font-black"
+              className="h-14 px-6 rounded-2xl bg-red-500 text-white flex items-center justify-center gap-3 font-black hover:scale-[1.02] transition-all"
             >
 
               <Flag size={20} />
@@ -669,13 +699,23 @@ export default function ListingPage() {
               images={listing.images}
             />
 
+            {/* DESCRIPTION */}
+
             <div className="bg-white rounded-[40px] p-8 shadow-sm">
 
-              <h2 className="text-4xl font-black mb-6">
+              <div className="flex items-center gap-3 mb-6">
 
-                Beschreibung
+                <Sparkles
+                  className="text-[#16d64d]"
+                />
 
-              </h2>
+                <h2 className="text-4xl font-black">
+
+                  Beschreibung
+
+                </h2>
+
+              </div>
 
               <p className="text-gray-600 text-lg leading-10 whitespace-pre-line">
 
@@ -684,6 +724,8 @@ export default function ListingPage() {
               </p>
 
             </div>
+
+            {/* OWNER */}
 
             <div className="bg-white rounded-[40px] p-8 shadow-sm">
 
@@ -702,17 +744,41 @@ export default function ListingPage() {
 
                   <div>
 
-                    <h3 className="text-3xl font-black mb-2">
+                    <Link
+                      href={`/user/${listing.user_id}`}
+                    >
 
-                      {owner?.full_name || "Gastgeber"}
+                      <h3 className="text-3xl font-black mb-2 hover:underline">
 
-                    </h3>
+                        {owner?.full_name || "Gastgeber"}
 
-                    <div className="flex items-center gap-2 text-gray-500">
+                      </h3>
 
-                      <Clock3 size={18} />
+                    </Link>
 
-                      Antwortet schnell
+                    <div className="flex flex-wrap items-center gap-4 text-gray-500">
+
+                      <div className="flex items-center gap-2">
+
+                        <Clock3 size={18} />
+
+                        Antwortet schnell
+
+                      </div>
+
+                      {owner?.verified_identity && (
+
+                        <div className="flex items-center gap-2 text-[#16d64d] font-bold">
+
+                          <BadgeCheck
+                            size={18}
+                          />
+
+                          Verifiziert
+
+                        </div>
+
+                      )}
 
                     </div>
 
@@ -722,7 +788,7 @@ export default function ListingPage() {
 
                 <button
                   onClick={handleMessage}
-                  className="h-16 px-8 rounded-2xl bg-black text-white flex items-center justify-center gap-3 font-black text-lg"
+                  className="h-16 px-8 rounded-2xl bg-black text-white flex items-center justify-center gap-3 font-black text-lg hover:scale-[1.02] transition-all"
                 >
 
                   <MessageCircle size={22} />
@@ -735,13 +801,23 @@ export default function ListingPage() {
 
             </div>
 
+            {/* MAP */}
+
             <div className="bg-white rounded-[40px] p-8 shadow-sm">
 
-              <h2 className="text-4xl font-black mb-8">
+              <div className="flex items-center gap-3 mb-8">
 
-                Standort
+                <MapPin
+                  className="text-[#16d64d]"
+                />
 
-              </h2>
+                <h2 className="text-4xl font-black">
+
+                  Standort
+
+                </h2>
+
+              </div>
 
               <ListingMap
                 lat={listing.latitude}
@@ -754,13 +830,15 @@ export default function ListingPage() {
 
             </div>
 
+            {/* REVIEWS */}
+
             <ReviewsSection
               listingId={listing.id}
               ownerId={listing.user_id}
               user={user}
             />
 
-            {/* RELATED LISTINGS */}
+            {/* RECOMMENDATIONS */}
 
             {recommendations.length > 0 && (
 
@@ -811,7 +889,7 @@ export default function ListingPage() {
 
           <div className="xl:sticky xl:top-28 h-fit">
 
-            <div className="bg-white rounded-[40px] p-8 shadow-sm">
+            <div className="bg-white rounded-[40px] p-8 shadow-sm border border-gray-100">
 
               <div className="flex items-end gap-3 mb-8">
 
@@ -890,7 +968,7 @@ export default function ListingPage() {
               <button
                 onClick={handleCheckout}
                 disabled={checkoutLoading}
-                className="w-full h-16 rounded-2xl bg-[#16d64d] text-white text-lg font-black mt-8"
+                className="w-full h-16 rounded-2xl bg-[#16d64d] text-white text-lg font-black mt-8 hover:scale-[1.01] transition-all"
               >
 
                 {checkoutLoading
@@ -901,6 +979,16 @@ export default function ListingPage() {
 
               </button>
 
+              <div className="flex items-center justify-center gap-2 mt-6 text-sm text-gray-400">
+
+                <ShieldCheck
+                  size={16}
+                />
+
+                Sichere Zahlung mit Stripe
+
+              </div>
+
             </div>
 
           </div>
@@ -908,6 +996,94 @@ export default function ListingPage() {
         </div>
 
       </div>
+
+      {/* REPORT MODAL */}
+
+      {reportOpen && (
+
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+
+          <div className="bg-white w-full max-w-xl rounded-[40px] p-8 relative">
+
+            <button
+              onClick={() =>
+                setReportOpen(false)
+              }
+              className="absolute top-6 right-6 w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center"
+            >
+
+              <X size={20} />
+
+            </button>
+
+            <h2 className="text-4xl font-black mb-8">
+
+              Listing melden
+
+            </h2>
+
+            <div className="space-y-5">
+
+              <select
+                value={reportReason}
+                onChange={(e) =>
+                  setReportReason(
+                    e.target.value
+                  )
+                }
+                className="w-full h-16 rounded-2xl border border-gray-200 px-5"
+              >
+
+                <option>
+                  Spam
+                </option>
+
+                <option>
+                  Betrug
+                </option>
+
+                <option>
+                  Fake Listing
+                </option>
+
+                <option>
+                  Illegale Inhalte
+                </option>
+
+              </select>
+
+              <textarea
+                value={reportMessage}
+                onChange={(e) =>
+                  setReportMessage(
+                    e.target.value
+                  )
+                }
+                placeholder="Beschreibe das Problem..."
+                className="w-full h-52 rounded-2xl border border-gray-200 p-5 resize-none"
+              />
+
+            </div>
+
+            <button
+              onClick={submitReport}
+              disabled={reportLoading}
+              className="w-full h-16 rounded-2xl bg-red-500 text-white font-black text-lg mt-8"
+            >
+
+              {reportLoading
+
+                ? "Wird gesendet..."
+
+                : "Listing melden"}
+
+            </button>
+
+          </div>
+
+        </div>
+
+      )}
 
       <Footer />
 

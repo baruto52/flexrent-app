@@ -22,6 +22,8 @@ import {
 
   ArrowRight,
 
+  Circle,
+
 } from "lucide-react";
 
 import { supabase }
@@ -40,6 +42,10 @@ type Conversation = {
   createdAt: string;
 
   unread: number;
+
+  verified?: boolean;
+
+  online?: boolean;
 };
 
 export default function MessagesPage() {
@@ -59,11 +65,38 @@ export default function MessagesPage() {
   const [loading, setLoading] =
     useState(true);
 
+  /*
+    INIT
+  */
+
   useEffect(() => {
 
-    init();
+    let cleanup:
+      (() => void) | undefined;
+
+    async function setup() {
+
+      const fn =
+        await init();
+
+      cleanup = fn;
+    }
+
+    setup();
+
+    return () => {
+
+      if (cleanup) {
+
+        cleanup();
+      }
+    };
 
   }, []);
+
+  /*
+    SEARCH
+  */
 
   useEffect(() => {
 
@@ -89,6 +122,10 @@ export default function MessagesPage() {
     );
 
   }, [search, conversations]);
+
+  /*
+    INIT SYSTEM
+  */
 
   async function init() {
 
@@ -116,12 +153,24 @@ export default function MessagesPage() {
       userId
     );
 
-    listenMessages(
-      userId
-    );
+    const channel =
+      listenMessages(
+        userId
+      );
 
     setLoading(false);
+
+    return () => {
+
+      supabase.removeChannel(
+        channel
+      );
+    };
   }
+
+  /*
+    REALTIME
+  */
 
   function listenMessages(
     userId: string
@@ -148,116 +197,165 @@ export default function MessagesPage() {
         }
       )
       .subscribe();
+
+    return channel;
   }
+
+  /*
+    LOAD CONVERSATIONS
+  */
 
   async function loadConversations(
     userId: string
   ) {
 
-    const { data } =
-      await supabase
-        .from("messages")
-        .select("*")
-        .or(
-          `sender_id.eq.${userId},receiver_id.eq.${userId}`
-        )
-        .order(
-          "created_at",
-          {
-            ascending: false,
-          }
-        );
+    try {
 
-    if (!data) {
-
-      setLoading(false);
-
-      return;
-    }
-
-    const uniqueMap =
-      new Map();
-
-    for (const msg of data) {
-
-      const otherUserId =
-        msg.sender_id === userId
-          ? msg.receiver_id
-          : msg.sender_id;
-
-      if (
-        uniqueMap.has(
-          otherUserId
-        )
-      )
-        continue;
-
-      const unreadCount =
-        data.filter(
-          (m) =>
-            m.sender_id ===
-              otherUserId &&
-            m.receiver_id ===
-              userId &&
-            !m.is_read
-        ).length;
-
-      const {
-        data: profile,
-      } =
+      const { data } =
         await supabase
-          .from("profiles")
-          .select(
-            "full_name, avatar_url"
+          .from("messages")
+          .select("*")
+          .or(
+            `sender_id.eq.${userId},receiver_id.eq.${userId}`
           )
-          .eq(
-            "id",
+          .order(
+            "created_at",
+            {
+              ascending: false,
+            }
+          );
+
+      if (!data) {
+
+        setConversations([]);
+
+        setFiltered([]);
+
+        return;
+      }
+
+      const uniqueMap =
+        new Map();
+
+      for (const msg of data) {
+
+        const otherUserId =
+          msg.sender_id === userId
+            ? msg.receiver_id
+            : msg.sender_id;
+
+        if (
+          uniqueMap.has(
             otherUserId
           )
-          .single();
+        )
+          continue;
 
-      uniqueMap.set(
-        otherUserId,
-        {
+        const unreadCount =
+          data.filter(
+            (m) =>
 
-          userId:
-            otherUserId,
+              m.sender_id ===
+                otherUserId &&
 
-          name:
-            profile?.full_name ||
-            "User",
+              m.receiver_id ===
+                userId &&
 
-          avatar:
-            profile?.avatar_url ||
-            "/avatar.png",
+              !m.is_read
+          ).length;
 
-          lastMessage:
-            msg.image_url
-              ? "📷 Bild"
-              : msg.message,
+        const {
+          data: profile,
+        } =
+          await supabase
+            .from("profiles")
+            .select(`
+              full_name,
+              avatar_url,
+              verified_identity,
+              online
+            `)
+            .eq(
+              "id",
+              otherUserId
+            )
+            .maybeSingle();
 
-          createdAt:
-            msg.created_at,
+        uniqueMap.set(
+          otherUserId,
+          {
 
-          unread:
-            unreadCount,
-        }
+            userId:
+              otherUserId,
+
+            name:
+              profile?.full_name ||
+              "User",
+
+            avatar:
+              profile?.avatar_url ||
+              "/avatar.png",
+
+            verified:
+              profile?.verified_identity ||
+              false,
+
+            online:
+              profile?.online ||
+              false,
+
+            lastMessage:
+              msg.image_url
+                ? "📷 Bild"
+                : msg.message ||
+                  "Neue Nachricht",
+
+            createdAt:
+              msg.created_at,
+
+            unread:
+              unreadCount,
+          }
+        );
+      }
+
+      const result =
+        Array.from(
+          uniqueMap.values()
+        );
+
+      result.sort(
+        (
+          a: any,
+          b: any
+        ) =>
+
+          new Date(
+            b.createdAt
+          ).getTime() -
+
+          new Date(
+            a.createdAt
+          ).getTime()
       );
+
+      setConversations(
+        result
+      );
+
+      setFiltered(
+        result
+      );
+
+    } catch (error) {
+
+      console.log(error);
     }
-
-    const result =
-      Array.from(
-        uniqueMap.values()
-      );
-
-    setConversations(
-      result
-    );
-
-    setFiltered(
-      result
-    );
   }
+
+  /*
+    DELETE
+  */
 
   async function deleteConversation(
     otherUserId: string
@@ -271,23 +369,35 @@ export default function MessagesPage() {
     if (!confirmDelete)
       return;
 
-    await supabase
-      .from("messages")
-      .delete()
-      .or(
-        `and(sender_id.eq.${currentUserId},receiver_id.eq.${otherUserId}),and(sender_id.eq.${otherUserId},receiver_id.eq.${currentUserId})`
+    try {
+
+      await supabase
+        .from("messages")
+        .delete()
+        .or(
+          `and(sender_id.eq.${currentUserId},receiver_id.eq.${otherUserId}),and(sender_id.eq.${otherUserId},receiver_id.eq.${currentUserId})`
+        );
+
+      setConversations(
+        (prev) =>
+
+          prev.filter(
+            (c) =>
+
+              c.userId !==
+              otherUserId
+          )
       );
 
-    setConversations(
-      (prev) =>
+    } catch (error) {
 
-        prev.filter(
-          (c) =>
-            c.userId !==
-            otherUserId
-        )
-    );
+      console.log(error);
+    }
   }
+
+  /*
+    LOADING
+  */
 
   if (loading) {
 
@@ -327,7 +437,7 @@ export default function MessagesPage() {
         "
       >
 
-        {/* HEADER */}
+        {/* HERO */}
 
         <div className="mb-10">
 
@@ -373,7 +483,6 @@ export default function MessagesPage() {
                   md:text-7xl
                   font-black
                   leading-none
-                  tracking-tight
                 "
               >
 
@@ -391,9 +500,8 @@ export default function MessagesPage() {
                 "
               >
 
-                Kommuniziere direkt mit
-                Vermietern und Mietern
-                auf Loqaro.
+                Kommuniziere sicher
+                mit Mietern und Hosts.
 
               </p>
 
@@ -402,13 +510,11 @@ export default function MessagesPage() {
             <div
               className="
                 bg-white
+                rounded-[36px]
+                p-6
+                shadow-sm
                 border
                 border-gray-100
-                rounded-3xl
-                px-8
-                py-6
-                shadow-sm
-                min-w-fit
               "
             >
 
@@ -427,7 +533,6 @@ export default function MessagesPage() {
                 className="
                   text-5xl
                   font-black
-                  leading-none
                 "
               >
 
@@ -507,8 +612,7 @@ export default function MessagesPage() {
             className="
               bg-white
               rounded-[40px]
-              p-10
-              md:p-24
+              p-16
               text-center
               shadow-sm
             "
@@ -537,10 +641,9 @@ export default function MessagesPage() {
 
             <h2
               className="
-                text-4xl
-                md:text-6xl
+                text-5xl
                 font-black
-                mb-6
+                mb-5
               "
             >
 
@@ -551,16 +654,12 @@ export default function MessagesPage() {
             <p
               className="
                 text-gray-500
-                text-lg
-                md:text-2xl
-                max-w-3xl
-                mx-auto
+                text-xl
               "
             >
 
-              Sobald du Listings
-              kontaktierst, erscheinen
-              deine Unterhaltungen hier.
+              Deine Konversationen
+              erscheinen hier.
 
             </p>
 
@@ -585,7 +684,6 @@ export default function MessagesPage() {
                     border-gray-100
                     hover:shadow-xl
                     transition-all
-                    duration-300
                   "
                 >
 
@@ -597,8 +695,11 @@ export default function MessagesPage() {
                     "
                   >
 
+                    {/* AVATAR */}
+
                     <Link
                       href={`/messages/${chat.userId}`}
+                      className="relative"
                     >
 
                       <img
@@ -611,13 +712,30 @@ export default function MessagesPage() {
                           h-20
                           rounded-full
                           object-cover
-                          border-4
-                          border-white
-                          shadow-lg
                         "
                       />
 
+                      {chat.online && (
+
+                        <div
+                          className="
+                            absolute
+                            bottom-1
+                            right-1
+                            w-5
+                            h-5
+                            rounded-full
+                            bg-[#16d64d]
+                            border-2
+                            border-white
+                          "
+                        />
+
+                      )}
+
                     </Link>
+
+                    {/* CONTENT */}
 
                     <Link
                       href={`/messages/${chat.userId}`}
@@ -632,7 +750,7 @@ export default function MessagesPage() {
                           flex
                           items-start
                           justify-between
-                          gap-5
+                          gap-4
                         "
                       >
 
@@ -659,20 +777,24 @@ export default function MessagesPage() {
 
                             </h2>
 
-                            <ShieldCheck
-                              size={18}
-                              className="
-                                text-[#16d64d]
-                              "
-                            />
+                            {chat.verified && (
+
+                              <ShieldCheck
+                                size={18}
+                                className="
+                                  text-[#16d64d]
+                                "
+                              />
+
+                            )}
 
                           </div>
 
                           <p
                             className="
                               text-gray-500
-                              line-clamp-1
                               text-lg
+                              truncate
                             "
                           >
 
@@ -690,7 +812,6 @@ export default function MessagesPage() {
                             flex-col
                             items-end
                             gap-3
-                            min-w-fit
                           "
                         >
 
@@ -740,12 +861,14 @@ export default function MessagesPage() {
 
                     </Link>
 
+                    {/* ACTIONS */}
+
                     <div
                       className="
                         flex
                         items-center
                         gap-3
-                        ml-3
+                        ml-2
                       "
                     >
 
@@ -760,7 +883,6 @@ export default function MessagesPage() {
                           flex
                           items-center
                           justify-center
-                          shadow-lg
                         "
                       >
 

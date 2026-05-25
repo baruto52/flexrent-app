@@ -7,11 +7,24 @@ import { z } from "zod";
 import { ratelimit }
 from "@/lib/rate-limit";
 
+import { createClient }
+from "@supabase/supabase-js";
+
 export const runtime = "edge";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
+
+const supabase =
+  createClient(
+
+    process.env
+      .NEXT_PUBLIC_SUPABASE_URL!,
+
+    process.env
+      .SUPABASE_SERVICE_ROLE_KEY!
+  );
 
 const schema = z.object({
   query: z.string().min(2).max(300),
@@ -67,6 +80,10 @@ export async function POST(
 
     const { query } =
       parsed.data;
+
+    /*
+      AI SEARCH ANALYSIS
+    */
 
     const completion =
       await openai.chat.completions.create({
@@ -133,9 +150,112 @@ Format:
     const result =
       JSON.parse(content);
 
+    /*
+      LOAD LISTINGS
+    */
+
+    let queryBuilder =
+      supabase
+        .from("listings")
+        .select("*")
+        .eq(
+          "active",
+          true
+        )
+        .limit(24);
+
+    /*
+      CATEGORY
+    */
+
+    if (
+      result.category
+    ) {
+
+      queryBuilder =
+        queryBuilder.ilike(
+          "category",
+          `%${result.category}%`
+        );
+    }
+
+    /*
+      LOCATION
+    */
+
+    if (
+      result.location
+    ) {
+
+      queryBuilder =
+        queryBuilder.ilike(
+          "location",
+          `%${result.location}%`
+        );
+    }
+
+    /*
+      PRICE
+    */
+
+    if (
+      result.maxPrice &&
+      !isNaN(
+        Number(
+          result.maxPrice
+        )
+      )
+    ) {
+
+      queryBuilder =
+        queryBuilder.lte(
+          "price",
+          Number(
+            result.maxPrice
+          )
+        );
+    }
+
+    const {
+      data: listings,
+      error,
+    } =
+      await queryBuilder;
+
+    if (error) {
+
+      return NextResponse.json(
+        {
+          error:
+            "Listings Fehler",
+        },
+        {
+          status: 500,
+        }
+      );
+    }
+
+    /*
+      AI SORTING
+    */
+
+    const sorted =
+      (listings || []).sort(
+
+        (a, b) =>
+
+          (b.trust_score || 0) -
+          (a.trust_score || 0)
+      );
+
     return NextResponse.json({
+
       success: true,
+
       search: result,
+
+      listings:
+        sorted,
     });
 
   } catch (error) {

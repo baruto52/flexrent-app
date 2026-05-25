@@ -16,6 +16,7 @@ import ReviewsSection from "@/components/ReviewsSection";
 import ImageGallery from "@/components/ImageGallery";
 import BookingCalendar from "@/components/BookingCalendar";
 import ListingMap from "@/components/ListingMap";
+import ListingCard from "@/components/ListingCard";
 
 import {
 
@@ -54,6 +55,11 @@ export default function ListingPage() {
 
   const [listing, setListing] =
     useState<any>(null);
+
+  const [
+    recommendations,
+    setRecommendations,
+  ] = useState<any[]>([]);
 
   const [owner, setOwner] =
     useState<any>(null);
@@ -135,7 +141,15 @@ export default function ListingPage() {
         setUser(session.user);
       }
 
-      await fetchListing();
+      const loadedListing =
+        await fetchListing();
+
+      if (loadedListing) {
+
+        await loadRecommendations(
+          loadedListing
+        );
+      }
 
       await loadBlockedDates();
 
@@ -165,7 +179,7 @@ export default function ListingPage() {
 
       setListing(null);
 
-      return;
+      return null;
     }
 
     let fixedImages: string[] = [];
@@ -253,6 +267,52 @@ export default function ListingPage() {
     } else {
 
       setAverageRating("0.0");
+    }
+
+    return data;
+  }
+
+  async function loadRecommendations(
+    item: any
+  ) {
+
+    try {
+
+      const res =
+        await fetch(
+          "/api/ai/recommendations",
+          {
+            method: "POST",
+
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
+
+            body: JSON.stringify({
+
+              title:
+                item.title,
+
+              category:
+                item.category,
+
+              listingId:
+                item.id,
+            }),
+          }
+        );
+
+      const data =
+        await res.json();
+
+      setRecommendations(
+        data.recommendations || []
+      );
+
+    } catch (error) {
+
+      console.log(error);
     }
   }
 
@@ -548,6 +608,16 @@ export default function ListingPage() {
 
             </div>
 
+            {listing.ai_verified && (
+
+              <div className="px-4 py-2 rounded-full bg-[#16d64d]/10 text-[#16d64d] text-sm font-black">
+
+                ✓ AI Verified
+
+              </div>
+
+            )}
+
           </div>
 
           <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
@@ -615,8 +685,6 @@ export default function ListingPage() {
 
             </div>
 
-            {/* OWNER */}
-
             <div className="bg-white rounded-[40px] p-8 shadow-sm">
 
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-8">
@@ -667,8 +735,6 @@ export default function ListingPage() {
 
             </div>
 
-            {/* MAP */}
-
             <div className="bg-white rounded-[40px] p-8 shadow-sm">
 
               <h2 className="text-4xl font-black mb-8">
@@ -688,13 +754,56 @@ export default function ListingPage() {
 
             </div>
 
-            {/* REVIEWS */}
-
             <ReviewsSection
               listingId={listing.id}
               ownerId={listing.user_id}
               user={user}
             />
+
+            {/* RELATED LISTINGS */}
+
+            {recommendations.length > 0 && (
+
+              <section className="mt-24">
+
+                <div className="flex items-end justify-between mb-8">
+
+                  <div>
+
+                    <h2 className="text-4xl font-black">
+
+                      Ähnliche Listings
+
+                    </h2>
+
+                    <p className="text-gray-500 mt-2">
+
+                      AI Empfehlungen für dich
+
+                    </p>
+
+                  </div>
+
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+
+                  {recommendations.map(
+                    (item) => (
+
+                      <ListingCard
+                        key={item.id}
+                        listing={item}
+                      />
+
+                    )
+                  )}
+
+                </div>
+
+              </section>
+
+            )}
 
           </div>
 

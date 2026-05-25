@@ -64,6 +64,11 @@ function HomeContent() {
   const [openAI, setOpenAI] =
     useState(false);
 
+  const [
+    searchLoading,
+    setSearchLoading,
+  ] = useState(false);
+
   useEffect(() => {
 
     setSearch(
@@ -95,6 +100,79 @@ function HomeContent() {
     );
 
   }, [searchParams]);
+
+  /*
+    AI SEARCH
+  */
+
+  async function handleAISearch() {
+
+    if (!search) return;
+
+    try {
+
+      setSearchLoading(true);
+
+      const res =
+        await fetch(
+          "/api/ai/search",
+          {
+            method: "POST",
+
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
+
+            body: JSON.stringify({
+              query: search,
+            }),
+          }
+        );
+
+      const data =
+        await res.json();
+
+      const result =
+        data.search;
+
+      if (
+        result?.category
+      ) {
+
+        setCategory(
+          result.category
+        );
+      }
+
+      if (
+        result?.maxPrice
+      ) {
+
+        setMaxPrice(
+          result.maxPrice
+        );
+      }
+
+      if (
+        result?.location
+      ) {
+
+        setLocation(
+          result.location
+        );
+      }
+
+    } catch (error) {
+
+      console.log(error);
+
+    } finally {
+
+      setSearchLoading(false);
+
+    }
+  }
 
   return (
 
@@ -276,9 +354,15 @@ function HomeContent() {
 
               </div>
 
-              {/* BUTTON */}
+              {/* AI SEARCH BUTTON */}
 
               <button
+                onClick={
+                  handleAISearch
+                }
+                disabled={
+                  searchLoading
+                }
                 className="
                   h-16
                   rounded-2xl
@@ -292,7 +376,9 @@ function HomeContent() {
                 "
               >
 
-                Jetzt entdecken
+                {searchLoading
+                  ? "AI analysiert..."
+                  : "Jetzt entdecken"}
 
               </button>
 

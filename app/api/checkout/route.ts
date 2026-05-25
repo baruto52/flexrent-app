@@ -1,10 +1,14 @@
 import { NextResponse }
 from "next/server";
 
-import Stripe from "stripe";
+import Stripe
+from "stripe";
 
 import { supabase }
 from "@/lib/supabase";
+
+export const runtime =
+  "nodejs";
 
 const stripe =
   new Stripe(
@@ -26,12 +30,19 @@ export async function POST(
     */
 
     if (
+
       !body.title ||
+
       !body.totalPrice ||
+
       !body.listingId ||
+
       !body.renterId ||
+
       !body.ownerId ||
+
       !body.startDate ||
+
       !body.endDate
     ) {
 
@@ -40,6 +51,247 @@ export async function POST(
         {
           error:
             "Ungültige Daten",
+        },
+
+        {
+          status: 400,
+        }
+      );
+    }
+
+    /*
+      DATES
+    */
+
+    const startDate =
+      new Date(
+        body.startDate
+      );
+
+    const endDate =
+      new Date(
+        body.endDate
+      );
+
+    /*
+      INVALID DATES
+    */
+
+    if (
+
+      isNaN(
+        startDate.getTime()
+      ) ||
+
+      isNaN(
+        endDate.getTime()
+      )
+    ) {
+
+      return NextResponse.json(
+
+        {
+          error:
+            "Ungültige Datumswerte",
+        },
+
+        {
+          status: 400,
+        }
+      );
+    }
+
+    /*
+      SAME USER
+    */
+
+    if (
+      body.renterId ===
+      body.ownerId
+    ) {
+
+      return NextResponse.json(
+
+        {
+          error:
+            "Eigenes Listing kann nicht gebucht werden",
+        },
+
+        {
+          status: 400,
+        }
+      );
+    }
+
+    /*
+      LISTING
+    */
+
+    const {
+      data: listing,
+      error: listingError,
+    } =
+      await supabase
+        .from("listings")
+        .select("*")
+        .eq(
+          "id",
+          body.listingId
+        )
+        .single();
+
+    if (
+      listingError ||
+      !listing
+    ) {
+
+      return NextResponse.json(
+
+        {
+          error:
+            "Listing nicht gefunden",
+        },
+
+        {
+          status: 404,
+        }
+      );
+    }
+
+    /*
+      INACTIVE
+    */
+
+    if (
+      listing.active === false
+    ) {
+
+      return NextResponse.json(
+
+        {
+          error:
+            "Listing nicht aktiv",
+        },
+
+        {
+          status: 400,
+        }
+      );
+    }
+
+    /*
+      OVERLAP CHECK
+    */
+
+    const {
+      data: overlappingBookings,
+    } =
+      await supabase
+        .from("bookings")
+        .select("*")
+        .eq(
+          "listing_id",
+          body.listingId
+        )
+        .neq(
+          "status",
+          "cancelled"
+        )
+        .lte(
+          "start_date",
+          body.endDate
+        )
+        .gte(
+          "end_date",
+          body.startDate
+        );
+
+    if (
+      overlappingBookings &&
+      overlappingBookings.length > 0
+    ) {
+
+      return NextResponse.json(
+
+        {
+          error:
+            "Zeitraum bereits gebucht",
+        },
+
+        {
+          status: 409,
+        }
+      );
+    }
+
+    /*
+      TOTAL DAYS
+    */
+
+    const totalDays =
+      Math.max(
+
+        1,
+
+        Math.ceil(
+
+          (
+            endDate.getTime() -
+            startDate.getTime()
+          ) /
+
+          (
+            1000 *
+            60 *
+            60 *
+            24
+          )
+        ) + 1
+      );
+
+    /*
+      PRICES
+    */
+
+    const listingPrice =
+      Number(
+        listing.price || 0
+      );
+
+    const subtotal =
+      listingPrice *
+      totalDays;
+
+    const serviceFee =
+      Math.round(
+        subtotal * 0.12
+      );
+
+    const cleaningFee =
+      25;
+
+    const calculatedTotal =
+
+      subtotal +
+      serviceFee +
+      cleaningFee;
+
+    /*
+      MANIPULATION CHECK
+    */
+
+    if (
+
+      Number(
+        body.totalPrice
+      ) !== calculatedTotal
+    ) {
+
+      return NextResponse.json(
+
+        {
+          error:
+            "Preis Manipulation erkannt",
         },
 
         {
@@ -68,7 +320,9 @@ export async function POST(
         .single();
 
     if (
+
       ownerError ||
+
       !ownerProfile
     ) {
 
@@ -86,7 +340,7 @@ export async function POST(
     }
 
     /*
-      STRIPE CONNECT CHECK
+      STRIPE CONNECT
     */
 
     if (
@@ -108,19 +362,16 @@ export async function POST(
     }
 
     /*
-      PRICING
+      STRIPE AMOUNT
     */
 
     const totalAmount =
       Math.round(
-
-        Number(
-          body.totalPrice
-        ) * 100
+        calculatedTotal * 100
       );
 
     /*
-      10% PLATFORM FEE
+      PLATFORM FEE
     */
 
     const applicationFee =
@@ -129,13 +380,14 @@ export async function POST(
       );
 
     /*
-      STRIPE SESSION
+      CHECKOUT SESSION
     */
 
     const session =
       await stripe.checkout.sessions.create({
 
-        mode: "payment",
+        mode:
+          "payment",
 
         payment_method_types: [
 
@@ -156,15 +408,16 @@ export async function POST(
 
             price_data: {
 
-              currency: "eur",
+              currency:
+                "eur",
 
               product_data: {
 
                 name:
-                  body.title,
+                  listing.title,
 
                 description:
-                  `Buchung von ${body.startDate} bis ${body.endDate}`,
+                  `${totalDays} Tage Buchung`,
               },
 
               unit_amount:
@@ -174,7 +427,7 @@ export async function POST(
         ],
 
         /*
-          MARKETPLACE PAYMENT
+          MARKETPLACE
         */
 
         payment_intent_data: {
@@ -202,7 +455,7 @@ export async function POST(
             body.ownerId,
 
           title:
-            body.title,
+            listing.title,
 
           startDate:
             body.startDate,
@@ -210,8 +463,25 @@ export async function POST(
           endDate:
             body.endDate,
 
+          subtotal:
+            String(
+              subtotal
+            ),
+
+          serviceFee:
+            String(
+              serviceFee
+            ),
+
+          cleaningFee:
+            String(
+              cleaningFee
+            ),
+
           totalPrice:
-            body.totalPrice,
+            String(
+              calculatedTotal
+            ),
         },
 
         success_url:
@@ -219,6 +489,42 @@ export async function POST(
 
         cancel_url:
           `${process.env.NEXT_PUBLIC_SITE_URL}/cancel`,
+      });
+
+    /*
+      CREATE PENDING BOOKING
+    */
+
+    await supabase
+      .from("bookings")
+      .insert({
+
+        listing_id:
+          body.listingId,
+
+        renter_id:
+          body.renterId,
+
+        owner_id:
+          body.ownerId,
+
+        start_date:
+          body.startDate,
+
+        end_date:
+          body.endDate,
+
+        total_price:
+          calculatedTotal,
+
+        payment_status:
+          "Pending",
+
+        status:
+          "pending",
+
+        stripe_session_id:
+          session.id,
       });
 
     return NextResponse.json({
@@ -230,17 +536,16 @@ export async function POST(
   } catch (error: any) {
 
     console.log(
-      "STRIPE ERROR:",
+      "CHECKOUT ERROR:",
       error
     );
 
     return NextResponse.json(
 
       {
-
         error:
           error.message ||
-          "Stripe Fehler",
+          "Checkout Fehler",
       },
 
       {

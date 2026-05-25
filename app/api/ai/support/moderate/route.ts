@@ -4,6 +4,9 @@ import OpenAI from "openai";
 
 import { z } from "zod";
 
+import { ratelimit }
+from "@/lib/rate-limit";
+
 export const runtime = "edge";
 
 const openai = new OpenAI({
@@ -20,6 +23,28 @@ export async function POST(
 ) {
 
   try {
+
+    const ip =
+      req.headers.get(
+        "x-forwarded-for"
+      ) || "anonymous";
+
+    const { success } =
+      await ratelimit.limit(ip);
+
+    if (!success) {
+
+      return NextResponse.json(
+        {
+          error:
+            "Zu viele Anfragen",
+        },
+        {
+          status: 429,
+        }
+      );
+
+    }
 
     const body =
       await req.json();

@@ -7,6 +7,8 @@ import {
 
 import Link from "next/link";
 
+import Image from "next/image";
+
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
@@ -205,18 +207,47 @@ export default function DashboardClient() {
     }
   }
 
+  /*
+    STRIPE CONNECT
+  */
+
   async function connectStripe() {
 
     try {
 
+      const response =
+        await fetch(
+          "/api/stripe/connect"
+        );
+
+      const data =
+        await response.json();
+
+      if (!data.url) {
+
+        alert(
+          "Stripe Fehler"
+        );
+
+        return;
+      }
+
       window.location.href =
-        "/api/stripe/connect";
+        data.url;
 
     } catch (error) {
 
       console.log(error);
+
+      alert(
+        "Stripe Connect Fehler"
+      );
     }
   }
+
+  /*
+    DELETE LISTING
+  */
 
   async function deleteListing(
     id: string
@@ -254,6 +285,10 @@ export default function DashboardClient() {
       console.log(error);
     }
   }
+
+  /*
+    TOGGLE ACTIVE
+  */
 
   async function toggleActive(
     id: string,
@@ -300,6 +335,10 @@ export default function DashboardClient() {
     }
   }
 
+  /*
+    STATS
+  */
+
   const activeListings =
 
     listings.filter(
@@ -332,6 +371,10 @@ export default function DashboardClient() {
 
       0
     );
+
+  /*
+    LOADING
+  */
 
   if (loading) {
 
@@ -412,10 +455,11 @@ export default function DashboardClient() {
 
             <h1
               className="
-                text-5xl
+                text-[52px]
+                leading-[0.9]
                 md:text-7xl
+                break-words
                 font-black
-                leading-none
                 tracking-tight
               "
             >
@@ -443,11 +487,14 @@ export default function DashboardClient() {
             "
           >
 
-            <img
+            <Image
               src={
                 profile?.avatar_url ||
                 "/avatar.png"
               }
+              alt=""
+              width={80}
+              height={80}
               className="
                 w-20
                 h-20
@@ -725,6 +772,7 @@ export default function DashboardClient() {
               <div
                 key={listing.id}
                 className="
+                  relative
                   bg-white
                   rounded-[36px]
                   overflow-hidden
@@ -734,12 +782,24 @@ export default function DashboardClient() {
                 "
               >
 
-                <img
+                <Link
+                  href={`/listing/${listing.id}`}
+                  className="
+                    absolute
+                    inset-0
+                    z-10
+                  "
+                />
+
+                <Image
                   src={
                     listing.images?.[0] ||
                     listing.image_url ||
                     "/placeholder.jpg"
                   }
+                  alt=""
+                  width={1200}
+                  height={800}
                   className="
                     w-full
                     h-64
@@ -747,7 +807,7 @@ export default function DashboardClient() {
                   "
                 />
 
-                <div className="p-6">
+                <div className="p-6 relative z-20">
 
                   <div
                     className="
@@ -823,13 +883,18 @@ export default function DashboardClient() {
                   >
 
                     <button
-                      onClick={() =>
+                      onClick={(e) => {
+
+                        e.preventDefault();
+
                         toggleActive(
                           listing.id,
                           listing.active
-                        )
-                      }
+                        );
+                      }}
                       className="
+                        relative
+                        z-30
                         flex-1
                         h-14
                         rounded-2xl
@@ -850,12 +915,17 @@ export default function DashboardClient() {
                     </button>
 
                     <button
-                      onClick={() =>
+                      onClick={(e) => {
+
+                        e.preventDefault();
+
                         deleteListing(
                           listing.id
-                        )
-                      }
+                        );
+                      }}
                       className="
+                        relative
+                        z-30
                         min-w-[56px]
                         h-14
                         rounded-2xl
@@ -888,7 +958,6 @@ export default function DashboardClient() {
       <Footer />
 
     </main>
-
   );
 }
 

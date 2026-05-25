@@ -24,6 +24,8 @@ import {
 
   Image as ImageIcon,
 
+  Loader2,
+
 } from "lucide-react";
 
 import imageCompression
@@ -71,6 +73,9 @@ export default function ChatPage() {
 
   const [uploading, setUploading] =
     useState(false);
+
+  const [previewImage, setPreviewImage] =
+    useState<string | null>(null);
 
   const [currentUserId, setCurrentUserId] =
     useState("");
@@ -225,21 +230,13 @@ export default function ChatPage() {
           await supabase
             .from("messages")
             .select(`
-
               id,
-
               sender_id,
-
               receiver_id,
-
               message,
-
               image_url,
-
               created_at,
-
               seen
-
             `)
             .or(
               `and(sender_id.eq.${userId},receiver_id.eq.${otherUserId}),and(sender_id.eq.${otherUserId},receiver_id.eq.${userId})`
@@ -307,12 +304,35 @@ export default function ChatPage() {
           event: "INSERT",
           schema: "public",
           table: "messages",
+          filter:
+            `receiver_id=eq.${userId}`,
         },
-        async () => {
+        async (payload) => {
 
-          await loadMessages(
-            userId
+          const newMsg =
+            payload.new as Message;
+
+          setMessages(
+            (prev) => {
+
+              const exists =
+                prev.some(
+                  (m) =>
+                    m.id ===
+                    newMsg.id
+                );
+
+              if (exists)
+                return prev;
+
+              return [
+                ...prev,
+                newMsg,
+              ];
+            }
           );
+
+          scrollToBottom();
         }
       )
       .subscribe();
@@ -373,7 +393,10 @@ export default function ChatPage() {
 
   async function sendMessage() {
 
-    if (!newMessage.trim())
+    if (
+      !newMessage.trim() ||
+      uploading
+    )
       return;
 
     const message =
@@ -470,6 +493,15 @@ export default function ChatPage() {
         return;
       }
 
+      const preview =
+        URL.createObjectURL(
+          file
+        );
+
+      setPreviewImage(
+        preview
+      );
+
       setUploading(true);
 
       const compressedFile =
@@ -554,6 +586,10 @@ export default function ChatPage() {
 
           is_read: false,
         });
+
+      setPreviewImage(
+        null
+      );
 
     } catch (error) {
 
@@ -785,6 +821,40 @@ export default function ChatPage() {
 
       </div>
 
+      {/* IMAGE PREVIEW */}
+
+      {previewImage && (
+
+        <div className="px-4 pb-4 bg-white">
+
+          <div className="relative w-32 h-32 rounded-2xl overflow-hidden border border-gray-200">
+
+            <Image
+              src={previewImage}
+              alt=""
+              fill
+              className="object-cover"
+            />
+
+            {uploading && (
+
+              <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+
+                <Loader2
+                  className="animate-spin text-white"
+                  size={32}
+                />
+
+              </div>
+
+            )}
+
+          </div>
+
+        </div>
+
+      )}
+
       {/* INPUT */}
 
       <div className="bg-white border-t border-gray-100 p-4 sticky bottom-0">
@@ -811,7 +881,8 @@ export default function ChatPage() {
               }
             }}
             placeholder="Nachricht schreiben..."
-            className="flex-1 h-16 rounded-2xl border border-gray-200 px-5 outline-none text-lg bg-[#f5f7fb]"
+            disabled={uploading}
+            className="flex-1 h-16 rounded-2xl border border-gray-200 px-5 outline-none text-lg bg-[#f5f7fb] disabled:opacity-50"
           />
 
           <label className="w-16 h-16 rounded-2xl bg-white border border-gray-200 flex items-center justify-center cursor-pointer">
@@ -842,7 +913,18 @@ export default function ChatPage() {
             className="w-16 h-16 rounded-2xl bg-[#16d64d] text-white flex items-center justify-center shadow-lg disabled:opacity-50"
           >
 
-            <Send size={22} />
+            {uploading ? (
+
+              <Loader2
+                className="animate-spin"
+                size={22}
+              />
+
+            ) : (
+
+              <Send size={22} />
+
+            )}
 
           </button>
 

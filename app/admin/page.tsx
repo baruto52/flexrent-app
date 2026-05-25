@@ -25,6 +25,10 @@ import {
 
   CalendarDays,
 
+  AlertTriangle,
+
+  ShieldCheck,
+
 } from "lucide-react";
 
 import { supabase }
@@ -91,7 +95,9 @@ export default function AdminPage() {
         return;
       }
 
-      /* ADMIN CHECK */
+      /*
+        ADMIN CHECK
+      */
 
       const {
         data: profile,
@@ -181,6 +187,26 @@ export default function AdminPage() {
             loadBookings();
           }
 
+        )
+        .on(
+
+          "postgres_changes",
+
+          {
+
+            event: "*",
+
+            schema: "public",
+
+            table:
+              "profiles",
+          },
+
+          () => {
+
+            loadUsers();
+          }
+
         );
 
     channel.subscribe();
@@ -193,9 +219,13 @@ export default function AdminPage() {
     const { data } =
       await supabase
         .from("profiles")
-        .select("*")
+        .select(`
+          *,
+          risk_score,
+          flagged
+        `)
         .order(
-          "created_at",
+          "risk_score",
           {
             ascending: false,
           }
@@ -211,7 +241,11 @@ export default function AdminPage() {
     const { data } =
       await supabase
         .from("listings")
-        .select("*")
+        .select(`
+          *,
+          trust_score,
+          ai_verified
+        `)
         .order(
           "created_at",
           {
@@ -323,7 +357,9 @@ export default function AdminPage() {
           font-black
         "
       >
+
         Admin Panel wird geladen...
+
       </div>
 
     );
@@ -343,13 +379,16 @@ export default function AdminPage() {
           font-black
         "
       >
+
         Kein Zugriff
+
       </div>
 
     );
   }
 
   return (
+
     <main className="min-h-screen bg-[#f5f7fb]">
 
       <Navbar />
@@ -397,7 +436,9 @@ export default function AdminPage() {
                   font-black
                 "
               >
-                Admin Panel
+
+                LOQARO AI Admin
+
               </h1>
 
               <p
@@ -407,7 +448,9 @@ export default function AdminPage() {
                   mt-3
                 "
               >
-                Marketplace Verwaltung
+
+                AI Marketplace Security Dashboard
+
               </p>
 
             </div>
@@ -430,56 +473,29 @@ export default function AdminPage() {
 
           {/* USERS */}
 
-          <div
-            className="
-              bg-white
-              rounded-[36px]
-              p-8
-              shadow-sm
-            "
-          >
+          <div className="bg-white rounded-[36px] p-8 shadow-sm">
 
-            <div
-              className="
-                flex
-                items-center
-                justify-between
-              "
-            >
+            <div className="flex items-center justify-between">
 
               <div>
 
                 <p className="text-gray-500 mb-2">
+
                   Nutzer
+
                 </p>
 
-                <h2
-                  className="
-                    text-5xl
-                    font-black
-                  "
-                >
+                <h2 className="text-5xl font-black">
+
                   {users.length}
+
                 </h2>
 
               </div>
 
-              <div
-                className="
-                  w-16
-                  h-16
-                  rounded-2xl
-                  bg-[#16d64d]
-                  text-white
-                  flex
-                  items-center
-                  justify-center
-                "
-              >
+              <div className="w-16 h-16 rounded-2xl bg-[#16d64d] text-white flex items-center justify-center">
 
-                <Users
-                  size={30}
-                />
+                <Users size={30} />
 
               </div>
 
@@ -489,56 +505,29 @@ export default function AdminPage() {
 
           {/* LISTINGS */}
 
-          <div
-            className="
-              bg-white
-              rounded-[36px]
-              p-8
-              shadow-sm
-            "
-          >
+          <div className="bg-white rounded-[36px] p-8 shadow-sm">
 
-            <div
-              className="
-                flex
-                items-center
-                justify-between
-              "
-            >
+            <div className="flex items-center justify-between">
 
               <div>
 
                 <p className="text-gray-500 mb-2">
+
                   Listings
+
                 </p>
 
-                <h2
-                  className="
-                    text-5xl
-                    font-black
-                  "
-                >
+                <h2 className="text-5xl font-black">
+
                   {listings.length}
+
                 </h2>
 
               </div>
 
-              <div
-                className="
-                  w-16
-                  h-16
-                  rounded-2xl
-                  bg-black
-                  text-white
-                  flex
-                  items-center
-                  justify-center
-                "
-              >
+              <div className="w-16 h-16 rounded-2xl bg-black text-white flex items-center justify-center">
 
-                <Package
-                  size={30}
-                />
+                <Package size={30} />
 
               </div>
 
@@ -548,56 +537,29 @@ export default function AdminPage() {
 
           {/* BOOKINGS */}
 
-          <div
-            className="
-              bg-white
-              rounded-[36px]
-              p-8
-              shadow-sm
-            "
-          >
+          <div className="bg-white rounded-[36px] p-8 shadow-sm">
 
-            <div
-              className="
-                flex
-                items-center
-                justify-between
-              "
-            >
+            <div className="flex items-center justify-between">
 
               <div>
 
                 <p className="text-gray-500 mb-2">
+
                   Buchungen
+
                 </p>
 
-                <h2
-                  className="
-                    text-5xl
-                    font-black
-                  "
-                >
+                <h2 className="text-5xl font-black">
+
                   {bookings.length}
+
                 </h2>
 
               </div>
 
-              <div
-                className="
-                  w-16
-                  h-16
-                  rounded-2xl
-                  bg-blue-500
-                  text-white
-                  flex
-                  items-center
-                  justify-center
-                "
-              >
+              <div className="w-16 h-16 rounded-2xl bg-blue-500 text-white flex items-center justify-center">
 
-                <CalendarDays
-                  size={30}
-                />
+                <CalendarDays size={30} />
 
               </div>
 
@@ -607,57 +569,30 @@ export default function AdminPage() {
 
           {/* REVENUE */}
 
-          <div
-            className="
-              bg-white
-              rounded-[36px]
-              p-8
-              shadow-sm
-            "
-          >
+          <div className="bg-white rounded-[36px] p-8 shadow-sm">
 
-            <div
-              className="
-                flex
-                items-center
-                justify-between
-              "
-            >
+            <div className="flex items-center justify-between">
 
               <div>
 
                 <p className="text-gray-500 mb-2">
+
                   Umsatz
+
                 </p>
 
-                <h2
-                  className="
-                    text-5xl
-                    font-black
-                  "
-                >
+                <h2 className="text-5xl font-black">
+
                   €
                   {revenue}
+
                 </h2>
 
               </div>
 
-              <div
-                className="
-                  w-16
-                  h-16
-                  rounded-2xl
-                  bg-yellow-500
-                  text-white
-                  flex
-                  items-center
-                  justify-center
-                "
-              >
+              <div className="w-16 h-16 rounded-2xl bg-yellow-500 text-white flex items-center justify-center">
 
-                <BadgeEuro
-                  size={30}
-                />
+                <BadgeEuro size={30} />
 
               </div>
 
@@ -667,18 +602,90 @@ export default function AdminPage() {
 
         </div>
 
+        {/* RISK USERS */}
+
+        <div className="mb-16">
+
+          <div className="flex items-center gap-4 mb-8">
+
+            <AlertTriangle
+              className="text-red-500"
+              size={32}
+            />
+
+            <h2 className="text-4xl font-black">
+
+              Risiko Nutzer
+
+            </h2>
+
+          </div>
+
+          <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
+
+            {users.map((user) => (
+
+              <div
+                key={user.id}
+                className="bg-white rounded-[32px] p-6 shadow-sm"
+              >
+
+                <div className="flex items-center justify-between mb-5">
+
+                  <div>
+
+                    <h3 className="text-2xl font-black">
+
+                      {user.full_name || "Unbekannt"}
+
+                    </h3>
+
+                    <p className="text-gray-500 mt-2">
+
+                      Risk Score:
+                      {" "}
+                      {user.risk_score || 0}
+
+                    </p>
+
+                  </div>
+
+                  {user.flagged ? (
+
+                    <div className="px-4 py-2 rounded-full bg-red-500/10 text-red-500 text-xs font-black">
+
+                      ⚠️ FLAGGED
+
+                    </div>
+
+                  ) : (
+
+                    <div className="px-4 py-2 rounded-full bg-[#16d64d]/10 text-[#16d64d] text-xs font-black">
+
+                      SAFE
+
+                    </div>
+
+                  )}
+
+                </div>
+
+              </div>
+
+            ))}
+
+          </div>
+
+        </div>
+
         {/* LISTINGS */}
 
         <div>
 
-          <h2
-            className="
-              text-4xl
-              font-black
-              mb-8
-            "
-          >
+          <h2 className="text-4xl font-black mb-8">
+
             Alle Listings
+
           </h2>
 
           <div className="space-y-8">
@@ -688,119 +695,99 @@ export default function AdminPage() {
 
                 <div
                   key={listing.id}
-                  className="
-                    bg-white
-                    rounded-[36px]
-                    overflow-hidden
-                    shadow-sm
-                  "
+                  className="bg-white rounded-[36px] overflow-hidden shadow-sm"
                 >
 
-                  <div
-                    className="
-                      grid
-                      lg:grid-cols-4
-                    "
-                  >
+                  <div className="grid lg:grid-cols-4">
 
                     {/* IMAGE */}
 
-                    <div
-                      className="
-                        relative
-                        h-[260px]
-                      "
-                    >
+                    <div className="relative h-[260px]">
 
                       <Image
                         src={
                           listing?.images?.[0] ||
                           "https://placehold.co/1200x900/png"
                         }
-                        alt={
-                          listing.title
-                        }
+                        alt={listing.title}
                         fill
-                        className="
-                          object-cover
-                        "
+                        className="object-cover"
                       />
 
                     </div>
 
                     {/* CONTENT */}
 
-                    <div
-                      className="
-                        lg:col-span-3
-                        p-8
-                        flex
-                        flex-col
-                        justify-between
-                      "
-                    >
+                    <div className="lg:col-span-3 p-8 flex flex-col justify-between">
 
                       <div>
 
-                        <div
-                          className="
-                            flex
-                            items-start
-                            justify-between
-                            gap-5
-                            mb-5
-                          "
-                        >
+                        <div className="flex items-start justify-between gap-5 mb-5">
 
                           <div>
 
-                            <h3
-                              className="
-                                text-4xl
-                                font-black
-                                mb-3
-                              "
-                            >
-                              {
-                                listing.title
-                              }
+                            <h3 className="text-4xl font-black mb-3">
+
+                              {listing.title}
+
                             </h3>
 
                             <p className="text-gray-500">
-                              {
-                                listing.location ||
-                                "Unbekannt"
-                              }
+
+                              {listing.location || "Unbekannt"}
+
                             </p>
 
                           </div>
 
-                          <h4
-                            className="
-                              text-5xl
-                              font-black
-                            "
-                          >
+                          <h4 className="text-5xl font-black">
+
                             €
-                            {
-                              listing.price
-                            }
+                            {listing.price}
+
                           </h4>
 
                         </div>
 
-                        <p
-                          className="
-                            text-gray-600
-                            leading-8
-                            line-clamp-3
-                          "
-                        >
-                          {
-                            listing.description ||
-                            "Keine Beschreibung"
-                          }
+                        <p className="text-gray-600 leading-8 line-clamp-3">
+
+                          {listing.description || "Keine Beschreibung"}
+
                         </p>
+
+                        <div className="flex flex-wrap gap-3 mt-5">
+
+                          {!!listing.trust_score && (
+
+                            <div className="px-4 py-2 rounded-full bg-black/5 text-sm font-black">
+
+                              AI Trust:
+                              {" "}
+                              {listing.trust_score}
+
+                            </div>
+
+                          )}
+
+                          {listing.ai_verified ? (
+
+                            <div className="px-4 py-2 rounded-full bg-[#16d64d]/10 text-[#16d64d] text-sm font-black">
+
+                              ✓ AI Verified
+
+                            </div>
+
+                          ) : (
+
+                            <div className="px-4 py-2 rounded-full bg-red-500/10 text-red-500 text-sm font-black">
+
+                              Risk Listing
+
+                            </div>
+
+                          )}
+
+                        </div>
 
                       </div>
 
@@ -814,23 +801,10 @@ export default function AdminPage() {
                               listing.id
                             )
                           }
-                          className="
-                            h-14
-                            px-7
-                            rounded-2xl
-                            bg-red-500
-                            text-white
-                            flex
-                            items-center
-                            justify-center
-                            gap-3
-                            font-bold
-                          "
+                          className="h-14 px-7 rounded-2xl bg-red-500 text-white flex items-center justify-center gap-3 font-bold"
                         >
 
-                          <Trash2
-                            size={20}
-                          />
+                          <Trash2 size={20} />
 
                           Listing löschen
 
@@ -856,5 +830,6 @@ export default function AdminPage() {
       <Footer />
 
     </main>
+
   );
 }

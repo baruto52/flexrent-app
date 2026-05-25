@@ -23,8 +23,6 @@ import {
 
   Menu,
 
-  Plus,
-
   User,
 
   X,
@@ -45,6 +43,10 @@ from "@/lib/supabase";
 
 import MobileBottomBar
 from "@/components/MobileBottomBar";
+
+import {
+  siteConfig,
+} from "@/config/site";
 
 export default function Navbar() {
 
@@ -302,7 +304,7 @@ export default function Navbar() {
 
     <>
 
-      {/* HIDE MOBILE BAR WHEN MENU OPEN */}
+      {/* MOBILE BAR */}
 
       <MobileBottomBar
         hidden={menuOpen}
@@ -360,7 +362,7 @@ export default function Navbar() {
               "
             >
 
-              F
+              L
 
             </div>
 
@@ -375,7 +377,7 @@ export default function Navbar() {
                 "
               >
 
-                FlexRent
+                {siteConfig.name}
 
               </h1>
 
@@ -384,10 +386,11 @@ export default function Navbar() {
                   text-[10px]
                   text-gray-400
                   font-bold
+                  tracking-[2px]
                 "
               >
 
-                PREMIUM MARKETPLACE
+                AI MARKETPLACE
 
               </p>
 
@@ -654,16 +657,34 @@ export default function Navbar() {
               "
             >
 
-              <h2
-                className="
-                  text-3xl
-                  font-black
-                "
-              >
+              <div>
 
-                Menü
+                <h2
+                  className="
+                    text-3xl
+                    font-black
+                  "
+                >
 
-              </h2>
+                  {siteConfig.name}
+
+                </h2>
+
+                <p
+                  className="
+                    text-xs
+                    text-gray-400
+                    font-bold
+                    tracking-[2px]
+                    mt-1
+                  "
+                >
+
+                  AI MARKETPLACE
+
+                </p>
+
+              </div>
 
               <button
                 onClick={closeMenu}

@@ -790,7 +790,7 @@ export default function FavoritesPage() {
 
                         {
                           listing.description ||
-                          "Premium Listing auf FlexRent."
+                          "Premium Listing auf Loqaro."
                         }
 
                       </p>

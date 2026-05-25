@@ -393,7 +393,7 @@ export default function MessagesPage() {
 
                 Kommuniziere direkt mit
                 Vermietern und Mietern
-                auf FlexRent.
+                auf Loqaro.
 
               </p>
 

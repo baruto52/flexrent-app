@@ -26,7 +26,7 @@ export function generateListingMetadata({
 
     description:
       description ||
-      "Premium Listing auf FlexRent.",
+      "Premium Listing auf Loqaro.",
 
     openGraph: {
 
@@ -34,7 +34,7 @@ export function generateListingMetadata({
 
       description:
         description ||
-        "Premium Listing auf FlexRent.",
+        "Premium Listing auf Loqaro.",
 
       images: [
 
@@ -55,7 +55,7 @@ export function generateListingMetadata({
 
       description:
         description ||
-        "Premium Listing auf FlexRent.",
+        "Premium Listing auf Loqaro.",
 
       images: [
 

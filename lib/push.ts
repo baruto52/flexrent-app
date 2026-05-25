@@ -3,7 +3,7 @@ from "web-push";
 
 webpush.setVapidDetails(
 
-  "mailto:support@flexrent.de",
+  "mailto:support@Loqaro.de",
 
   process.env
     .NEXT_PUBLIC_VAPID_PUBLIC_KEY!,

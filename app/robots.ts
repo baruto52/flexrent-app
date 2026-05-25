@@ -9,7 +9,7 @@ MetadataRoute.Robots {
     process.env
       .NEXT_PUBLIC_SITE_URL ||
 
-    "https://flexrent.de";
+    "https://Loqaro.de";
 
   return {
 

@@ -12,7 +12,7 @@ Promise<MetadataRoute.Sitemap> {
     process.env
       .NEXT_PUBLIC_SITE_URL ||
 
-    "https://flexrent.de";
+    "https://Loqaro.de";
 
   /*
     STATIC PAGES

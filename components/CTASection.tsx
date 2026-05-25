@@ -68,7 +68,7 @@ export default function CTASection() {
                   mb-8
                 "
               >
-                Starte jetzt mit FlexRent
+                Starte jetzt mit Loqaro
               </div>
 
               <h2

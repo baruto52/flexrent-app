@@ -56,7 +56,7 @@ export default function Footer() {
               <div>
 
                 <h2 className="text-2xl font-black">
-                  FlexRent
+                  Loqaro
                 </h2>
 
                 <p className="text-gray-500 text-sm">
@@ -281,7 +281,7 @@ export default function Footer() {
         >
 
           <p className="text-gray-500">
-            © 2025 FlexRent. Alle Rechte vorbehalten.
+            © 2025 Loqaro. Alle Rechte vorbehalten.
           </p>
 
           <div className="flex items-center gap-8 text-gray-500">

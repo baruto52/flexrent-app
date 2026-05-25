@@ -102,7 +102,7 @@ export default function LoginPage() {
       >
 
         <h1 className="text-5xl font-black mb-3">
-          FlexRent
+          Loqaro
         </h1>
 
         <h2 className="text-4xl font-black mb-2">

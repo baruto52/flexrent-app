@@ -176,7 +176,7 @@ export default function SuccessPage() {
               title:
                 title ||
 
-                "FlexRent Buchung",
+                "Loqaro Buchung",
 
               startDate,
 

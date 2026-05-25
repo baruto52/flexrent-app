@@ -24,7 +24,7 @@ export async function POST(
     await resend.emails.send({
 
       from:
-        "FlexRent <onboarding@resend.dev>",
+        "Loqaro <onboarding@resend.dev>",
 
       to:
         email,

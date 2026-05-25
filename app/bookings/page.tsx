@@ -398,7 +398,7 @@ export default function BookingsPage() {
 
               Verwalte deine aktiven,
               offenen und vergangenen
-              Buchungen auf FlexRent.
+              Buchungen auf Loqaro.
 
             </p>
 

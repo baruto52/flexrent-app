@@ -85,7 +85,7 @@ export default function ListingSection() {
             </h2>
 
             <p className="text-gray-500 text-xl mt-3">
-              Die beliebtesten Angebote auf FlexRent.
+              Die beliebtesten Angebote auf Loqaro.
             </p>
 
           </div>

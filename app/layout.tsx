@@ -17,67 +17,48 @@ from "@/components/PushNotifications";
 import OnlineStatus
 from "@/components/OnlineStatus";
 
+import {
+  siteConfig,
+} from "@/config/site";
+
 export const metadata: Metadata = {
 
   metadataBase:
     new URL(
-
       process.env
         .NEXT_PUBLIC_SITE_URL ||
 
-      "https://flexrent.de"
+      siteConfig.url
     ),
 
   title: {
 
     default:
-      "FlexRent",
+      siteConfig.name,
 
     template:
-      "%s | FlexRent",
+      `%s | ${siteConfig.name}`,
   },
 
   description:
-    "Premium Marketplace für Werkzeuge, Fahrzeuge, Immobilien, Elektronik und mehr.",
+    siteConfig.description,
 
-  keywords: [
-
-    "FlexRent",
-
-    "Marketplace",
-
-    "Mieten",
-
-    "Werkzeuge",
-
-    "Fahrzeuge",
-
-    "Immobilien",
-
-    "Elektronik",
-
-    "Sharing Economy",
-
-    "Deutschland",
-
-    "Buchung",
-
-    "Verleihplattform",
-  ],
+  keywords:
+    siteConfig.keywords,
 
   authors: [
 
     {
       name:
-        "FlexRent",
+        siteConfig.company,
     },
   ],
 
   creator:
-    "FlexRent",
+    siteConfig.company,
 
   publisher:
-    "FlexRent",
+    siteConfig.company,
 
   robots: {
 
@@ -113,20 +94,19 @@ export const metadata: Metadata = {
     locale: "de_DE",
 
     url:
-
       process.env
         .NEXT_PUBLIC_SITE_URL ||
 
-      "https://flexrent.de",
+      siteConfig.url,
 
     title:
-      "FlexRent",
+      siteConfig.name,
 
     description:
-      "Premium Marketplace für Vermietungen aller Art.",
+      siteConfig.description,
 
     siteName:
-      "FlexRent",
+      siteConfig.name,
 
     images: [
 
@@ -139,7 +119,7 @@ export const metadata: Metadata = {
         height: 630,
 
         alt:
-          "FlexRent",
+          siteConfig.name,
       },
     ],
   },
@@ -150,10 +130,10 @@ export const metadata: Metadata = {
       "summary_large_image",
 
     title:
-      "FlexRent",
+      siteConfig.name,
 
     description:
-      "Premium Marketplace für Vermietungen.",
+      siteConfig.description,
 
     images: [
 

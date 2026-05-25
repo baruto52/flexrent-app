@@ -56,7 +56,7 @@ export default function FeaturesSection() {
               tracking-[-3px]
             "
           >
-            Warum FlexRent?
+            Warum Loqaro?
           </h2>
 
           <p

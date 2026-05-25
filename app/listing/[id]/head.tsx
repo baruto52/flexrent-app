@@ -48,7 +48,7 @@ export default async function Head({
     "/og-image.png";
 
   const title =
-    `${listing.title} | FlexRent`;
+    `${listing.title} | Loqaro`;
 
   const description =
 
@@ -57,7 +57,7 @@ export default async function Head({
       160
     ) ||
 
-    "Premium Listing auf FlexRent";
+    "Premium Listing auf Loqaro";
 
   return (
 

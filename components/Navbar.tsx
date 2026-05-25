@@ -461,6 +461,8 @@ export default function Navbar() {
             "
           >
 
+            {/* FAVORITES */}
+
             <Link
               href="/favorites"
               className="
@@ -472,12 +474,16 @@ export default function Navbar() {
                 flex
                 items-center
                 justify-center
+                hover:bg-gray-200
+                transition-all
               "
             >
 
               <Heart size={20} />
 
             </Link>
+
+            {/* NOTIFICATIONS */}
 
             <Link
               href="/notifications"
@@ -490,6 +496,8 @@ export default function Navbar() {
                 flex
                 items-center
                 justify-center
+                hover:bg-gray-200
+                transition-all
               "
             >
 
@@ -527,6 +535,8 @@ export default function Navbar() {
 
             </Link>
 
+            {/* MESSAGES */}
+
             <Link
               href="/messages"
               className="
@@ -538,6 +548,8 @@ export default function Navbar() {
                 flex
                 items-center
                 justify-center
+                hover:bg-gray-200
+                transition-all
               "
             >
 
@@ -574,6 +586,88 @@ export default function Navbar() {
               )}
 
             </Link>
+
+            {/* DESKTOP PROFILE */}
+
+            {user && (
+
+              <div
+                className="
+                  hidden
+                  lg:flex
+                  items-center
+                  gap-3
+                  ml-3
+                "
+              >
+
+                <Link
+                  href="/profile"
+                  className="
+                    h-12
+                    px-5
+                    rounded-2xl
+                    bg-gray-100
+                    flex
+                    items-center
+                    gap-3
+                    font-bold
+                    hover:bg-gray-200
+                    transition-all
+                  "
+                >
+
+                  <div
+                    className="
+                      w-8
+                      h-8
+                      rounded-full
+                      bg-[#16d64d]
+                      text-white
+                      flex
+                      items-center
+                      justify-center
+                      font-black
+                      text-sm
+                    "
+                  >
+
+                    {user.email
+                      ?.charAt(0)
+                      ?.toUpperCase()}
+
+                  </div>
+
+                  Profil
+
+                </Link>
+
+                <button
+                  onClick={logout}
+                  className="
+                    h-12
+                    px-5
+                    rounded-2xl
+                    bg-red-500
+                    text-white
+                    flex
+                    items-center
+                    gap-2
+                    font-black
+                    hover:opacity-90
+                    transition-all
+                  "
+                >
+
+                  <LogOut size={18} />
+
+                  Logout
+
+                </button>
+
+              </div>
+
+            )}
 
             {/* MOBILE MENU */}
 

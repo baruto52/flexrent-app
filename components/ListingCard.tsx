@@ -557,6 +557,65 @@ export default function ListingCard({
 
         </div>
 
+        {/* AI VERIFIED */}
+
+        {listing.ai_verified && (
+
+          <div
+            className="
+              mb-4
+              inline-flex
+              items-center
+              gap-2
+              px-4
+              py-2
+              rounded-full
+              bg-[#16d64d]/10
+              text-[#16d64d]
+              text-xs
+              font-black
+            "
+          >
+
+            ✓ AI Verified
+
+          </div>
+
+        )}
+
+        {/* TRUST SCORE */}
+
+        {!!listing.trust_score && (
+
+          <div
+            className="
+              mb-4
+              flex
+              items-center
+              gap-2
+            "
+          >
+
+            <div
+              className="
+                px-3
+                py-1
+                rounded-full
+                bg-black/5
+                text-black
+                text-xs
+                font-black
+              "
+            >
+
+              AI Trust {listing.trust_score}%
+
+            </div>
+
+          </div>
+
+        )}
+
         {/* LOCATION */}
 
         <div

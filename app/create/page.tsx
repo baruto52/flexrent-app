@@ -126,10 +126,6 @@ export default function CreatePage() {
 
   }, []);
 
-  /*
-    AI CATEGORY
-  */
-
   async function detectCategory(
     value: string
   ) {
@@ -179,10 +175,6 @@ export default function CreatePage() {
 
     }
   }
-
-  /*
-    AI DESCRIPTION
-  */
 
   async function generateDescription() {
 
@@ -269,10 +261,6 @@ export default function CreatePage() {
       );
     };
 
-  /*
-    IMAGE UPLOAD
-  */
-
   const uploadImages =
     async () => {
 
@@ -356,10 +344,6 @@ export default function CreatePage() {
       return uploaded;
     };
 
-  /*
-    CREATE LISTING
-  */
-
   const createListing =
     async () => {
 
@@ -405,10 +389,6 @@ export default function CreatePage() {
 
       try {
 
-        /*
-          AI MODERATION
-        */
-
         const moderationRes =
           await fetch(
             "/api/ai/moderate",
@@ -430,10 +410,6 @@ export default function CreatePage() {
         const moderationData =
           await moderationRes.json();
 
-        /*
-          HIGH RISK
-        */
-
         if (
           moderationData
             ?.moderation?.risk ===
@@ -448,10 +424,6 @@ export default function CreatePage() {
 
           return;
         }
-
-        /*
-          MEDIUM RISK
-        */
 
         if (
           moderationData
@@ -472,16 +444,37 @@ export default function CreatePage() {
           }
         }
 
-        /*
-          IMAGE UPLOAD
-        */
-
         const imageUrls =
           await uploadImages();
 
-        /*
-          SAVE LISTING
-        */
+        const trustRes =
+          await fetch(
+            "/api/ai/trust-score",
+            {
+              method: "POST",
+
+              headers: {
+                "Content-Type":
+                  "application/json",
+              },
+
+              body: JSON.stringify({
+                title,
+                description,
+                imageCount:
+                  imageUrls.length,
+              }),
+            }
+          );
+
+        const trustData =
+          await trustRes.json();
+
+        const trust =
+          trustData?.trust;
+
+        const aiVerified =
+          (trust?.score || 0) >= 80;
 
         const { error } =
           await supabase
@@ -513,6 +506,18 @@ export default function CreatePage() {
                 imageUrls,
 
               active: true,
+
+              trust_score:
+                trust?.score || 0,
+
+              trust_label:
+                trust?.label || "",
+
+              trust_reason:
+                trust?.reason || "",
+
+              ai_verified:
+                aiVerified,
             });
 
         if (error) {
@@ -546,80 +551,27 @@ export default function CreatePage() {
 
   return (
 
-    <main
-      className="
-        min-h-screen
-        bg-[#f5f7fb]
-      "
-    >
+    <main className="min-h-screen bg-[#f5f7fb]">
 
       <Navbar />
 
-      <div
-        className="
-          max-w-7xl
-          mx-auto
-          px-4
-          md:px-8
-          py-10
-        "
-      >
+      <div className="max-w-7xl mx-auto px-4 md:px-8 py-10">
 
-        <div
-          className="
-            bg-white
-            rounded-[42px]
-            p-5
-            md:p-10
-            shadow-sm
-            border
-            border-gray-100
-          "
-        >
-
-          {/* HEADER */}
+        <div className="bg-white rounded-[42px] p-5 md:p-10 shadow-sm border border-gray-100">
 
           <div className="mb-12">
 
-            <div
-              className="
-                flex
-                items-center
-                gap-5
-                mb-5
-              "
-            >
+            <div className="flex items-center gap-5 mb-5">
 
-              <div
-                className="
-                  w-20
-                  h-20
-                  rounded-[28px]
-                  bg-[#16d64d]
-                  text-white
-                  flex
-                  items-center
-                  justify-center
-                  shadow-lg
-                "
-              >
+              <div className="w-20 h-20 rounded-[28px] bg-[#16d64d] text-white flex items-center justify-center shadow-lg">
 
-                <Sparkles
-                  size={38}
-                />
+                <Sparkles size={38} />
 
               </div>
 
               <div>
 
-                <h1
-                  className="
-                    text-4xl
-                    md:text-6xl
-                    font-black
-                    leading-none
-                  "
-                >
+                <h1 className="text-4xl md:text-6xl font-black leading-none">
 
                   Neues Listing
 
@@ -631,11 +583,7 @@ export default function CreatePage() {
 
           </div>
 
-          {/* FORM */}
-
           <div className="space-y-10">
-
-            {/* TITLE */}
 
             <div className="space-y-3">
 
@@ -654,25 +602,12 @@ export default function CreatePage() {
 
                 }}
                 placeholder="Titel"
-                className="
-                  w-full
-                  h-16
-                  rounded-2xl
-                  border
-                  border-gray-200
-                  px-5
-                "
+                className="w-full h-16 rounded-2xl border border-gray-200 px-5"
               />
 
               {categoryLoading && (
 
-                <p
-                  className="
-                    text-sm
-                    text-gray-500
-                    px-2
-                  "
-                >
+                <p className="text-sm text-gray-500 px-2">
 
                   AI erkennt Kategorie...
 
@@ -682,25 +617,11 @@ export default function CreatePage() {
 
             </div>
 
-            {/* DESCRIPTION */}
-
             <div className="space-y-4">
 
-              <div
-                className="
-                  flex
-                  items-center
-                  justify-between
-                  gap-4
-                "
-              >
+              <div className="flex items-center justify-between gap-4">
 
-                <h2
-                  className="
-                    text-lg
-                    font-black
-                  "
-                >
+                <h2 className="text-lg font-black">
 
                   Beschreibung
 
@@ -714,15 +635,7 @@ export default function CreatePage() {
                   disabled={
                     descriptionLoading
                   }
-                  className="
-                    h-11
-                    px-5
-                    rounded-2xl
-                    bg-[#16d64d]
-                    text-white
-                    text-sm
-                    font-black
-                  "
+                  className="h-11 px-5 rounded-2xl bg-[#16d64d] text-white text-sm font-black"
                 >
 
                   {descriptionLoading
@@ -741,19 +654,10 @@ export default function CreatePage() {
                   )
                 }
                 placeholder="Beschreibung"
-                className="
-                  w-full
-                  h-48
-                  rounded-3xl
-                  border
-                  border-gray-200
-                  p-5
-                "
+                className="w-full h-48 rounded-3xl border border-gray-200 p-5"
               />
 
             </div>
-
-            {/* PRICE */}
 
             <input
               type="number"
@@ -764,17 +668,8 @@ export default function CreatePage() {
                 )
               }
               placeholder="Preis"
-              className="
-                w-full
-                h-16
-                rounded-2xl
-                border
-                border-gray-200
-                px-5
-              "
+              className="w-full h-16 rounded-2xl border border-gray-200 px-5"
             />
-
-            {/* LOCATION */}
 
             <LocationPicker
               location={location}
@@ -783,8 +678,6 @@ export default function CreatePage() {
               setLng={setLng}
             />
 
-            {/* CATEGORY */}
-
             <select
               value={category}
               onChange={(e) =>
@@ -792,14 +685,7 @@ export default function CreatePage() {
                   e.target.value
                 )
               }
-              className="
-                w-full
-                h-16
-                rounded-2xl
-                border
-                border-gray-200
-                px-5
-              "
+              className="w-full h-16 rounded-2xl border border-gray-200 px-5"
             >
 
               {categories.map(
@@ -818,26 +704,9 @@ export default function CreatePage() {
 
             </select>
 
-            {/* IMAGE UPLOAD */}
+            <label className="border-2 border-dashed border-gray-300 rounded-[40px] p-10 flex flex-col items-center justify-center cursor-pointer">
 
-            <label
-              className="
-                border-2
-                border-dashed
-                border-gray-300
-                rounded-[40px]
-                p-10
-                flex
-                flex-col
-                items-center
-                justify-center
-                cursor-pointer
-              "
-            >
-
-              <Upload
-                size={50}
-              />
+              <Upload size={50} />
 
               <input
                 type="file"
@@ -849,18 +718,9 @@ export default function CreatePage() {
 
             </label>
 
-            {/* IMAGE PREVIEW */}
-
             {images.length > 0 && (
 
-              <div
-                className="
-                  grid
-                  grid-cols-2
-                  md:grid-cols-4
-                  gap-5
-                "
-              >
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
 
                 {images.map(
                   (
@@ -870,22 +730,13 @@ export default function CreatePage() {
 
                     <div
                       key={index}
-                      className="
-                        relative
-                        h-44
-                        rounded-3xl
-                        overflow-hidden
-                      "
+                      className="relative h-44 rounded-3xl overflow-hidden"
                     >
 
                       <img
                         src={URL.createObjectURL(image)}
                         alt=""
-                        className="
-                          w-full
-                          h-full
-                          object-cover
-                        "
+                        className="w-full h-full object-cover"
                       />
 
                       <button
@@ -893,24 +744,10 @@ export default function CreatePage() {
                         onClick={() =>
                           removeImage(index)
                         }
-                        className="
-                          absolute
-                          top-3
-                          right-3
-                          w-10
-                          h-10
-                          rounded-full
-                          bg-red-500
-                          text-white
-                          flex
-                          items-center
-                          justify-center
-                        "
+                        className="absolute top-3 right-3 w-10 h-10 rounded-full bg-red-500 text-white flex items-center justify-center"
                       >
 
-                        <Trash2
-                          size={18}
-                        />
+                        <Trash2 size={18} />
 
                       </button>
 
@@ -923,20 +760,10 @@ export default function CreatePage() {
 
             )}
 
-            {/* SUBMIT */}
-
             <button
               onClick={createListing}
               disabled={loading}
-              className="
-                w-full
-                h-20
-                rounded-[30px]
-                bg-[#16d64d]
-                text-white
-                text-2xl
-                font-black
-              "
+              className="w-full h-20 rounded-[30px] bg-[#16d64d] text-white text-2xl font-black"
             >
 
               {loading

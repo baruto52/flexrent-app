@@ -19,6 +19,9 @@ import {
   Sparkles,
 } from "lucide-react";
 
+import imageCompression
+from "browser-image-compression";
+
 import { supabase }
 from "@/lib/supabase";
 
@@ -148,6 +151,10 @@ export default function CreatePage() {
       );
     };
 
+  /*
+    OPTIMIZED IMAGE UPLOAD
+  */
+
   const uploadImages =
     async () => {
 
@@ -160,46 +167,76 @@ export default function CreatePage() {
           images.map(
             async (image) => {
 
-              if (
-                image.size >
-                5 * 1024 * 1024
-              ) {
+              try {
 
-                return null;
-              }
+                /*
+                  COMPRESS IMAGE
+                */
 
-              const fileName =
-                `${Date.now()}-${Math.random()}-${image.name}`;
+                const compressedFile =
+                  await imageCompression(
+                    image,
+                    {
 
-              const { error } =
-                await supabase.storage
-                  .from(
-                    "listing-images"
-                  )
-                  .upload(
-                    fileName,
-                    image
+                      maxSizeMB: 1,
+
+                      maxWidthOrHeight: 1600,
+
+                      useWebWorker: true,
+                    }
                   );
 
-              if (error) {
+                /*
+                  FILE NAME
+                */
+
+                const fileName =
+                  `${Date.now()}-${Math.random()}-${image.name}`;
+
+                /*
+                  UPLOAD
+                */
+
+                const { error } =
+                  await supabase.storage
+                    .from(
+                      "listing-images"
+                    )
+                    .upload(
+                      fileName,
+                      compressedFile
+                    );
+
+                if (error) {
+
+                  console.log(error);
+
+                  return null;
+                }
+
+                /*
+                  PUBLIC URL
+                */
+
+                const {
+                  data,
+                } =
+                  supabase.storage
+                    .from(
+                      "listing-images"
+                    )
+                    .getPublicUrl(
+                      fileName
+                    );
+
+                return data.publicUrl;
+
+              } catch (error) {
 
                 console.log(error);
 
                 return null;
               }
-
-              const {
-                data,
-              } =
-                supabase.storage
-                  .from(
-                    "listing-images"
-                  )
-                  .getPublicUrl(
-                    fileName
-                  );
-
-              return data.publicUrl;
             }
           )
         );
@@ -407,21 +444,6 @@ export default function CreatePage() {
 
                 </h1>
 
-                <p
-                  className="
-                    text-gray-500
-                    text-lg
-                    md:text-xl
-                    mt-3
-                  "
-                >
-
-                  Vermiete Werkzeuge,
-                  Keller, Garagen,
-                  Parkplätze & mehr.
-
-                </p>
-
               </div>
 
             </div>
@@ -432,434 +454,132 @@ export default function CreatePage() {
 
           <div className="space-y-10">
 
-            {/* TITLE */}
-
-            <div>
-
-              <label
-                className="
-                  block
-                  font-black
-                  text-lg
-                  mb-3
-                "
-              >
-
-                Titel
-
-              </label>
-
-              <input
-                type="text"
-                value={title}
-                onChange={(e) =>
-                  setTitle(
-                    e.target.value
-                  )
-                }
-                placeholder="Makita Bohrmaschine"
-                disabled={loading}
-                className="
-                  w-full
-                  h-16
-                  rounded-2xl
-                  border
-                  border-gray-200
-                  px-5
-                  text-lg
-                  outline-none
-                "
-              />
-
-            </div>
-
-            {/* DESCRIPTION */}
-
-            <div>
-
-              <label
-                className="
-                  block
-                  font-black
-                  text-lg
-                  mb-3
-                "
-              >
-
-                Beschreibung
-
-              </label>
-
-              <textarea
-                value={description}
-                onChange={(e) =>
-                  setDescription(
-                    e.target.value
-                  )
-                }
-                placeholder="Beschreibe dein Listing..."
-                disabled={loading}
-                className="
-                  w-full
-                  h-48
-                  rounded-3xl
-                  border
-                  border-gray-200
-                  p-5
-                  text-lg
-                  outline-none
-                  resize-none
-                "
-              />
-
-            </div>
-
-            {/* PRICE */}
-
-            <div
+            <input
+              type="text"
+              value={title}
+              onChange={(e) =>
+                setTitle(
+                  e.target.value
+                )
+              }
+              placeholder="Titel"
               className="
-                grid
-                md:grid-cols-2
-                gap-6
+                w-full
+                h-16
+                rounded-2xl
+                border
+                border-gray-200
+                px-5
+              "
+            />
+
+            <textarea
+              value={description}
+              onChange={(e) =>
+                setDescription(
+                  e.target.value
+                )
+              }
+              placeholder="Beschreibung"
+              className="
+                w-full
+                h-48
+                rounded-3xl
+                border
+                border-gray-200
+                p-5
+              "
+            />
+
+            <input
+              type="number"
+              value={price}
+              onChange={(e) =>
+                setPrice(
+                  e.target.value
+                )
+              }
+              placeholder="Preis"
+              className="
+                w-full
+                h-16
+                rounded-2xl
+                border
+                border-gray-200
+                px-5
+              "
+            />
+
+            <LocationPicker
+              location={location}
+              setLocation={setLocation}
+              setLat={setLat}
+              setLng={setLng}
+            />
+
+            <select
+              value={category}
+              onChange={(e) =>
+                setCategory(
+                  e.target.value
+                )
+              }
+              className="
+                w-full
+                h-16
+                rounded-2xl
+                border
+                border-gray-200
+                px-5
               "
             >
 
-              <div>
+              {categories.map(
+                (category) => (
 
-                <label
-                  className="
-                    block
-                    font-black
-                    text-lg
-                    mb-3
-                  "
-                >
+                  <option
+                    key={category}
+                  >
 
-                  Preis
+                    {category}
 
-                </label>
-
-                <input
-                  type="number"
-                  value={price}
-                  onChange={(e) =>
-                    setPrice(
-                      e.target.value
-                    )
-                  }
-                  placeholder="25"
-                  disabled={loading}
-                  className="
-                    w-full
-                    h-16
-                    rounded-2xl
-                    border
-                    border-gray-200
-                    px-5
-                    text-lg
-                    outline-none
-                  "
-                />
-
-              </div>
-
-              <div>
-
-                <label
-                  className="
-                    block
-                    font-black
-                    text-lg
-                    mb-3
-                  "
-                >
-
-                  Einheit
-
-                </label>
-
-                <select
-                  value={priceUnit}
-                  onChange={(e) =>
-                    setPriceUnit(
-                      e.target.value
-                    )
-                  }
-                  disabled={loading}
-                  className="
-                    w-full
-                    h-16
-                    rounded-2xl
-                    border
-                    border-gray-200
-                    px-5
-                    text-lg
-                    outline-none
-                    bg-white
-                  "
-                >
-
-                  <option>
-                    Stunde
                   </option>
 
-                  <option>
-                    Tag
-                  </option>
+                )
+              )}
 
-                  <option>
-                    Woche
-                  </option>
-
-                  <option>
-                    Monat
-                  </option>
-
-                </select>
-
-              </div>
-
-            </div>
-
-            {/* LOCATION */}
-
-            <div>
-
-              <label
-                className="
-                  block
-                  font-black
-                  text-lg
-                  mb-4
-                "
-              >
-
-                Standort
-
-              </label>
-
-              <LocationPicker
-                location={location}
-                setLocation={setLocation}
-                setLat={setLat}
-                setLng={setLng}
-              />
-
-            </div>
-
-            {/* CATEGORY */}
-
-            <div>
-
-              <label
-                className="
-                  block
-                  font-black
-                  text-lg
-                  mb-5
-                "
-              >
-
-                Kategorie
-
-              </label>
-
-              <div
-                className="
-                  flex
-                  gap-5
-                  overflow-x-auto
-                  scrollbar-hide
-                  pb-4
-                "
-              >
-
-                {categories.map(
-                  (item) => {
-
-                    const active =
-                      category === item;
-
-                    return (
-
-                      <button
-                        key={item}
-                        type="button"
-                        disabled={loading}
-                        onClick={() =>
-                          setCategory(item)
-                        }
-                        className={`
-                          min-w-[160px]
-                          h-[160px]
-                          rounded-[36px]
-                          border
-                          transition-all
-                          duration-300
-                          flex
-                          flex-col
-                          items-center
-                          justify-center
-                          gap-5
-                          shadow-sm
-                          hover:-translate-y-1
-                          hover:shadow-xl
-                          ${
-                            active
-                              ? "bg-[#16d64d] text-white border-[#16d64d]"
-                              : "bg-white border-gray-100"
-                          }
-                        `}
-                      >
-
-                        <div
-                          className={`
-                            w-20
-                            h-20
-                            rounded-[26px]
-                            flex
-                            items-center
-                            justify-center
-                            text-3xl
-                            ${
-                              active
-                                ? "bg-white/20"
-                                : "bg-[#16d64d]/10"
-                            }
-                          `}
-                        >
-
-                          {item === "Alle" && "📦"}
-                          {item === "Werkzeuge" && "🛠️"}
-                          {item === "Parkplätze" && "🅿️"}
-                          {item === "Garagen" && "🚗"}
-                          {item === "Keller" && "📦"}
-                          {item === "Lagerräume" && "🏢"}
-                          {item === "Transporter" && "🚚"}
-                          {item === "Anhänger" && "🛻"}
-                          {item === "Maschinen" && "⚙️"}
-                          {item === "Fahrzeuge" && "🚘"}
-                          {item === "Baumaschinen" && "🏗️"}
-                          {item === "Elektronik" && "💻"}
-                          {item === "Sonstiges" && "✨"}
-
-                        </div>
-
-                        <span
-                          className="
-                            font-black
-                            text-base
-                            text-center
-                            px-2
-                            whitespace-nowrap
-                          "
-                        >
-
-                          {item}
-
-                        </span>
-
-                      </button>
-
-                    );
-                  }
-                )}
-
-              </div>
-
-            </div>
+            </select>
 
             {/* IMAGE UPLOAD */}
 
-            <div>
+            <label
+              className="
+                border-2
+                border-dashed
+                border-gray-300
+                rounded-[40px]
+                p-10
+                flex
+                flex-col
+                items-center
+                justify-center
+                cursor-pointer
+              "
+            >
 
-              <label
-                className="
-                  block
-                  font-black
-                  text-lg
-                  mb-4
-                "
-              >
+              <Upload
+                size={50}
+              />
 
-                Bilder
+              <input
+                type="file"
+                hidden
+                multiple
+                accept="image/*"
+                onChange={handleImages}
+              />
 
-              </label>
-
-              <label
-                className="
-                  border-2
-                  border-dashed
-                  border-gray-300
-                  rounded-[40px]
-                  p-10
-                  md:p-16
-                  flex
-                  flex-col
-                  items-center
-                  justify-center
-                  cursor-pointer
-                  text-center
-                  hover:border-[#16d64d]
-                  transition
-                "
-              >
-
-                <div
-                  className="
-                    w-24
-                    h-24
-                    rounded-full
-                    bg-[#16d64d]
-                    text-white
-                    flex
-                    items-center
-                    justify-center
-                    mb-6
-                  "
-                >
-
-                  <Upload
-                    size={42}
-                  />
-
-                </div>
-
-                <h3
-                  className="
-                    text-3xl
-                    md:text-4xl
-                    font-black
-                    mb-3
-                  "
-                >
-
-                  Bilder hochladen
-
-                </h3>
-
-                <p
-                  className="
-                    text-gray-500
-                    text-lg
-                  "
-                >
-
-                  Maximal 10 Bilder
-
-                </p>
-
-                <input
-                  type="file"
-                  hidden
-                  multiple
-                  accept="image/*"
-                  onChange={handleImages}
-                />
-
-              </label>
-
-            </div>
+            </label>
 
             {/* PREVIEW */}
 
@@ -935,8 +655,6 @@ export default function CreatePage() {
 
             )}
 
-            {/* BUTTON */}
-
             <button
               onClick={createListing}
               disabled={loading}
@@ -948,8 +666,6 @@ export default function CreatePage() {
                 text-white
                 text-2xl
                 font-black
-                hover:scale-[1.01]
-                transition-all
               "
             >
 

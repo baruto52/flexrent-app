@@ -16,13 +16,9 @@ import {
 
   MapPin,
 
-  Star,
-
   SlidersHorizontal,
 
   Sparkles,
-
-  X,
 
 } from "lucide-react";
 
@@ -34,6 +30,9 @@ from "@/components/Footer";
 
 import FavoriteButton
 from "@/components/FavoriteButton";
+
+import ListingSkeleton
+from "@/components/ListingSkeleton";
 
 import { supabase }
 from "@/lib/supabase";
@@ -98,25 +97,140 @@ export default function ExplorePage() {
   const [mobileFilters, setMobileFilters] =
     useState(false);
 
+  /*
+    INFINITE SCROLL
+  */
+
+  const [page, setPage] =
+    useState(1);
+
+  const [hasMore, setHasMore] =
+    useState(true);
+
+  /*
+    USER LOCATION
+  */
+
   const {
     location: userLocation,
   } =
     useUserLocation();
 
+  /*
+    INITIAL LOAD
+  */
+
   useEffect(() => {
 
-    loadListings();
+    loadListings(true);
 
   }, []);
 
-  async function loadListings() {
+  /*
+    INFINITE SCROLL
+  */
+
+  useEffect(() => {
+
+    const handleScroll =
+      () => {
+
+        if (
+
+          window.innerHeight +
+          window.scrollY >=
+
+          document.body.offsetHeight - 1000 &&
+
+          !loading &&
+          hasMore
+        ) {
+
+          setPage(
+            (prev) =>
+              prev + 1
+          );
+        }
+      };
+
+    window.addEventListener(
+      "scroll",
+      handleScroll
+    );
+
+    return () =>
+
+      window.removeEventListener(
+        "scroll",
+        handleScroll
+      );
+
+  }, [loading, hasMore]);
+
+  /*
+    LOAD NEXT PAGE
+  */
+
+  useEffect(() => {
+
+    if (page > 1) {
+
+      loadListings();
+    }
+
+  }, [page]);
+
+  /*
+    OPTIMIZED LOAD
+  */
+
+  async function loadListings(
+    reset = false
+  ) {
 
     try {
 
-      const { data } =
+      setLoading(true);
+
+      const from =
+        reset
+          ? 0
+          : (page - 1) * 20;
+
+      const to =
+        from + 19;
+
+      const {
+        data,
+        error,
+      } =
         await supabase
           .from("listings")
-          .select("*")
+          .select(`
+
+            id,
+
+            title,
+
+            description,
+
+            price,
+
+            location,
+
+            rental_type,
+
+            category,
+
+            images,
+
+            created_at,
+
+            latitude,
+
+            longitude
+
+          `)
           .eq(
             "active",
             true
@@ -126,11 +240,44 @@ export default function ExplorePage() {
             {
               ascending: false,
             }
+          )
+          .range(
+            from,
+            to
           );
 
-      setListings(
-        data || []
-      );
+      if (error) {
+
+        console.log(error);
+
+        return;
+      }
+
+      if (
+        !data ||
+        data.length < 20
+      ) {
+
+        setHasMore(false);
+      }
+
+      if (reset) {
+
+        setListings(
+          data || []
+        );
+
+      } else {
+
+        setListings(
+          (prev) => [
+
+            ...prev,
+
+            ...(data || []),
+          ]
+        );
+      }
 
     } catch (error) {
 
@@ -395,23 +542,6 @@ export default function ExplorePage() {
 
               </h1>
 
-              <p
-                className="
-                  text-white/90
-                  text-xl
-                  mt-8
-                  max-w-2xl
-                  leading-9
-                "
-              >
-
-                Werkzeuge, Fahrzeuge,
-                Immobilien und vieles mehr —
-                alles in einer modernen
-                Marketplace Plattform.
-
-              </p>
-
             </div>
 
           </div>
@@ -443,8 +573,6 @@ export default function ExplorePage() {
                 gap-5
               "
             >
-
-              {/* SEARCH */}
 
               <div
                 className="
@@ -481,8 +609,6 @@ export default function ExplorePage() {
 
               </div>
 
-              {/* LOCATION */}
-
               <div
                 className="
                   flex-1
@@ -517,8 +643,6 @@ export default function ExplorePage() {
                 />
 
               </div>
-
-              {/* FILTER BUTTON */}
 
               <button
                 onClick={() =>
@@ -557,120 +681,207 @@ export default function ExplorePage() {
 
       </section>
 
-      {/* MOBILE FILTER MODAL */}
-
-      {mobileFilters && (
-
-        <div
-          className="
-            fixed
-            inset-0
-            z-50
-            bg-black/50
-            backdrop-blur-sm
-            p-4
-            flex
-            items-end
-          "
-        >
-
-          <div
-            className="
-              bg-white
-              rounded-t-[40px]
-              p-8
-              w-full
-              space-y-6
-            "
-          >
-
-            <div
-              className="
-                flex
-                items-center
-                justify-between
-              "
-            >
-
-              <h2
-                className="
-                  text-3xl
-                  font-black
-                "
-              >
-
-                Filter
-
-              </h2>
-
-              <button
-                onClick={() =>
-                  setMobileFilters(
-                    false
-                  )
-                }
-              >
-
-                <X
-                  size={28}
-                />
-
-              </button>
-
-            </div>
-
-          </div>
-
-        </div>
-
-      )}
-
       {/* LISTINGS */}
 
       <section className="px-4 py-12">
 
         <div className="max-w-7xl mx-auto">
 
-          {loading ? (
+          <div
+            className="
+              grid
+              grid-cols-1
+              sm:grid-cols-2
+              xl:grid-cols-3
+              gap-8
+            "
+          >
 
-            <div
-              className="
-                text-3xl
-                font-black
-              "
-            >
+            {filteredListings.map(
+              (listing: any) => (
 
-              Listings werden geladen...
+                <Link
+                  href={`/listing/${listing.id}`}
+                  key={listing.id}
+                  className="
+                    group
+                    bg-white
+                    rounded-[36px]
+                    overflow-hidden
+                    shadow-sm
+                    hover:shadow-2xl
+                    hover:-translate-y-2
+                    transition-all
+                    duration-300
+                  "
+                >
 
-            </div>
+                  <div
+                    className="
+                      relative
+                      h-[300px]
+                      overflow-hidden
+                    "
+                  >
 
-          ) : filteredListings.length === 0 ? (
+                    <Image
+                      src={
+                        listing.images?.[0] ||
 
-            <div
-              className="
-                bg-white
-                rounded-[40px]
-                p-20
-                text-center
-                shadow-sm
-              "
-            >
+                        "https://placehold.co/1200x900/png"
+                      }
+                      alt={
+                        listing.title
+                      }
+                      fill
 
-              <h2
-                className="
-                  text-5xl
-                  font-black
-                  mb-5
-                "
-              >
+                      loading="lazy"
 
-                Keine Listings gefunden
+                      quality={75}
 
-              </h2>
+                      sizes="
+                        (max-width: 640px) 100vw,
+                        (max-width: 1280px) 50vw,
+                        33vw
+                      "
 
-            </div>
+                      className="
+                        object-cover
+                        group-hover:scale-110
+                        transition-transform
+                        duration-700
+                      "
+                    />
 
-          ) : (
+                    <FavoriteButton
+                      listingId={
+                        listing.id
+                      }
+                    />
+
+                  </div>
+
+                  <div className="p-7">
+
+                    <h2
+                      className="
+                        text-3xl
+                        font-black
+                        line-clamp-1
+                        mb-4
+                      "
+                    >
+
+                      {
+                        listing.title
+                      }
+
+                    </h2>
+
+                    <div
+                      className="
+                        flex
+                        items-center
+                        gap-2
+                        text-gray-500
+                        mb-2
+                      "
+                    >
+
+                      <MapPin
+                        size={18}
+                      />
+
+                      {
+                        listing.location
+                      }
+
+                    </div>
+
+                    {listing.distance && (
+
+                      <div
+                        className="
+                          mt-3
+                          inline-flex
+                          items-center
+                          gap-2
+                          px-3
+                          py-2
+                          rounded-full
+                          bg-[#16d64d]/10
+                          text-[#16d64d]
+                          text-sm
+                          font-black
+                        "
+                      >
+
+                        📍
+                        {listing.distance.toFixed(1)}
+                        km entfernt
+
+                      </div>
+
+                    )}
+
+                    <p
+                      className="
+                        text-gray-500
+                        leading-8
+                        line-clamp-2
+                        min-h-[64px]
+                        mt-5
+                      "
+                    >
+
+                      {
+                        listing.description
+                      }
+
+                    </p>
+
+                    <div
+                      className="
+                        flex
+                        items-end
+                        justify-between
+                        mt-8
+                      "
+
+                    >
+
+                      <div>
+
+                        <span
+                          className="
+                            text-5xl
+                            font-black
+                          "
+                        >
+
+                          €
+                          {
+                            listing.price
+                          }
+
+                        </span>
+
+                      </div>
+
+                    </div>
+
+                  </div>
+
+                </Link>
+
+              )
+            )}
+
+          </div>
+
+          {/* SKELETON */}
+
+          {loading && (
 
             <div
               className="
@@ -679,242 +890,36 @@ export default function ExplorePage() {
                 sm:grid-cols-2
                 xl:grid-cols-3
                 gap-8
+                mt-8
               "
             >
 
-              {filteredListings.map(
-                (listing: any) => (
+              {Array.from({
+                length: 6,
+              }).map((_, index) => (
 
-                  <Link
-                    href={`/listing/${listing.id}`}
-                    key={listing.id}
-                    className="
-                      group
-                      bg-white
-                      rounded-[36px]
-                      overflow-hidden
-                      shadow-sm
-                      hover:shadow-2xl
-                      hover:-translate-y-2
-                      transition-all
-                      duration-300
-                    "
-                  >
+                <ListingSkeleton
+                  key={index}
+                />
 
-                    {/* IMAGE */}
+              ))}
 
-                    <div
-                      className="
-                        relative
-                        h-[300px]
-                        overflow-hidden
-                      "
-                    >
+            </div>
 
-                      <Image
-                        src={
-                          listing.images?.[0] ||
+          )}
 
-                          "https://placehold.co/1200x900/png"
-                        }
-                        alt={
-                          listing.title
-                        }
-                        fill
-                        className="
-                          object-cover
-                          group-hover:scale-110
-                          transition-transform
-                          duration-700
-                        "
-                      />
+          {!hasMore && (
 
-                      <FavoriteButton
-                        listingId={
-                          listing.id
-                        }
-                      />
+            <div
+              className="
+                text-center
+                py-10
+                text-gray-400
+                font-bold
+              "
+            >
 
-                    </div>
-
-                    {/* CONTENT */}
-
-                    <div className="p-7">
-
-                      <div
-                        className="
-                          flex
-                          items-center
-                          justify-between
-                          mb-5
-                        "
-                      >
-
-                        <div
-                          className="
-                            px-4
-                            py-2
-                            rounded-full
-                            bg-[#16d64d]/10
-                            text-[#16d64d]
-                            font-black
-                          "
-                        >
-
-                          {
-                            listing.rental_type
-                          }
-
-                        </div>
-
-                        <div
-                          className="
-                            flex
-                            items-center
-                            gap-2
-                            font-black
-                          "
-                        >
-
-                          <Star
-                            size={18}
-                            className="
-                              fill-yellow-400
-                              text-yellow-400
-                            "
-                          />
-
-                          4.9
-
-                        </div>
-
-                      </div>
-
-                      <h2
-                        className="
-                          text-3xl
-                          font-black
-                          line-clamp-1
-                          mb-4
-                        "
-                      >
-
-                        {
-                          listing.title
-                        }
-
-                      </h2>
-
-                      <div
-                        className="
-                          flex
-                          items-center
-                          gap-2
-                          text-gray-500
-                          mb-2
-                        "
-                      >
-
-                        <MapPin
-                          size={18}
-                        />
-
-                        {
-                          listing.location
-                        }
-
-                      </div>
-
-                      {listing.distance && (
-
-                        <div
-                          className="
-                            mt-3
-                            inline-flex
-                            items-center
-                            gap-2
-                            px-3
-                            py-2
-                            rounded-full
-                            bg-[#16d64d]/10
-                            text-[#16d64d]
-                            text-sm
-                            font-black
-                          "
-                        >
-
-                          📍
-                          {listing.distance.toFixed(1)}
-                          km entfernt
-
-                        </div>
-
-                      )}
-
-                      <p
-                        className="
-                          text-gray-500
-                          leading-8
-                          line-clamp-2
-                          min-h-[64px]
-                          mt-5
-                        "
-                      >
-
-                        {
-                          listing.description
-                        }
-
-                      </p>
-
-                      <div
-                        className="
-                          flex
-                          items-end
-                          justify-between
-                          mt-8
-                        "
-                      >
-
-                        <div>
-
-                          <span
-                            className="
-                              text-5xl
-                              font-black
-                            "
-                          >
-
-                            €
-                            {
-                              listing.price
-                            }
-
-                          </span>
-
-                          <span
-                            className="
-                              text-gray-500
-                              ml-2
-                            "
-                          >
-
-                            / {
-                              listing.rental_type
-                            }
-
-                          </span>
-
-                        </div>
-
-                      </div>
-
-                    </div>
-
-                  </Link>
-
-                )
-              )}
+              Keine weiteren Listings
 
             </div>
 

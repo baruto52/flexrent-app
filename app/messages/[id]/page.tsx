@@ -4,7 +4,10 @@ import {
   useEffect,
   useRef,
   useState,
+  useCallback,
 } from "react";
+
+import Image from "next/image";
 
 import {
   useParams,
@@ -17,13 +20,14 @@ import {
 
   Send,
 
-  Trash2,
-
   ShieldCheck,
 
   Image as ImageIcon,
 
 } from "lucide-react";
+
+import imageCompression
+from "browser-image-compression";
 
 import { supabase }
 from "@/lib/supabase";
@@ -80,11 +84,19 @@ export default function ChatPage() {
   const [otherTyping, setOtherTyping] =
     useState(false);
 
+  /*
+    INIT
+  */
+
   useEffect(() => {
 
     init();
 
   }, []);
+
+  /*
+    AUTO SCROLL
+  */
 
   useEffect(() => {
 
@@ -137,12 +149,21 @@ export default function ChatPage() {
     setLoading(false);
   }
 
+  /*
+    PROFILE
+  */
+
   async function loadProfile() {
 
     const { data } =
       await supabase
         .from("profiles")
-        .select("*")
+        .select(`
+          id,
+          full_name,
+          avatar_url,
+          online
+        `)
         .eq(
           "id",
           otherUserId
@@ -152,27 +173,61 @@ export default function ChatPage() {
     setProfile(data);
   }
 
-  async function loadMessages(
-    userId: string
-  ) {
+  /*
+    LOAD MESSAGES
+  */
 
-    const { data } =
-      await supabase
-        .from("messages")
-        .select("*")
-        .or(
-          `and(sender_id.eq.${userId},receiver_id.eq.${otherUserId}),and(sender_id.eq.${otherUserId},receiver_id.eq.${userId})`
-        )
-        .order(
-          "created_at",
-          {
-            ascending: true,
-          }
-        );
+  const loadMessages =
+    useCallback(
+      async (
+        userId: string
+      ) => {
 
-    if (data)
-      setMessages(data);
-  }
+        const {
+          data,
+        } =
+          await supabase
+            .from("messages")
+            .select(`
+
+              id,
+
+              sender_id,
+
+              receiver_id,
+
+              message,
+
+              image_url,
+
+              created_at,
+
+              seen
+
+            `)
+            .or(
+              `and(sender_id.eq.${userId},receiver_id.eq.${otherUserId}),and(sender_id.eq.${otherUserId},receiver_id.eq.${userId})`
+            )
+            .order(
+              "created_at",
+              {
+                ascending: true,
+              }
+            )
+            .limit(100);
+
+        if (data) {
+
+          setMessages(data);
+        }
+      },
+
+      [otherUserId]
+    );
+
+  /*
+    MARK READ
+  */
 
   async function markMessagesAsRead(
     userId: string
@@ -196,6 +251,10 @@ export default function ChatPage() {
       );
   }
 
+  /*
+    REALTIME
+  */
+
   function listenMessages(
     userId: string
   ) {
@@ -209,7 +268,7 @@ export default function ChatPage() {
       .on(
         "postgres_changes",
         {
-          event: "*",
+          event: "INSERT",
           schema: "public",
           table: "messages",
         },
@@ -222,6 +281,10 @@ export default function ChatPage() {
       )
       .subscribe();
   }
+
+  /*
+    TYPING
+  */
 
   function listenTyping(
     userId: string
@@ -264,6 +327,82 @@ export default function ChatPage() {
       .subscribe();
   }
 
+  /*
+    SEND MESSAGE
+  */
+
+  async function sendMessage() {
+
+    if (!newMessage.trim())
+      return;
+
+    const message =
+      newMessage;
+
+    setNewMessage("");
+
+    /*
+      OPTIMISTIC UI
+    */
+
+    const optimisticMessage = {
+
+      id:
+        Math.random().toString(),
+
+      sender_id:
+        currentUserId,
+
+      receiver_id:
+        otherUserId,
+
+      message,
+
+      created_at:
+        new Date().toISOString(),
+    };
+
+    setMessages(
+      (prev: any) => [
+
+        ...prev,
+
+        optimisticMessage,
+      ]
+    );
+
+    scrollToBottom();
+
+    const {
+      error,
+    } =
+      await supabase
+        .from("messages")
+        .insert({
+
+          sender_id:
+            currentUserId,
+
+          receiver_id:
+            otherUserId,
+
+          message,
+
+          seen: false,
+
+          is_read: false,
+        });
+
+    if (error) {
+
+      console.log(error);
+    }
+  }
+
+  /*
+    IMAGE UPLOAD
+  */
+
   async function uploadImage(
     file: File
   ) {
@@ -273,8 +412,21 @@ export default function ChatPage() {
       setUploading(true);
 
       /*
-        SAFE FILE NAME
+        COMPRESS
       */
+
+      const compressedFile =
+        await imageCompression(
+          file,
+          {
+
+            maxSizeMB: 1,
+
+            maxWidthOrHeight: 1600,
+
+            useWebWorker: true,
+          }
+        );
 
       const extension =
         file.name
@@ -299,7 +451,7 @@ export default function ChatPage() {
 
             fileName,
 
-            file,
+            compressedFile,
 
             {
 
@@ -315,14 +467,7 @@ export default function ChatPage() {
 
       if (uploadError) {
 
-        console.log(
-          "UPLOAD ERROR:",
-          uploadError
-        );
-
-        alert(
-          "Bild Upload fehlgeschlagen"
-        );
+        console.log(uploadError);
 
         return;
       }
@@ -340,132 +485,10 @@ export default function ChatPage() {
             fileName
           );
 
-      if (
-        !publicUrlData
-          ?.publicUrl
-      ) {
-
-        alert(
-          "Bild URL Fehler"
-        );
-
-        return;
-      }
-
       /*
-        SAVE MESSAGE
+        SAVE
       */
 
-      const {
-        error: messageError,
-      } =
-        await supabase
-          .from("messages")
-          .insert({
-
-            sender_id:
-              currentUserId,
-
-            receiver_id:
-              otherUserId,
-
-            message:
-              "",
-
-            image_url:
-              publicUrlData.publicUrl,
-
-            seen: false,
-
-            is_read: false,
-          });
-
-      if (messageError) {
-
-        console.log(
-          "MESSAGE ERROR:",
-          messageError
-        );
-
-        alert(
-          "Nachricht konnte nicht gespeichert werden"
-        );
-
-        return;
-      }
-
-      /*
-        PUSH
-      */
-
-      try {
-
-        await fetch(
-          "/api/send-push",
-          {
-
-            method: "POST",
-
-            headers: {
-
-              "Content-Type":
-                "application/json",
-            },
-
-            body: JSON.stringify({
-
-              userId:
-                otherUserId,
-
-              title:
-                "Neues Bild",
-
-              message:
-                "Du hast ein Bild erhalten",
-            }),
-          }
-        );
-
-      } catch (error) {
-
-        console.log(error);
-      }
-
-      /*
-        RELOAD
-      */
-
-      await loadMessages(
-        currentUserId
-      );
-
-      scrollToBottom();
-
-    } catch (error) {
-
-      console.log(
-        "IMAGE ERROR:",
-        error
-      );
-
-      alert(
-        "Bild konnte nicht gesendet werden"
-      );
-
-    } finally {
-
-      setUploading(false);
-    }
-  }
-
-  async function sendMessage() {
-
-    if (!newMessage.trim())
-      return;
-
-    const {
-      error,
-    } =
       await supabase
         .from("messages")
         .insert({
@@ -477,58 +500,45 @@ export default function ChatPage() {
             otherUserId,
 
           message:
-            newMessage,
+            "",
+
+          image_url:
+            publicUrlData.publicUrl,
 
           seen: false,
 
           is_read: false,
         });
 
-    if (error) {
+    } catch (error) {
 
       console.log(error);
 
-      return;
+    } finally {
+
+      setUploading(false);
     }
-
-    setNewMessage("");
-
-    await loadMessages(
-      currentUserId
-    );
-
-    scrollToBottom();
   }
+
+  /*
+    SCROLL
+  */
 
   function scrollToBottom() {
 
-    messagesEndRef.current?.scrollIntoView({
+    setTimeout(() => {
 
-      behavior: "smooth",
-    });
+      messagesEndRef.current?.scrollIntoView({
+
+        behavior: "smooth",
+      });
+
+    }, 100);
   }
 
-  async function deleteMessage(
-    id: string
-  ) {
-
-    await supabase
-      .from("messages")
-      .delete()
-      .eq(
-        "id",
-        id
-      );
-
-    setMessages(
-      (prev) =>
-
-        prev.filter(
-          (msg) =>
-            msg.id !== id
-        )
-    );
-  }
+  /*
+    LOADING
+  */
 
   if (loading) {
 
@@ -613,16 +623,20 @@ export default function ChatPage() {
 
           </button>
 
-          <img
+          <Image
             src={
               profile?.avatar_url ||
               "/avatar.png"
             }
+            alt=""
+            width={56}
+            height={56}
+            loading="lazy"
             className="
-              w-14
-              h-14
               rounded-full
               object-cover
+              w-14
+              h-14
             "
           />
 
@@ -730,10 +744,15 @@ export default function ChatPage() {
 
                   {msg.image_url && (
 
-                    <img
+                    <Image
                       src={
                         msg.image_url
                       }
+                      alt=""
+                      width={500}
+                      height={500}
+                      loading="lazy"
+                      quality={75}
                       className="
                         rounded-2xl
                         mb-3

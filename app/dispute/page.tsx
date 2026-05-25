@@ -1,8 +1,13 @@
 "use client";
 
 import {
+
+  Suspense,
+
   useEffect,
+
   useState,
+
 } from "react";
 
 import {
@@ -26,7 +31,7 @@ import {
 import { supabase }
 from "@/lib/supabase";
 
-export default function DisputePage() {
+function DisputeContent() {
 
   const searchParams =
     useSearchParams();
@@ -436,6 +441,26 @@ export default function DisputePage() {
       <Footer />
 
     </main>
+  );
+}
 
+export default function DisputePage() {
+
+  return (
+
+    <Suspense
+      fallback={
+
+        <div className="min-h-screen flex items-center justify-center text-3xl font-black">
+
+          Laden...
+
+        </div>
+      }
+    >
+
+      <DisputeContent />
+
+    </Suspense>
   );
 }

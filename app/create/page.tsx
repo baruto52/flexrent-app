@@ -299,8 +299,83 @@ export default function CreatePage() {
 
       try {
 
+        /*
+          AI MODERATION
+        */
+
+        const moderationRes =
+          await fetch(
+            "/api/ai/moderate",
+            {
+              method: "POST",
+
+              headers: {
+                "Content-Type":
+                  "application/json",
+              },
+
+              body: JSON.stringify({
+                title,
+                description,
+              }),
+            }
+          );
+
+        const moderationData =
+          await moderationRes.json();
+
+        /*
+          HIGH RISK
+        */
+
+        if (
+          moderationData
+            ?.moderation?.risk ===
+          "high"
+        ) {
+
+          alert(
+            "Dieses Listing wurde aus Sicherheitsgründen blockiert."
+          );
+
+          setLoading(false);
+
+          return;
+        }
+
+        /*
+          MEDIUM RISK
+        */
+
+        if (
+          moderationData
+            ?.moderation?.risk ===
+          "medium"
+        ) {
+
+          const confirmed =
+            confirm(
+              "Dieses Listing wirkt möglicherweise verdächtig. Trotzdem veröffentlichen?"
+            );
+
+          if (!confirmed) {
+
+            setLoading(false);
+
+            return;
+          }
+        }
+
+        /*
+          IMAGE UPLOAD
+        */
+
         const imageUrls =
           await uploadImages();
+
+        /*
+          SAVE LISTING
+        */
 
         const { error } =
           await supabase

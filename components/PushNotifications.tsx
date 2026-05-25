@@ -16,6 +16,18 @@ export default function PushNotifications() {
 
     try {
 
+      /*
+        SUPPORT CHECK
+      */
+
+      if (
+        typeof window ===
+        "undefined"
+      ) {
+
+        return;
+      }
+
       if (
         !("serviceWorker" in navigator)
       ) {
@@ -34,20 +46,30 @@ export default function PushNotifications() {
         REGISTER SW
       */
 
+      await navigator
+        .serviceWorker
+        .register("/sw.js");
+
+      /*
+        WAIT FOR ACTIVE SW
+      */
+
       const registration =
         await navigator
           .serviceWorker
-          .register("/sw.js");
+          .ready;
 
       /*
         PERMISSION
       */
 
       const permission =
-        await Notification.requestPermission();
+        await Notification
+          .requestPermission();
 
       if (
-        permission !== "granted"
+        permission !==
+        "granted"
       ) {
 
         return;
@@ -109,7 +131,10 @@ export default function PushNotifications() {
 
     } catch (error) {
 
-      console.log(error);
+      console.log(
+        "Push Error:",
+        error
+      );
     }
   }
 
@@ -119,12 +144,16 @@ export default function PushNotifications() {
 
     const padding =
       "=".repeat(
-        (4 -
+
+        (
+          4 -
+
           (
             base64String.length %
             4
-          )) %
-          4
+          )
+
+        ) % 4
       );
 
     const base64 =

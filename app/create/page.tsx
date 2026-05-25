@@ -83,6 +83,11 @@ export default function CreatePage() {
   const [category, setCategory] =
     useState("");
 
+  const [
+    categoryLoading,
+    setCategoryLoading,
+  ] = useState(false);
+
   const [images, setImages] =
     useState<File[]>([]);
 
@@ -115,6 +120,60 @@ export default function CreatePage() {
     );
 
   }, []);
+
+  /*
+    AI CATEGORY
+  */
+
+  async function detectCategory(
+    value: string
+  ) {
+
+    if (!value) return;
+
+    try {
+
+      setCategoryLoading(true);
+
+      const res =
+        await fetch(
+          "/api/ai/category",
+          {
+            method: "POST",
+
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
+
+            body: JSON.stringify({
+              title: value,
+            }),
+          }
+        );
+
+      const data =
+        await res.json();
+
+      if (
+        data?.category
+      ) {
+
+        setCategory(
+          data.category
+        );
+      }
+
+    } catch (error) {
+
+      console.log(error);
+
+    } finally {
+
+      setCategoryLoading(false);
+
+    }
+  }
 
   const handleImages =
     (
@@ -169,10 +228,6 @@ export default function CreatePage() {
 
               try {
 
-                /*
-                  COMPRESS IMAGE
-                */
-
                 const compressedFile =
                   await imageCompression(
                     image,
@@ -186,16 +241,8 @@ export default function CreatePage() {
                     }
                   );
 
-                /*
-                  FILE NAME
-                */
-
                 const fileName =
                   `${Date.now()}-${Math.random()}-${image.name}`;
-
-                /*
-                  UPLOAD
-                */
 
                 const { error } =
                   await supabase.storage
@@ -213,10 +260,6 @@ export default function CreatePage() {
 
                   return null;
                 }
-
-                /*
-                  PUBLIC URL
-                */
 
                 const {
                   data,
@@ -529,24 +572,54 @@ export default function CreatePage() {
 
           <div className="space-y-10">
 
-            <input
-              type="text"
-              value={title}
-              onChange={(e) =>
-                setTitle(
-                  e.target.value
-                )
-              }
-              placeholder="Titel"
-              className="
-                w-full
-                h-16
-                rounded-2xl
-                border
-                border-gray-200
-                px-5
-              "
-            />
+            {/* TITLE */}
+
+            <div className="space-y-3">
+
+              <input
+                type="text"
+                value={title}
+                onChange={(e) => {
+
+                  setTitle(
+                    e.target.value
+                  );
+
+                  detectCategory(
+                    e.target.value
+                  );
+
+                }}
+                placeholder="Titel"
+                className="
+                  w-full
+                  h-16
+                  rounded-2xl
+                  border
+                  border-gray-200
+                  px-5
+                "
+              />
+
+              {categoryLoading && (
+
+                <p
+                  className="
+                    text-sm
+                    text-gray-500
+                    px-2
+                  "
+                >
+
+                  AI erkennt Kategorie...
+
+                </p>
+
+              )}
+
+            </div>
+
+            {/* DESCRIPTION */}
 
             <textarea
               value={description}
@@ -565,6 +638,8 @@ export default function CreatePage() {
                 p-5
               "
             />
+
+            {/* PRICE */}
 
             <input
               type="number"
@@ -585,12 +660,16 @@ export default function CreatePage() {
               "
             />
 
+            {/* LOCATION */}
+
             <LocationPicker
               location={location}
               setLocation={setLocation}
               setLat={setLat}
               setLng={setLng}
             />
+
+            {/* CATEGORY */}
 
             <select
               value={category}
@@ -656,7 +735,7 @@ export default function CreatePage() {
 
             </label>
 
-            {/* PREVIEW */}
+            {/* IMAGE PREVIEW */}
 
             {images.length > 0 && (
 
@@ -729,6 +808,8 @@ export default function CreatePage() {
               </div>
 
             )}
+
+            {/* SUBMIT */}
 
             <button
               onClick={createListing}

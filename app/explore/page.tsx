@@ -69,6 +69,10 @@ type Listing = {
   longitude?: number;
 
   distance?: number;
+
+  ai_verified?: boolean;
+
+  trust_score?: number;
 };
 
 export default function ExplorePage() {
@@ -81,6 +85,11 @@ export default function ExplorePage() {
 
   const [search, setSearch] =
     useState("");
+
+  const [
+    aiLoading,
+    setAiLoading,
+  ] = useState(false);
 
   const [location, setLocation] =
     useState("");
@@ -181,7 +190,62 @@ export default function ExplorePage() {
   }, [page]);
 
   /*
-    OPTIMIZED LOAD
+    AI SEARCH
+  */
+
+  async function handleAISearch() {
+
+    if (!search)
+      return;
+
+    try {
+
+      setAiLoading(true);
+
+      const res =
+        await fetch(
+          "/api/ai/search",
+          {
+            method: "POST",
+
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
+
+            body: JSON.stringify({
+              query: search,
+            }),
+          }
+        );
+
+      const data =
+        await res.json();
+
+      if (
+        data?.listings
+      ) {
+
+        setListings(
+          data.listings
+        );
+
+        setHasMore(false);
+      }
+
+    } catch (error) {
+
+      console.log(error);
+
+    } finally {
+
+      setAiLoading(false);
+
+    }
+  }
+
+  /*
+    LOAD LISTINGS
   */
 
   async function loadListings(
@@ -228,7 +292,11 @@ export default function ExplorePage() {
 
             latitude,
 
-            longitude
+            longitude,
+
+            ai_verified,
+
+            trust_score
 
           `)
           .eq(
@@ -498,7 +566,7 @@ export default function ExplorePage() {
               "
             >
 
-              FLEX
+              LOQARO
 
             </div>
 
@@ -519,11 +587,9 @@ export default function ExplorePage() {
                 "
               >
 
-                <Sparkles
-                  size={20}
-                />
+                <Sparkles size={20} />
 
-                Premium Explore
+                AI Smart Explore
 
               </div>
 
@@ -587,9 +653,7 @@ export default function ExplorePage() {
                 "
               >
 
-                <Search
-                  size={22}
-                />
+                <Search size={22} />
 
                 <input
                   type="text"
@@ -599,7 +663,7 @@ export default function ExplorePage() {
                       e.target.value
                     )
                   }
-                  placeholder="Nach Listings suchen..."
+                  placeholder="AI Suche..."
                   className="
                     bg-transparent
                     w-full
@@ -622,9 +686,7 @@ export default function ExplorePage() {
                 "
               >
 
-                <MapPin
-                  size={22}
-                />
+                <MapPin size={22} />
 
                 <input
                   type="text"
@@ -643,6 +705,32 @@ export default function ExplorePage() {
                 />
 
               </div>
+
+              <button
+                onClick={
+                  handleAISearch
+                }
+                disabled={
+                  aiLoading
+                }
+                className="
+                  h-16
+                  px-8
+                  rounded-2xl
+                  bg-[#16d64d]
+                  text-white
+                  font-black
+                  whitespace-nowrap
+                "
+              >
+
+                {aiLoading
+
+                  ? "AI sucht..."
+
+                  : "AI Suche"}
+
+              </button>
 
               <button
                 onClick={() =>
@@ -734,17 +822,13 @@ export default function ExplorePage() {
                         listing.title
                       }
                       fill
-
                       loading="lazy"
-
                       quality={75}
-
                       sizes="
                         (max-width: 640px) 100vw,
                         (max-width: 1280px) 50vw,
                         33vw
                       "
-
                       className="
                         object-cover
                         group-hover:scale-110
@@ -763,58 +847,47 @@ export default function ExplorePage() {
 
                   <div className="p-7">
 
-                    <h2
-                      className="
-                        text-3xl
-                        font-black
-                        line-clamp-1
-                        mb-4
-                      "
-                    >
+                    <h2 className="text-3xl font-black line-clamp-1 mb-4">
 
-                      {
-                        listing.title
-                      }
+                      {listing.title}
 
                     </h2>
 
-                    <div
-                      className="
-                        flex
-                        items-center
-                        gap-2
-                        text-gray-500
-                        mb-2
-                      "
-                    >
+                    {listing.ai_verified && (
 
-                      <MapPin
-                        size={18}
-                      />
+                      <div className="mb-4 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#16d64d]/10 text-[#16d64d] text-xs font-black">
 
-                      {
-                        listing.location
-                      }
+                        ✓ AI Verified
+
+                      </div>
+
+                    )}
+
+                    {!!listing.trust_score && (
+
+                      <div className="mb-4">
+
+                        <div className="inline-flex items-center gap-2 px-3 py-2 rounded-full bg-black/5 text-black text-xs font-black">
+
+                          AI Trust {listing.trust_score}%
+
+                        </div>
+
+                      </div>
+
+                    )}
+
+                    <div className="flex items-center gap-2 text-gray-500 mb-2">
+
+                      <MapPin size={18} />
+
+                      {listing.location}
 
                     </div>
 
                     {listing.distance && (
 
-                      <div
-                        className="
-                          mt-3
-                          inline-flex
-                          items-center
-                          gap-2
-                          px-3
-                          py-2
-                          rounded-full
-                          bg-[#16d64d]/10
-                          text-[#16d64d]
-                          text-sm
-                          font-black
-                        "
-                      >
+                      <div className="mt-3 inline-flex items-center gap-2 px-3 py-2 rounded-full bg-[#16d64d]/10 text-[#16d64d] text-sm font-black">
 
                         📍
                         {listing.distance.toFixed(1)}
@@ -824,45 +897,20 @@ export default function ExplorePage() {
 
                     )}
 
-                    <p
-                      className="
-                        text-gray-500
-                        leading-8
-                        line-clamp-2
-                        min-h-[64px]
-                        mt-5
-                      "
-                    >
+                    <p className="text-gray-500 leading-8 line-clamp-2 min-h-[64px] mt-5">
 
-                      {
-                        listing.description
-                      }
+                      {listing.description}
 
                     </p>
 
-                    <div
-                      className="
-                        flex
-                        items-end
-                        justify-between
-                        mt-8
-                      "
-
-                    >
+                    <div className="flex items-end justify-between mt-8">
 
                       <div>
 
-                        <span
-                          className="
-                            text-5xl
-                            font-black
-                          "
-                        >
+                        <span className="text-5xl font-black">
 
                           €
-                          {
-                            listing.price
-                          }
+                          {listing.price}
 
                         </span>
 
@@ -879,20 +927,9 @@ export default function ExplorePage() {
 
           </div>
 
-          {/* SKELETON */}
-
           {loading && (
 
-            <div
-              className="
-                grid
-                grid-cols-1
-                sm:grid-cols-2
-                xl:grid-cols-3
-                gap-8
-                mt-8
-              "
-            >
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-8 mt-8">
 
               {Array.from({
                 length: 6,
@@ -910,14 +947,7 @@ export default function ExplorePage() {
 
           {!hasMore && (
 
-            <div
-              className="
-                text-center
-                py-10
-                text-gray-400
-                font-bold
-              "
-            >
+            <div className="text-center py-10 text-gray-400 font-bold">
 
               Keine weiteren Listings
 
@@ -932,6 +962,5 @@ export default function ExplorePage() {
       <Footer />
 
     </main>
-
   );
 }

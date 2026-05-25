@@ -33,6 +33,23 @@ export default function MessagesModal({
     useState<any[]>([]);
 
   /*
+    AI WARNING
+  */
+
+  const [
+    aiWarning,
+    setAiWarning,
+  ] = useState("");
+
+  const [
+    aiChecking,
+    setAiChecking,
+  ] = useState(false);
+
+  const [message, setMessage] =
+    useState("");
+
+  /*
     LOAD CHATS
   */
 
@@ -136,6 +153,78 @@ export default function MessagesModal({
 
       [user.id]
     );
+
+  /*
+    AI CHAT MODERATION
+  */
+
+  async function moderateMessage(
+    value: string
+  ) {
+
+    if (
+      value.length < 6
+    ) {
+
+      setAiWarning("");
+
+      return;
+    }
+
+    try {
+
+      setAiChecking(true);
+
+      const res =
+        await fetch(
+          "/api/ai/chat-moderate",
+          {
+            method: "POST",
+
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
+
+            body: JSON.stringify({
+              message: value,
+            }),
+          }
+        );
+
+      const data =
+        await res.json();
+
+      const moderation =
+        data?.moderation;
+
+      if (
+        moderation?.risk ===
+        "high"
+      ) {
+
+        setAiWarning(
+
+          moderation.reason ||
+
+          "Diese Nachricht könnte verdächtig sein."
+        );
+
+      } else {
+
+        setAiWarning("");
+      }
+
+    } catch (error) {
+
+      console.log(error);
+
+    } finally {
+
+      setAiChecking(false);
+
+    }
+  }
 
   /*
     INITIAL LOAD
@@ -248,6 +337,76 @@ export default function MessagesModal({
             ×
 
           </button>
+
+        </div>
+
+        {/* AI SECURITY PREVIEW */}
+
+        <div className="p-5 border-b">
+
+          <textarea
+            value={message}
+            onChange={(e) => {
+
+              setMessage(
+                e.target.value
+              );
+
+              moderateMessage(
+                e.target.value
+              );
+
+            }}
+            placeholder="Nachricht testen..."
+            className="
+              w-full
+              h-28
+              rounded-2xl
+              border
+              border-gray-200
+              p-4
+              resize-none
+            "
+          />
+
+          {aiChecking && (
+
+            <div
+              className="
+                mt-3
+                text-sm
+                text-gray-400
+                font-bold
+              "
+            >
+
+              AI überprüft Nachricht...
+
+            </div>
+
+          )}
+
+          {aiWarning && (
+
+            <div
+              className="
+                mt-3
+                p-4
+                rounded-2xl
+                bg-red-500/10
+                border
+                border-red-200
+                text-red-600
+                text-sm
+                font-bold
+              "
+            >
+
+              ⚠️ {aiWarning}
+
+            </div>
+
+          )}
 
         </div>
 

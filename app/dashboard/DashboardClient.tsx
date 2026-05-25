@@ -6,7 +6,6 @@ import {
 } from "react";
 
 import Link from "next/link";
-import Image from "next/image";
 
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -15,13 +14,7 @@ import {
 
   Plus,
 
-  Eye,
-
   EyeOff,
-
-  Pencil,
-
-  Trash2,
 
   Sparkles,
 
@@ -34,6 +27,8 @@ import {
   ArrowUpRight,
 
   CreditCard,
+
+  Trash2,
 
 } from "lucide-react";
 
@@ -214,46 +209,8 @@ export default function DashboardClient() {
 
     try {
 
-      const {
-        data: { user },
-      } =
-        await supabase.auth.getUser();
-
-      if (!user)
-        return;
-
-      const response =
-        await fetch(
-          "/api/connect",
-          {
-
-            method: "POST",
-
-            headers: {
-
-              "Content-Type":
-                "application/json",
-            },
-
-            body: JSON.stringify({
-
-              userId:
-                user.id,
-
-              email:
-                user.email,
-            }),
-          }
-        );
-
-      const data =
-        await response.json();
-
-      if (data.url) {
-
-        window.location.href =
-          data.url;
-      }
+      window.location.href =
+        "/api/stripe/connect";
 
     } catch (error) {
 
@@ -273,22 +230,29 @@ export default function DashboardClient() {
     if (!confirmed)
       return;
 
-    await supabase
-      .from("listings")
-      .delete()
-      .eq(
-        "id",
-        id
+    try {
+
+      await supabase
+        .from("listings")
+        .delete()
+        .eq(
+          "id",
+          id
+        );
+
+      setListings(
+        (prev) =>
+
+          prev.filter(
+            (listing) =>
+              listing.id !== id
+          )
       );
 
-    setListings(
-      (prev) =>
+    } catch (error) {
 
-        prev.filter(
-          (listing) =>
-            listing.id !== id
-        )
-    );
+      console.log(error);
+    }
   }
 
   async function toggleActive(
@@ -296,37 +260,44 @@ export default function DashboardClient() {
     active: boolean
   ) {
 
-    await supabase
-      .from("listings")
-      .update({
+    try {
 
-        active:
-          !active,
-      })
-      .eq(
-        "id",
-        id
+      await supabase
+        .from("listings")
+        .update({
+
+          active:
+            !active,
+        })
+        .eq(
+          "id",
+          id
+        );
+
+      setListings(
+        (prev) =>
+
+          prev.map(
+            (listing) =>
+
+              listing.id === id
+
+                ? {
+
+                    ...listing,
+
+                    active:
+                      !active,
+                  }
+
+                : listing
+          )
       );
 
-    setListings(
-      (prev) =>
+    } catch (error) {
 
-        prev.map(
-          (listing) =>
-
-            listing.id === id
-
-              ? {
-
-                  ...listing,
-
-                  active:
-                    !active,
-                }
-
-              : listing
-        )
-    );
+      console.log(error);
+    }
   }
 
   const activeListings =
@@ -662,6 +633,8 @@ export default function DashboardClient() {
               gap-3
               font-black
               text-lg
+              hover:scale-[1.02]
+              transition-all
             "
           >
 
@@ -675,11 +648,247 @@ export default function DashboardClient() {
 
         </div>
 
+        {/* EMPTY */}
+
+        {listings.length === 0 && (
+
+          <div
+            className="
+              bg-white
+              rounded-[40px]
+              p-16
+              text-center
+              shadow-sm
+            "
+          >
+
+            <h2
+              className="
+                text-4xl
+                font-black
+                mb-5
+              "
+            >
+
+              Keine Listings gefunden
+
+            </h2>
+
+            <p
+              className="
+                text-gray-500
+                mb-8
+              "
+            >
+
+              Erstelle jetzt dein erstes Listing.
+
+            </p>
+
+            <Link
+              href="/create"
+              className="
+                inline-flex
+                items-center
+                justify-center
+                h-14
+                px-8
+                rounded-2xl
+                bg-[#16d64d]
+                text-white
+                font-black
+              "
+            >
+
+              Listing erstellen
+
+            </Link>
+
+          </div>
+
+        )}
+
+        {/* LISTINGS */}
+
+        <div
+          className="
+            grid
+            md:grid-cols-2
+            xl:grid-cols-3
+            gap-8
+          "
+        >
+
+          {listings.map(
+            (listing) => (
+
+              <div
+                key={listing.id}
+                className="
+                  bg-white
+                  rounded-[36px]
+                  overflow-hidden
+                  shadow-sm
+                  border
+                  border-gray-100
+                "
+              >
+
+                <img
+                  src={
+                    listing.images?.[0] ||
+                    listing.image_url ||
+                    "/placeholder.jpg"
+                  }
+                  className="
+                    w-full
+                    h-64
+                    object-cover
+                  "
+                />
+
+                <div className="p-6">
+
+                  <div
+                    className="
+                      flex
+                      items-start
+                      justify-between
+                      gap-4
+                      mb-5
+                    "
+                  >
+
+                    <div>
+
+                      <h2
+                        className="
+                          text-2xl
+                          font-black
+                          mb-2
+                        "
+                      >
+
+                        {listing.title}
+
+                      </h2>
+
+                      <p
+                        className="
+                          text-gray-500
+                        "
+                      >
+
+                        €{listing.price}
+
+                      </p>
+
+                    </div>
+
+                    <div
+                      className={`
+                        px-4
+                        py-2
+                        rounded-full
+                        text-sm
+                        font-black
+
+                        ${
+                          listing.active
+
+                            ? "bg-[#16d64d]/10 text-[#16d64d]"
+
+                            : "bg-red-100 text-red-500"
+                        }
+                      `}
+                    >
+
+                      {
+                        listing.active
+
+                          ? "Aktiv"
+
+                          : "Inaktiv"
+                      }
+
+                    </div>
+
+                  </div>
+
+                  <div
+                    className="
+                      flex
+                      gap-3
+                    "
+                  >
+
+                    <button
+                      onClick={() =>
+                        toggleActive(
+                          listing.id,
+                          listing.active
+                        )
+                      }
+                      className="
+                        flex-1
+                        h-14
+                        rounded-2xl
+                        bg-black
+                        text-white
+                        font-black
+                      "
+                    >
+
+                      {
+                        listing.active
+
+                          ? "Deaktivieren"
+
+                          : "Aktivieren"
+                      }
+
+                    </button>
+
+                    <button
+                      onClick={() =>
+                        deleteListing(
+                          listing.id
+                        )
+                      }
+                      className="
+                        min-w-[56px]
+                        h-14
+                        rounded-2xl
+                        bg-red-500
+                        text-white
+                        flex
+                        items-center
+                        justify-center
+                      "
+                    >
+
+                      <Trash2
+                        size={20}
+                      />
+
+                    </button>
+
+                  </div>
+
+                </div>
+
+              </div>
+            )
+          )}
+
+        </div>
+
       </div>
 
       <Footer />
 
     </main>
+
   );
 }
 

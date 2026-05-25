@@ -1,8 +1,13 @@
 "use client";
 
 import {
+  useEffect,
   useState,
 } from "react";
+
+import {
+  useSearchParams,
+} from "next/navigation";
 
 import Navbar
 from "@/components/Navbar";
@@ -10,10 +15,21 @@ from "@/components/Navbar";
 import Footer
 from "@/components/Footer";
 
+import {
+
+  ShieldAlert,
+
+  AlertTriangle,
+
+} from "lucide-react";
+
 import { supabase }
 from "@/lib/supabase";
 
 export default function DisputePage() {
+
+  const searchParams =
+    useSearchParams();
 
   const [
     bookingId,
@@ -41,6 +57,26 @@ export default function DisputePage() {
 
   const [success, setSuccess] =
     useState(false);
+
+  /*
+    AUTO LISTING
+  */
+
+  useEffect(() => {
+
+    const listing =
+      searchParams.get(
+        "listing"
+      );
+
+    if (listing) {
+
+      setListingId(
+        listing
+      );
+    }
+
+  }, [searchParams]);
 
   async function submitDispute() {
 
@@ -127,22 +163,118 @@ export default function DisputePage() {
 
       <Navbar />
 
-      <div className="max-w-3xl mx-auto px-4 py-20">
+      <div className="max-w-4xl mx-auto px-4 py-20">
 
-        <div className="bg-white rounded-[40px] p-10 shadow-sm">
+        {/* HERO */}
 
-          <h1 className="text-5xl font-black mb-6">
+        <div
+          className="
+            bg-black
+            text-white
+            rounded-[40px]
+            p-10
+            mb-10
+          "
+        >
 
-            Dispute Center
+          <div
+            className="
+              flex
+              items-center
+              gap-5
+              mb-6
+            "
+          >
 
-          </h1>
+            <div
+              className="
+                w-20
+                h-20
+                rounded-[28px]
+                bg-red-500
+                flex
+                items-center
+                justify-center
+              "
+            >
 
-          <p className="text-gray-500 leading-8 mb-10">
+              <ShieldAlert
+                size={42}
+              />
 
-            Probleme mit einer Buchung?
-            Reiche hier einen Dispute ein.
+            </div>
 
-          </p>
+            <div>
+
+              <h1
+                className="
+                  text-5xl
+                  md:text-6xl
+                  font-black
+                "
+              >
+
+                Dispute Center
+
+              </h1>
+
+              <p
+                className="
+                  text-gray-400
+                  mt-3
+                  text-lg
+                "
+              >
+
+                Probleme mit einer Buchung?
+                Reiche hier einen Dispute ein.
+
+              </p>
+
+            </div>
+
+          </div>
+
+        </div>
+
+        {/* FORM */}
+
+        <div
+          className="
+            bg-white
+            rounded-[40px]
+            p-10
+            shadow-sm
+          "
+        >
+
+          <div
+            className="
+              flex
+              items-center
+              gap-3
+              mb-8
+            "
+          >
+
+            <AlertTriangle
+              className="
+                text-red-500
+              "
+            />
+
+            <h2
+              className="
+                text-3xl
+                font-black
+              "
+            >
+
+              Streitfall eröffnen
+
+            </h2>
+
+          </div>
 
           <div className="space-y-5">
 
@@ -161,6 +293,8 @@ export default function DisputePage() {
                 border
                 border-gray-200
                 px-6
+                outline-none
+                focus:border-black
               "
             />
 
@@ -179,6 +313,8 @@ export default function DisputePage() {
                 border
                 border-gray-200
                 px-6
+                outline-none
+                focus:border-black
               "
             />
 
@@ -197,6 +333,8 @@ export default function DisputePage() {
                 border
                 border-gray-200
                 px-6
+                outline-none
+                focus:border-black
               "
             />
 
@@ -215,6 +353,8 @@ export default function DisputePage() {
                 border
                 border-gray-200
                 px-6
+                outline-none
+                focus:border-black
               "
             />
 
@@ -234,6 +374,8 @@ export default function DisputePage() {
                 border-gray-200
                 p-6
                 resize-none
+                outline-none
+                focus:border-black
               "
             />
 
@@ -255,6 +397,8 @@ export default function DisputePage() {
               text-white
               text-lg
               font-black
+              hover:scale-[1.01]
+              transition-all
             "
           >
 

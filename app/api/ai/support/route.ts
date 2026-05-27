@@ -2,9 +2,6 @@ import { NextResponse } from "next/server";
 
 import OpenAI from "openai";
 
-import { ratelimit }
-from "@/lib/rate-limit";
-
 export const runtime = "nodejs";
 
 const openai = new OpenAI({
@@ -16,28 +13,6 @@ export async function POST(
 ) {
 
   try {
-
-    const ip =
-      req.headers.get(
-        "x-forwarded-for"
-      ) || "anonymous";
-
-    const { success } =
-      await ratelimit.limit(ip);
-
-    if (!success) {
-
-      return NextResponse.json(
-        {
-          error:
-            "Zu viele Anfragen",
-        },
-        {
-          status: 429,
-        }
-      );
-
-    }
 
     const body =
       await req.json();
@@ -56,11 +31,11 @@ export async function POST(
           status: 400,
         }
       );
-
     }
 
     const completion =
       await openai.chat.completions.create({
+
         model: "gpt-4o-mini",
 
         messages: [
@@ -68,64 +43,49 @@ export async function POST(
           {
             role: "system",
 
-            content: `
-Du bist der offizielle KI-Support von LOQARO.
-
-LOQARO ist ein Premium Marketplace für:
-- Werkzeuge
-- Fahrzeuge
-- Immobilien
-- Elektronik
-- Vermietung
-- Sharing Economy
-
-Deine Aufgaben:
-- professioneller Support
-- Scam erkennen
-- Nutzer schützen
-- hilfreich bleiben
-- kurz antworten
-- keine falschen Informationen erfinden
-- niemals halluzinieren
-
-Wenn Betrug erkannt wird:
-- Nutzer warnen
-- Sicherheitsmaßnahmen empfehlen
-`,
+            content:
+              "Du bist der offizielle KI Support von LOQARO.",
           },
 
           {
             role: "user",
 
-            content: message,
+            content:
+              message,
           },
         ],
-
-        temperature: 0.7,
       });
 
     const answer =
-      completion.choices?.[0]
+      completion
+        .choices?.[0]
         ?.message?.content;
 
     return NextResponse.json({
+
       success: true,
-      answer,
+
+      answer:
+        answer ||
+        "Keine Antwort",
     });
 
-  } catch (error) {
+  } catch (error: any) {
 
-    console.error(error);
+    console.log(
+      "OPENAI ERROR:",
+      error
+    );
 
     return NextResponse.json(
       {
         error:
+          error?.message ||
           "AI Fehler",
       },
       {
         status: 500,
       }
     );
-
   }
 }

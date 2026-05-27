@@ -41,17 +41,35 @@ export default function AISupportModal({
 
   async function askAI() {
 
-    if (!message.trim()) return;
+    if (
+      !message.trim() ||
+      loading
+    ) return;
 
-    const userMessage = {
-      role: "user" as const,
-      content: message,
+    /*
+      USER MESSAGE
+    */
+
+    const userMessage: Message = {
+
+      role: "user",
+
+      content:
+        message,
     };
 
-    setMessages((prev) => [
-      ...prev,
+    /*
+      HISTORY UPDATE
+    */
+
+    const updatedMessages = [
+      ...messages,
       userMessage,
-    ]);
+    ];
+
+    setMessages(
+      updatedMessages
+    );
 
     setMessage("");
 
@@ -74,8 +92,12 @@ export default function AISupportModal({
           },
 
           body: JSON.stringify({
+
             message:
               userMessage.content,
+
+            history:
+              updatedMessages,
           }),
         }
       );
@@ -93,13 +115,13 @@ export default function AISupportModal({
       );
 
       /*
-        ERROR HANDLING
+        ERROR
       */
 
       if (!res.ok) {
 
-        setMessages((prev) => [
-          ...prev,
+        setMessages([
+          ...updatedMessages,
           {
             role: "assistant",
 
@@ -113,18 +135,25 @@ export default function AISupportModal({
       }
 
       /*
-        SUCCESS
+        AI MESSAGE
       */
 
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant",
+      const aiMessage: Message = {
 
-          content:
-            data.answer ||
-            "Keine AI Antwort.",
-        },
+        role: "assistant",
+
+        content:
+          data.answer ||
+          "Keine AI Antwort.",
+      };
+
+      /*
+        FINAL UPDATE
+      */
+
+      setMessages([
+        ...updatedMessages,
+        aiMessage,
       ]);
 
     } catch (error) {
@@ -134,8 +163,8 @@ export default function AISupportModal({
         error
       );
 
-      setMessages((prev) => [
-        ...prev,
+      setMessages([
+        ...updatedMessages,
         {
           role: "assistant",
 
@@ -446,6 +475,5 @@ export default function AISupportModal({
       </div>
 
     </div>
-
   );
 }

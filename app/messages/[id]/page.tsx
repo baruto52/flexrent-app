@@ -68,6 +68,11 @@ export default function ChatPage() {
   const messagesEndRef =
     useRef<HTMLDivElement>(null);
 
+  const typingTimeout =
+    useRef<NodeJS.Timeout | null>(
+      null
+    );
+
   const [messages, setMessages] =
     useState<Message[]>([]);
 
@@ -288,6 +293,31 @@ export default function ChatPage() {
   }
 
   /*
+    SEND TYPING STATUS
+  */
+
+  async function sendTypingStatus(
+    typing: boolean
+  ) {
+
+    if (!currentUserId)
+      return;
+
+    await supabase
+      .from("typing_status")
+      .upsert({
+
+        user_id:
+          currentUserId,
+
+        receiver_id:
+          otherUserId,
+
+        typing,
+      });
+  }
+
+  /*
     REALTIME
   */
 
@@ -402,10 +432,60 @@ export default function ChatPage() {
     )
       return;
 
+    /*
+      AI MODERATION
+    */
+
+    const moderationRes =
+      await fetch(
+        "/api/ai/moderate",
+        {
+
+          method: "POST",
+
+          headers: {
+
+            "Content-Type":
+              "application/json",
+          },
+
+          body: JSON.stringify({
+
+            message:
+              newMessage,
+          }),
+        }
+      );
+
+    const moderation =
+      await moderationRes.json();
+
+    /*
+      BLOCK SCAM
+    */
+
+    if (
+      moderation.safe === false
+    ) {
+
+      alert(
+
+        moderation.reason ||
+
+        "Verdächtige Nachricht erkannt."
+      );
+
+      return;
+    }
+
     const message =
       newMessage;
 
     setNewMessage("");
+
+    await sendTypingStatus(
+      false
+    );
 
     const optimisticMessage: Message = {
 
@@ -639,8 +719,6 @@ export default function ChatPage() {
 
     <main className="h-screen bg-[#f5f7fb] flex flex-col">
 
-      {/* HEADER */}
-
       <div className="bg-white border-b border-gray-100 px-4 md:px-6 py-4 flex items-center justify-between sticky top-0 z-40">
 
         <div className="flex items-center gap-4">
@@ -710,8 +788,6 @@ export default function ChatPage() {
 
       </div>
 
-      {/* CHAT */}
-
       <div className="flex-1 overflow-y-auto px-4 md:px-6 py-6 space-y-5">
 
         {messages.map(
@@ -739,8 +815,6 @@ export default function ChatPage() {
         <div ref={messagesEndRef} />
 
       </div>
-
-      {/* IMAGE PREVIEW */}
 
       {previewImage && (
 
@@ -774,19 +848,43 @@ export default function ChatPage() {
 
       )}
 
-      {/* INPUT */}
-
       <div className="bg-white border-t border-gray-100 p-4 sticky bottom-0">
 
         <div className="flex items-center gap-3 max-w-5xl mx-auto">
 
           <input
             value={newMessage}
-            onChange={(e) =>
+            onChange={async (e) => {
+
               setNewMessage(
                 e.target.value
-              )
-            }
+              );
+
+              await sendTypingStatus(
+                true
+              );
+
+              if (
+                typingTimeout.current
+              ) {
+
+                clearTimeout(
+                  typingTimeout.current
+                );
+              }
+
+              typingTimeout.current =
+                setTimeout(
+                  () => {
+
+                    sendTypingStatus(
+                      false
+                    );
+
+                  },
+                  1500
+                );
+            }}
             onKeyDown={(e) => {
 
               if (

@@ -166,14 +166,8 @@ export default function BookingCard({
     basePrice *
     totalUnits;
 
-  const serviceFee =
-    Math.round(
-      subtotal * 0.1
-    );
-
   const total =
-    subtotal +
-    serviceFee;
+    subtotal;
 
   /*
     LABEL
@@ -516,34 +510,6 @@ export default function BookingCard({
 
                     </div>
 
-                    <div
-                      className="
-                        flex
-                        items-center
-                        justify-between
-                        text-gray-600
-                      "
-                    >
-
-                      <span>
-
-                        Servicegebühr
-
-                      </span>
-
-                      <span
-                        className="
-                          font-bold
-                        "
-                      >
-
-                        €
-                        {serviceFee}
-
-                      </span>
-
-                    </div>
-
                     {/* TOTAL */}
 
                     <div
@@ -602,7 +568,7 @@ export default function BookingCard({
                             mt-1
                           "
                         >
-                          inkl. Gebühren
+                          Endpreis
                         </p>
 
                       </div>

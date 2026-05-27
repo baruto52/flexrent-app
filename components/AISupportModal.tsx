@@ -74,18 +74,38 @@ export default function AISupportModal({
         }
       );
 
-      const data =
-        await res.json();
+     const data =
+  await res.json();
 
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant",
-          content:
-            data.answer ||
-            "Keine Antwort erhalten.",
-        },
-      ]);
+console.log(
+  "AI RESPONSE:",
+  data
+);
+
+if (!res.ok) {
+
+  setMessages((prev) => [
+    ...prev,
+    {
+      role: "assistant",
+      content:
+        data.error ||
+        "Server Fehler.",
+    },
+  ]);
+
+  return;
+}
+
+setMessages((prev) => [
+  ...prev,
+  {
+    role: "assistant",
+    content:
+      data.answer ||
+      "Keine AI Antwort.",
+  },
+]);
 
     } catch (error) {
 

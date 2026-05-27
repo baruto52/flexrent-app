@@ -42,8 +42,10 @@ export async function POST(
     const body =
       await req.json();
 
-    const message =
-      body.message;
+    const {
+      message,
+      history = [],
+    } = body;
 
     if (!message) {
 
@@ -61,9 +63,14 @@ export async function POST(
 
     const completion =
       await openai.chat.completions.create({
+
         model: "gpt-4o-mini",
 
         messages: [
+
+          /*
+            SYSTEM
+          */
 
           {
             role: "system",
@@ -92,6 +99,36 @@ Deine Aufgaben:
 - niemals halluzinieren
 
 WICHTIG:
+Du musst dir den kompletten Chat Verlauf merken.
+
+Wenn Nutzer kurz antworten wie:
+- ja
+- nein
+- mieten
+- kaufen
+- verkaufen
+- ok
+- gerne
+
+Dann musst du den vorherigen Kontext weiter benutzen.
+
+Du darfst NICHT den Chat vergessen.
+
+BEISPIEL:
+User:
+"Bohrmaschine"
+
+AI:
+"Möchten Sie eine Bohrmaschine mieten, kaufen oder verkaufen?"
+
+User:
+"mieten"
+
+AI:
+"Für privat oder gewerblich? Und für wie viele Tage?"
+
+Du darfst NICHT wieder von vorne anfangen.
+
 Wenn Nutzer nur ein Wort schreiben wie:
 "Bohrmaschine"
 "BMW"
@@ -112,6 +149,16 @@ Wenn Betrug erkannt wird:
 - Sicherheitsmaßnahmen empfehlen
 `,
           },
+
+          /*
+            CHAT HISTORY
+          */
+
+          ...history,
+
+          /*
+            CURRENT MESSAGE
+          */
 
           {
             role: "user",

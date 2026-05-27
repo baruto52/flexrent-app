@@ -5,7 +5,7 @@ import OpenAI from "openai";
 import { ratelimit }
 from "@/lib/rate-limit";
 
-export const runtime = "edge";
+export const runtime = "nodejs";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,

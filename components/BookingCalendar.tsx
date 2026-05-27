@@ -2,6 +2,7 @@
 
 import DatePicker
 from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 import {
 
@@ -10,6 +11,8 @@ import {
   Sparkles,
 
   Lock,
+
+  Clock3,
 
 } from "lucide-react";
 
@@ -24,6 +27,8 @@ type Props = {
   setEndDate: any;
 
   excludedDates?: Date[];
+
+  rentalType?: string;
 };
 
 export default function BookingCalendar({
@@ -38,7 +43,12 @@ export default function BookingCalendar({
 
   excludedDates = [],
 
+  rentalType = "day",
+
 }: Props) {
+
+  const isHourly =
+    rentalType === "hour";
 
   return (
 
@@ -76,8 +86,12 @@ export default function BookingCalendar({
             "
           >
 
-            Wähle verfügbare Tage
-            für deine Buchung.
+            {isHourly
+
+              ? "Wähle Datum und Uhrzeit."
+
+              : "Wähle verfügbare Tage für deine Buchung."
+            }
 
           </p>
 
@@ -98,9 +112,19 @@ export default function BookingCalendar({
           "
         >
 
-          <CalendarDays
-            size={38}
-          />
+          {isHourly ? (
+
+            <Clock3
+              size={38}
+            />
+
+          ) : (
+
+            <CalendarDays
+              size={38}
+            />
+
+          )}
 
         </div>
 
@@ -162,10 +186,8 @@ export default function BookingCalendar({
             "
           >
 
-            Bereits gebuchte Tage
-            sind automatisch blockiert,
-            damit keine Doppelbuchungen
-            entstehen.
+            Bereits reservierte Zeiten
+            werden automatisch blockiert.
 
           </p>
 
@@ -173,7 +195,7 @@ export default function BookingCalendar({
 
       </div>
 
-      {/* CALENDARS */}
+      {/* CALENDAR */}
 
       <div
         className="
@@ -218,9 +240,19 @@ export default function BookingCalendar({
               "
             >
 
-              <CalendarDays
-                size={20}
-              />
+              {isHourly ? (
+
+                <Clock3
+                  size={20}
+                />
+
+              ) : (
+
+                <CalendarDays
+                  size={20}
+                />
+
+              )}
 
             </div>
 
@@ -234,7 +266,7 @@ export default function BookingCalendar({
                 "
               >
 
-                Check-In
+                Start
 
               </p>
 
@@ -245,7 +277,12 @@ export default function BookingCalendar({
                 "
               >
 
-                Startdatum
+                {isHourly
+
+                  ? "Startzeit"
+
+                  : "Startdatum"
+                }
 
               </h3>
 
@@ -255,15 +292,33 @@ export default function BookingCalendar({
 
           <DatePicker
             selected={startDate}
+
             onChange={(date) =>
               setStartDate(date)
             }
+
             minDate={new Date()}
+
             excludeDates={
               excludedDates
             }
+
+            showTimeSelect={
+              isHourly
+            }
+
+            timeIntervals={60}
+
+            dateFormat={
+              isHourly
+                ? "dd.MM.yyyy HH:mm"
+                : "dd.MM.yyyy"
+            }
+
             monthsShown={1}
+
             inline
+
             calendarClassName="
               premium-calendar
             "
@@ -306,9 +361,19 @@ export default function BookingCalendar({
               "
             >
 
-              <CalendarDays
-                size={20}
-              />
+              {isHourly ? (
+
+                <Clock3
+                  size={20}
+                />
+
+              ) : (
+
+                <CalendarDays
+                  size={20}
+                />
+
+              )}
 
             </div>
 
@@ -322,7 +387,7 @@ export default function BookingCalendar({
                 "
               >
 
-                Check-Out
+                Ende
 
               </p>
 
@@ -333,7 +398,12 @@ export default function BookingCalendar({
                 "
               >
 
-                Enddatum
+                {isHourly
+
+                  ? "Endzeit"
+
+                  : "Enddatum"
+                }
 
               </h3>
 
@@ -343,18 +413,36 @@ export default function BookingCalendar({
 
           <DatePicker
             selected={endDate}
+
             onChange={(date) =>
               setEndDate(date)
             }
+
             minDate={
               startDate ||
               new Date()
             }
+
             excludeDates={
               excludedDates
             }
+
+            showTimeSelect={
+              isHourly
+            }
+
+            timeIntervals={60}
+
+            dateFormat={
+              isHourly
+                ? "dd.MM.yyyy HH:mm"
+                : "dd.MM.yyyy"
+            }
+
             monthsShown={1}
+
             inline
+
             calendarClassName="
               premium-calendar
             "
@@ -364,7 +452,7 @@ export default function BookingCalendar({
 
       </div>
 
-      {/* BLOCKED INFO */}
+      {/* BLOCKED */}
 
       {excludedDates.length > 0 && (
 
@@ -412,7 +500,7 @@ export default function BookingCalendar({
               "
             >
 
-              Bereits gebuchte Zeiträume
+              Blockierte Zeiten
 
             </h3>
 
@@ -423,9 +511,9 @@ export default function BookingCalendar({
               "
             >
 
-              Einige Tage sind bereits
-              reserviert und deshalb
-              nicht mehr verfügbar.
+              Bereits reservierte
+              Zeiträume sind automatisch
+              gesperrt.
 
             </p>
 

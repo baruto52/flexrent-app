@@ -12,9 +12,7 @@ const withPWA =
 
     skipWaiting: true,
 
-    disable:
-      process.env.NODE_ENV ===
-      "development",
+    disable: true,
   });
 
 const nextConfig = {
@@ -22,13 +20,11 @@ const nextConfig = {
   eslint: {
 
     ignoreDuringBuilds: true,
-
   },
 
   typescript: {
 
     ignoreBuildErrors: true,
-
   },
 
   images: {

@@ -40,7 +40,7 @@ export async function POST(
       await req.text();
 
     const headersList =
-      await headers();
+  await headers();
 
     const signature =
       headersList.get(
@@ -120,17 +120,28 @@ export async function POST(
         session.id
       );
 
+      const metadata =
+        session.metadata;
+
+      if (!metadata) {
+
+        return NextResponse.json({
+
+          received: true,
+        });
+      }
+
       /*
-        FIND BOOKING
+        DUPLICATE CHECK
       */
 
       const {
-        data: booking,
-        error: bookingFindError,
+        data:
+          existingBooking,
       } =
         await supabase
           .from("bookings")
-          .select("*")
+          .select("id")
           .eq(
             "stripe_session_id",
             session.id
@@ -138,62 +149,11 @@ export async function POST(
           .maybeSingle();
 
       if (
-        bookingFindError
+        existingBooking
       ) {
 
         console.log(
-          "BOOKING FIND ERROR:",
-          bookingFindError
-        );
-
-        return NextResponse.json(
-
-          {
-            error:
-              "Booking nicht gefunden",
-          },
-
-          {
-            status: 500,
-          }
-        );
-      }
-
-      /*
-        NO BOOKING
-      */
-
-      if (!booking) {
-
-        console.log(
-          "NO BOOKING FOUND FOR SESSION:",
-          session.id
-        );
-
-        return NextResponse.json(
-
-          {
-            error:
-              "Keine Booking gefunden",
-          },
-
-          {
-            status: 404,
-          }
-        );
-      }
-
-      /*
-        ALREADY PAID
-      */
-
-      if (
-        booking.payment_status ===
-        "paid"
-      ) {
-
-        console.log(
-          "BOOKING ALREADY PAID"
+          "BOOKING ALREADY EXISTS"
         );
 
         return NextResponse.json({
@@ -203,15 +163,86 @@ export async function POST(
       }
 
       /*
-        UPDATE BOOKING
+        FINAL OVERLAP CHECK
       */
 
       const {
-        error: updateError,
+        data:
+          overlappingBookings,
       } =
         await supabase
           .from("bookings")
-          .update({
+          .select("*")
+          .eq(
+            "listing_id",
+            metadata.listingId
+          )
+          .in(
+            "status",
+            [
+              "confirmed",
+              "active",
+            ]
+          )
+          .lte(
+            "start_date",
+            metadata.endDate
+          )
+          .gte(
+            "end_date",
+            metadata.startDate
+          );
+
+      if (
+
+        overlappingBookings &&
+
+        overlappingBookings
+          .length > 0
+      ) {
+
+        console.log(
+          "BOOKING OVERLAP BLOCKED"
+        );
+
+        return NextResponse.json({
+
+          received: true,
+        });
+      }
+
+      /*
+        CREATE BOOKING
+      */
+
+      const {
+        data: booking,
+        error:
+          bookingError,
+      } =
+        await supabase
+          .from("bookings")
+          .insert({
+
+            listing_id:
+              metadata.listingId,
+
+            renter_id:
+              metadata.renterId,
+
+            owner_id:
+              metadata.ownerId,
+
+            start_date:
+              metadata.startDate,
+
+            end_date:
+              metadata.endDate,
+
+            total_price:
+              Number(
+                metadata.totalPrice
+              ),
 
             payment_status:
               "paid",
@@ -219,27 +250,30 @@ export async function POST(
             status:
               "confirmed",
 
+            stripe_session_id:
+              session.id,
+
             paid_at:
               new Date()
                 .toISOString(),
           })
-          .eq(
-            "id",
-            booking.id
-          );
+          .select()
+          .single();
 
-      if (updateError) {
+      if (
+        bookingError
+      ) {
 
         console.log(
-          "BOOKING UPDATE ERROR:",
-          updateError
+          "BOOKING CREATE ERROR:",
+          bookingError
         );
 
         return NextResponse.json(
 
           {
             error:
-              "Booking Update Fehler",
+              "Booking Create Fehler",
           },
 
           {
@@ -257,7 +291,7 @@ export async function POST(
         .insert({
 
           user_id:
-            booking.owner_id,
+            metadata.ownerId,
 
           title:
             "Neue Buchung",
@@ -275,7 +309,7 @@ export async function POST(
         .insert({
 
           user_id:
-            booking.renter_id,
+            metadata.renterId,
 
           title:
             "Buchung bestätigt",
@@ -285,7 +319,7 @@ export async function POST(
         });
 
       console.log(
-        "BOOKING CONFIRMED:",
+        "BOOKING CREATED:",
         booking.id
       );
     }
@@ -303,23 +337,8 @@ export async function POST(
         event.data
           .object as Stripe.Checkout.Session;
 
-      await supabase
-        .from("bookings")
-        .update({
-
-          payment_status:
-            "expired",
-
-          status:
-            "cancelled",
-        })
-        .eq(
-          "stripe_session_id",
-          session.id
-        );
-
       console.log(
-        "BOOKING EXPIRED:",
+        "CHECKOUT EXPIRED:",
         session.id
       );
     }

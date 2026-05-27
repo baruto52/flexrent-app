@@ -31,13 +31,69 @@ export default function AISupportModal({
   const bottomRef =
     useRef<HTMLDivElement>(null);
 
+  /*
+    LOAD CHAT HISTORY
+  */
+
+  useEffect(() => {
+
+    const stored =
+      localStorage.getItem(
+        "loqaro-ai-history"
+      );
+
+    if (stored) {
+
+      try {
+
+        setMessages(
+          JSON.parse(stored)
+        );
+
+      } catch {
+
+        localStorage.removeItem(
+          "loqaro-ai-history"
+        );
+
+      }
+
+    }
+
+  }, []);
+
+  /*
+    AUTO SCROLL
+  */
+
   useEffect(() => {
 
     bottomRef.current?.scrollIntoView({
       behavior: "smooth",
     });
 
-  }, [messages]);
+  }, [messages, loading]);
+
+  /*
+    SAVE HISTORY
+  */
+
+  function saveHistory(
+    updated: Message[]
+  ) {
+
+    setMessages(updated);
+
+    localStorage.setItem(
+      "loqaro-ai-history",
+      JSON.stringify(updated)
+    );
+
+  }
+
+  /*
+    ASK AI
+  */
 
   async function askAI() {
 
@@ -55,19 +111,21 @@ export default function AISupportModal({
       role: "user",
 
       content:
-        message,
+        message.trim(),
     };
 
     /*
-      HISTORY UPDATE
+      UPDATE HISTORY
     */
 
-    const updatedMessages = [
+    const updatedMessages: Message[] = [
+
       ...messages,
+
       userMessage,
     ];
 
-    setMessages(
+    saveHistory(
       updatedMessages
     );
 
@@ -120,8 +178,10 @@ export default function AISupportModal({
 
       if (!res.ok) {
 
-        setMessages([
+        const errorMessages: Message[] = [
+
           ...updatedMessages,
+
           {
             role: "assistant",
 
@@ -129,7 +189,11 @@ export default function AISupportModal({
               data.error ||
               "Server Fehler.",
           },
-        ]);
+        ];
+
+        saveHistory(
+          errorMessages
+        );
 
         return;
       }
@@ -151,10 +215,16 @@ export default function AISupportModal({
         FINAL UPDATE
       */
 
-      setMessages([
+      const finalMessages: Message[] = [
+
         ...updatedMessages,
+
         aiMessage,
-      ]);
+      ];
+
+      saveHistory(
+        finalMessages
+      );
 
     } catch (error) {
 
@@ -163,21 +233,41 @@ export default function AISupportModal({
         error
       );
 
-      setMessages([
+      const errorMessages: Message[] = [
+
         ...updatedMessages,
+
         {
           role: "assistant",
 
           content:
             "AI Fehler aufgetreten.",
         },
-      ]);
+      ];
+
+      saveHistory(
+        errorMessages
+      );
 
     } finally {
 
       setLoading(false);
 
     }
+  }
+
+  /*
+    CLEAR CHAT
+  */
+
+  function clearChat() {
+
+    localStorage.removeItem(
+      "loqaro-ai-history"
+    );
+
+    setMessages([]);
+
   }
 
   return (
@@ -240,22 +330,44 @@ export default function AISupportModal({
 
           </div>
 
-          <button
-            onClick={onClose}
-            className="
-              w-12
-              h-12
-              rounded-full
-              bg-gray-100
-              text-2xl
-              hover:bg-gray-200
-              transition
-            "
-          >
+          <div className="flex items-center gap-3">
 
-            ×
+            <button
+              onClick={clearChat}
+              className="
+                px-4
+                h-11
+                rounded-2xl
+                bg-gray-100
+                hover:bg-gray-200
+                text-sm
+                font-semibold
+                transition
+              "
+            >
 
-          </button>
+              Reset
+
+            </button>
+
+            <button
+              onClick={onClose}
+              className="
+                w-12
+                h-12
+                rounded-full
+                bg-gray-100
+                text-2xl
+                hover:bg-gray-200
+                transition
+              "
+            >
+
+              ×
+
+            </button>
+
+          </div>
 
         </div>
 

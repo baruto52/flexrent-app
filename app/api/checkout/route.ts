@@ -193,9 +193,13 @@ export async function POST(
           "listing_id",
           body.listingId
         )
-        .neq(
+        .in(
           "status",
-          "cancelled"
+          [
+            "confirmed",
+            "active",
+            "pending",
+          ]
         )
         .lte(
           "start_date",
@@ -225,29 +229,87 @@ export async function POST(
     }
 
     /*
-      TOTAL DAYS
+      RENTAL TYPE
     */
 
-    const totalDays =
-      Math.max(
+    const rentalType =
+      listing.rental_type ||
+      "day";
 
-        1,
+    /*
+      TOTAL UNITS
+    */
 
-        Math.ceil(
+    let totalUnits = 1;
 
-          (
-            endDate.getTime() -
-            startDate.getTime()
-          ) /
+    const diffMs =
+      endDate.getTime() -
+      startDate.getTime();
 
-          (
-            1000 *
-            60 *
-            60 *
-            24
+    if (
+      rentalType === "hour"
+    ) {
+
+      totalUnits =
+        Math.max(
+
+          1,
+
+          Math.ceil(
+
+            diffMs /
+
+            (
+              1000 *
+              60 *
+              60
+            )
           )
-        ) + 1
-      );
+        );
+
+    } else if (
+      rentalType === "week"
+    ) {
+
+      totalUnits =
+        Math.max(
+
+          1,
+
+          Math.ceil(
+
+            diffMs /
+
+            (
+              1000 *
+              60 *
+              60 *
+              24 *
+              7
+            )
+          )
+        );
+
+    } else {
+
+      totalUnits =
+        Math.max(
+
+          1,
+
+          Math.ceil(
+
+            diffMs /
+
+            (
+              1000 *
+              60 *
+              60 *
+              24
+            )
+          ) + 1
+        );
+    }
 
     /*
       PRICES
@@ -260,7 +322,7 @@ export async function POST(
 
     const subtotal =
       listingPrice *
-      totalDays;
+      totalUnits;
 
     const serviceFee =
       Math.round(
@@ -380,6 +442,28 @@ export async function POST(
       );
 
     /*
+      LABEL
+    */
+
+    let rentalLabel =
+      "Tage";
+
+    if (
+      rentalType === "hour"
+    ) {
+
+      rentalLabel =
+        "Stunden";
+
+    } else if (
+      rentalType === "week"
+    ) {
+
+      rentalLabel =
+        "Wochen";
+    }
+
+    /*
       CHECKOUT SESSION
     */
 
@@ -417,7 +501,7 @@ export async function POST(
                   listing.title,
 
                 description:
-                  `${totalDays} Tage Buchung`,
+                  `${totalUnits} ${rentalLabel} Buchung`,
               },
 
               unit_amount:
@@ -482,6 +566,13 @@ export async function POST(
             String(
               calculatedTotal
             ),
+
+          rentalType,
+
+          totalUnits:
+            String(
+              totalUnits
+            ),
         },
 
         success_url:
@@ -492,40 +583,9 @@ export async function POST(
       });
 
     /*
-      CREATE PENDING BOOKING
+      BOOKING CREATED
+      VIA STRIPE WEBHOOK
     */
-
-    await supabase
-      .from("bookings")
-      .insert({
-
-        listing_id:
-          body.listingId,
-
-        renter_id:
-          body.renterId,
-
-        owner_id:
-          body.ownerId,
-
-        start_date:
-          body.startDate,
-
-        end_date:
-          body.endDate,
-
-        total_price:
-          calculatedTotal,
-
-        payment_status:
-          "Pending",
-
-        status:
-          "pending",
-
-        stripe_session_id:
-          session.id,
-      });
 
     return NextResponse.json({
 

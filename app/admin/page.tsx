@@ -8,7 +8,6 @@ import {
 import Image from "next/image";
 
 import Navbar from "@/components/Navbar";
-
 import Footer from "@/components/Footer";
 
 import {
@@ -29,7 +28,18 @@ import {
 
   ShieldCheck,
 
+  Ban,
+
+  Search,
+
+  Flag,
+
+  Eye,
+
 } from "lucide-react";
+
+import toast
+from "react-hot-toast";
 
 import { supabase }
 from "@/lib/supabase";
@@ -51,30 +61,18 @@ export default function AdminPage() {
   const [bookings, setBookings] =
     useState<any[]>([]);
 
+  const [reports, setReports] =
+    useState<any[]>([]);
+
   const [revenue, setRevenue] =
     useState(0);
 
+  const [search, setSearch] =
+    useState("");
+
   useEffect(() => {
 
-    let realtimeChannel: any;
-
-    init().then(
-      (channel) => {
-
-        realtimeChannel =
-          channel;
-      }
-    );
-
-    return () => {
-
-      if (realtimeChannel) {
-
-        supabase.removeChannel(
-          realtimeChannel
-        );
-      }
-    };
+    init();
 
   }, []);
 
@@ -94,10 +92,6 @@ export default function AdminPage() {
 
         return;
       }
-
-      /*
-        ADMIN CHECK
-      */
 
       const {
         data: profile,
@@ -127,9 +121,9 @@ export default function AdminPage() {
         loadListings(),
 
         loadBookings(),
-      ]);
 
-      return listenRealtime();
+        loadReports(),
+      ]);
 
     } catch (error) {
 
@@ -141,91 +135,14 @@ export default function AdminPage() {
     }
   }
 
-  function listenRealtime() {
-
-    const channel =
-      supabase
-        .channel(
-          "admin-realtime"
-        )
-        .on(
-
-          "postgres_changes",
-
-          {
-
-            event: "*",
-
-            schema: "public",
-
-            table:
-              "listings",
-          },
-
-          () => {
-
-            loadListings();
-          }
-
-        )
-        .on(
-
-          "postgres_changes",
-
-          {
-
-            event: "*",
-
-            schema: "public",
-
-            table:
-              "bookings",
-          },
-
-          () => {
-
-            loadBookings();
-          }
-
-        )
-        .on(
-
-          "postgres_changes",
-
-          {
-
-            event: "*",
-
-            schema: "public",
-
-            table:
-              "profiles",
-          },
-
-          () => {
-
-            loadUsers();
-          }
-
-        );
-
-    channel.subscribe();
-
-    return channel;
-  }
-
   async function loadUsers() {
 
     const { data } =
       await supabase
         .from("profiles")
-        .select(`
-          *,
-          risk_score,
-          flagged
-        `)
+        .select("*")
         .order(
-          "risk_score",
+          "created_at",
           {
             ascending: false,
           }
@@ -241,11 +158,7 @@ export default function AdminPage() {
     const { data } =
       await supabase
         .from("listings")
-        .select(`
-          *,
-          trust_score,
-          ai_verified
-        `)
+        .select("*")
         .order(
           "created_at",
           {
@@ -295,6 +208,24 @@ export default function AdminPage() {
     );
   }
 
+  async function loadReports() {
+
+    const { data } =
+      await supabase
+        .from("reports")
+        .select("*")
+        .order(
+          "created_at",
+          {
+            ascending: false,
+          }
+        );
+
+    setReports(
+      data || []
+    );
+  }
+
   async function deleteListing(
     id: string
   ) {
@@ -307,56 +238,109 @@ export default function AdminPage() {
     if (!confirmed)
       return;
 
-    try {
-
-      const { error } =
-        await supabase
-          .from("listings")
-          .delete()
-          .eq(
-            "id",
-            id
-          );
-
-      if (error) {
-
-        alert(
-          "Fehler beim Löschen"
+    const { error } =
+      await supabase
+        .from("listings")
+        .delete()
+        .eq(
+          "id",
+          id
         );
 
-        return;
-      }
+    if (error) {
 
-      setListings(
-        (prev) =>
-
-          prev.filter(
-            (listing) =>
-
-              listing.id !== id
-          )
+      toast.error(
+        "Fehler beim Löschen"
       );
 
-    } catch (error) {
-
-      console.log(error);
+      return;
     }
+
+    toast.success(
+      "Listing gelöscht"
+    );
+
+    loadListings();
   }
+
+  async function banUser(
+    id: string
+  ) {
+
+    const confirmed =
+      confirm(
+        "Nutzer bannen?"
+      );
+
+    if (!confirmed)
+      return;
+
+    const { error } =
+      await supabase
+        .from("profiles")
+        .update({
+
+          banned: true,
+        })
+        .eq(
+          "id",
+          id
+        );
+
+    if (error) {
+
+      toast.error(
+        "Ban Fehler"
+      );
+
+      return;
+    }
+
+    toast.success(
+      "Nutzer gebannt"
+    );
+
+    loadUsers();
+  }
+
+  async function resolveReport(
+    id: string
+  ) {
+
+    await supabase
+      .from("reports")
+      .update({
+
+        resolved: true,
+      })
+      .eq(
+        "id",
+        id
+      );
+
+    toast.success(
+      "Report erledigt"
+    );
+
+    loadReports();
+  }
+
+  const filteredListings =
+    listings.filter(
+      (listing) =>
+
+        listing.title
+          ?.toLowerCase()
+          .includes(
+            search.toLowerCase()
+          )
+    );
 
   if (loading) {
 
     return (
 
-      <div
-        className="
-          min-h-screen
-          flex
-          items-center
-          justify-center
-          text-3xl
-          font-black
-        "
-      >
+      <div className="min-h-screen flex items-center justify-center text-3xl font-black">
 
         Admin Panel wird geladen...
 
@@ -369,16 +353,7 @@ export default function AdminPage() {
 
     return (
 
-      <div
-        className="
-          min-h-screen
-          flex
-          items-center
-          justify-center
-          text-4xl
-          font-black
-        "
-      >
+      <div className="min-h-screen flex items-center justify-center text-4xl font-black">
 
         Kein Zugriff
 
@@ -397,63 +372,55 @@ export default function AdminPage() {
 
         {/* HEADER */}
 
-        <div className="mb-14">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-12">
 
-          <div
-            className="
-              flex
-              items-center
-              gap-5
-              mb-5
-            "
-          >
+          <div>
 
-            <div
+            <h1 className="text-5xl md:text-6xl font-black mb-3">
+
+              LOQARO Admin
+
+            </h1>
+
+            <p className="text-gray-500 text-xl">
+
+              Marketplace Moderation Dashboard
+
+            </p>
+
+          </div>
+
+          {/* SEARCH */}
+
+          <div className="relative">
+
+            <Search
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+              size={20}
+            />
+
+            <input
+              value={search}
+              onChange={(e) =>
+                setSearch(
+                  e.target.value
+                )
+              }
+              placeholder="Listings suchen..."
               className="
-                w-20
-                h-20
-                rounded-[28px]
-                bg-black
-                text-white
-                flex
-                items-center
-                justify-center
+                h-14
+                w-full
+                md:w-[320px]
+                rounded-2xl
+                border
+                border-gray-200
+                bg-white
+                pl-12
+                pr-5
+                outline-none
+                font-medium
               "
-            >
-
-              <Shield
-                size={38}
-              />
-
-            </div>
-
-            <div>
-
-              <h1
-                className="
-                  text-5xl
-                  md:text-6xl
-                  font-black
-                "
-              >
-
-                LOQARO AI Admin
-
-              </h1>
-
-              <p
-                className="
-                  text-gray-500
-                  text-xl
-                  mt-3
-                "
-              >
-
-                AI Marketplace Security Dashboard
-
-              </p>
-
-            </div>
+            />
 
           </div>
 
@@ -461,17 +428,7 @@ export default function AdminPage() {
 
         {/* KPI */}
 
-        <div
-          className="
-            grid
-            md:grid-cols-2
-            xl:grid-cols-4
-            gap-6
-            mb-14
-          "
-        >
-
-          {/* USERS */}
+        <div className="grid md:grid-cols-2 xl:grid-cols-4 gap-6 mb-14">
 
           <div className="bg-white rounded-[36px] p-8 shadow-sm">
 
@@ -503,8 +460,6 @@ export default function AdminPage() {
 
           </div>
 
-          {/* LISTINGS */}
-
           <div className="bg-white rounded-[36px] p-8 shadow-sm">
 
             <div className="flex items-center justify-between">
@@ -535,8 +490,6 @@ export default function AdminPage() {
 
           </div>
 
-          {/* BOOKINGS */}
-
           <div className="bg-white rounded-[36px] p-8 shadow-sm">
 
             <div className="flex items-center justify-between">
@@ -545,29 +498,27 @@ export default function AdminPage() {
 
                 <p className="text-gray-500 mb-2">
 
-                  Buchungen
+                  Reports
 
                 </p>
 
                 <h2 className="text-5xl font-black">
 
-                  {bookings.length}
+                  {reports.length}
 
                 </h2>
 
               </div>
 
-              <div className="w-16 h-16 rounded-2xl bg-blue-500 text-white flex items-center justify-center">
+              <div className="w-16 h-16 rounded-2xl bg-red-500 text-white flex items-center justify-center">
 
-                <CalendarDays size={30} />
+                <Flag size={30} />
 
               </div>
 
             </div>
 
           </div>
-
-          {/* REVENUE */}
 
           <div className="bg-white rounded-[36px] p-8 shadow-sm">
 
@@ -602,7 +553,7 @@ export default function AdminPage() {
 
         </div>
 
-        {/* RISK USERS */}
+        {/* REPORTS */}
 
         <div className="mb-16">
 
@@ -615,11 +566,66 @@ export default function AdminPage() {
 
             <h2 className="text-4xl font-black">
 
-              Risiko Nutzer
+              Reports
 
             </h2>
 
           </div>
+
+          <div className="space-y-5">
+
+            {reports.map((report) => (
+
+              <div
+                key={report.id}
+                className="bg-white rounded-[32px] p-7 shadow-sm flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6"
+              >
+
+                <div>
+
+                  <h3 className="text-2xl font-black mb-3">
+
+                    {report.reason}
+
+                  </h3>
+
+                  <p className="text-gray-600 leading-7">
+
+                    {report.message || "Keine Nachricht"}
+                  </p>
+
+                </div>
+
+                <button
+                  onClick={() =>
+                    resolveReport(
+                      report.id
+                    )
+                  }
+                  className="h-14 px-7 rounded-2xl bg-[#16d64d] text-white font-bold"
+                >
+
+                  Report lösen
+
+                </button>
+
+              </div>
+
+            ))}
+
+          </div>
+
+        </div>
+
+        {/* USERS */}
+
+        <div className="mb-16">
+
+          <h2 className="text-4xl font-black mb-8">
+
+            Nutzer
+
+          </h2>
 
           <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
 
@@ -627,10 +633,10 @@ export default function AdminPage() {
 
               <div
                 key={user.id}
-                className="bg-white rounded-[32px] p-6 shadow-sm"
+                className="bg-white rounded-[32px] p-7 shadow-sm"
               >
 
-                <div className="flex items-center justify-between mb-5">
+                <div className="flex items-center justify-between mb-6">
 
                   <div>
 
@@ -642,19 +648,17 @@ export default function AdminPage() {
 
                     <p className="text-gray-500 mt-2">
 
-                      Risk Score:
-                      {" "}
-                      {user.risk_score || 0}
+                      {user.email || "Keine Email"}
 
                     </p>
 
                   </div>
 
-                  {user.flagged ? (
+                  {user.banned ? (
 
                     <div className="px-4 py-2 rounded-full bg-red-500/10 text-red-500 text-xs font-black">
 
-                      ⚠️ FLAGGED
+                      GEBANNT
 
                     </div>
 
@@ -662,13 +666,32 @@ export default function AdminPage() {
 
                     <div className="px-4 py-2 rounded-full bg-[#16d64d]/10 text-[#16d64d] text-xs font-black">
 
-                      SAFE
+                      AKTIV
 
                     </div>
 
                   )}
 
                 </div>
+
+                {!user.banned && (
+
+                  <button
+                    onClick={() =>
+                      banUser(
+                        user.id
+                      )
+                    }
+                    className="h-14 w-full rounded-2xl bg-red-500 text-white flex items-center justify-center gap-3 font-bold"
+                  >
+
+                    <Ban size={20} />
+
+                    Nutzer bannen
+
+                  </button>
+
+                )}
 
               </div>
 
@@ -684,13 +707,13 @@ export default function AdminPage() {
 
           <h2 className="text-4xl font-black mb-8">
 
-            Alle Listings
+            Listings
 
           </h2>
 
           <div className="space-y-8">
 
-            {listings.map(
+            {filteredListings.map(
               (listing) => (
 
                 <div
@@ -755,45 +778,22 @@ export default function AdminPage() {
 
                         </p>
 
-                        <div className="flex flex-wrap gap-3 mt-5">
-
-                          {!!listing.trust_score && (
-
-                            <div className="px-4 py-2 rounded-full bg-black/5 text-sm font-black">
-
-                              AI Trust:
-                              {" "}
-                              {listing.trust_score}
-
-                            </div>
-
-                          )}
-
-                          {listing.ai_verified ? (
-
-                            <div className="px-4 py-2 rounded-full bg-[#16d64d]/10 text-[#16d64d] text-sm font-black">
-
-                              ✓ AI Verified
-
-                            </div>
-
-                          ) : (
-
-                            <div className="px-4 py-2 rounded-full bg-red-500/10 text-red-500 text-sm font-black">
-
-                              Risk Listing
-
-                            </div>
-
-                          )}
-
-                        </div>
-
                       </div>
 
-                      {/* ACTION */}
+                      {/* ACTIONS */}
 
-                      <div className="mt-8">
+                      <div className="flex flex-wrap gap-4 mt-8">
+
+                        <a
+                          href={`/listing/${listing.id}`}
+                          className="h-14 px-7 rounded-2xl bg-black text-white flex items-center justify-center gap-3 font-bold"
+                        >
+
+                          <Eye size={20} />
+
+                          Öffnen
+
+                        </a>
 
                         <button
                           onClick={() =>
@@ -806,7 +806,7 @@ export default function AdminPage() {
 
                           <Trash2 size={20} />
 
-                          Listing löschen
+                          Löschen
 
                         </button>
 
@@ -830,6 +830,5 @@ export default function AdminPage() {
       <Footer />
 
     </main>
-
   );
 }

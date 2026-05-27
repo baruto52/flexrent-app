@@ -14,13 +14,24 @@ import Footer from "@/components/Footer";
 import LocationPicker from "@/components/LocationPicker";
 
 import {
+
   Upload,
+
   Trash2,
+
   Sparkles,
+
+  ShieldAlert,
+
+  Clock3,
+
 } from "lucide-react";
 
 import imageCompression
 from "browser-image-compression";
+
+import toast
+from "react-hot-toast";
 
 import { supabase }
 from "@/lib/supabase";
@@ -54,6 +65,15 @@ const categories = [
   "Sonstiges",
 ];
 
+const rentalUnits = [
+
+  "hour",
+
+  "day",
+
+  "week",
+];
+
 export default function CreatePage() {
 
   const router =
@@ -66,15 +86,24 @@ export default function CreatePage() {
     useState("");
 
   const [
+
     descriptionLoading,
+
     setDescriptionLoading,
+
   ] = useState(false);
 
   const [price, setPrice] =
     useState("");
 
-  const [priceUnit, setPriceUnit] =
-    useState("Tag");
+  /*
+    RENTAL TYPE
+  */
+
+  const [
+    rentalType,
+    setRentalType,
+  ] = useState("day");
 
   const [location, setLocation] =
     useState("");
@@ -89,8 +118,11 @@ export default function CreatePage() {
     useState("");
 
   const [
+
     categoryLoading,
+
     setCategoryLoading,
+
   ] = useState(false);
 
   const [images, setImages] =
@@ -98,6 +130,20 @@ export default function CreatePage() {
 
   const [loading, setLoading] =
     useState(false);
+
+  /*
+    AI
+  */
+
+  const [
+    aiRisk,
+    setAiRisk,
+  ] = useState("");
+
+  const [
+    aiReason,
+    setAiReason,
+  ] = useState("");
 
   useEffect(() => {
 
@@ -126,6 +172,10 @@ export default function CreatePage() {
 
   }, []);
 
+  /*
+    CATEGORY AI
+  */
+
   async function detectCategory(
     value: string
   ) {
@@ -140,6 +190,7 @@ export default function CreatePage() {
         await fetch(
           "/api/ai/category",
           {
+
             method: "POST",
 
             headers: {
@@ -172,13 +223,19 @@ export default function CreatePage() {
     } finally {
 
       setCategoryLoading(false);
-
     }
   }
 
+  /*
+    DESCRIPTION AI
+  */
+
   async function generateDescription() {
 
-    if (!title || !category)
+    if (
+      !title ||
+      !category
+    )
       return;
 
     try {
@@ -189,6 +246,7 @@ export default function CreatePage() {
         await fetch(
           "/api/ai/generate-description",
           {
+
             method: "POST",
 
             headers: {
@@ -197,7 +255,9 @@ export default function CreatePage() {
             },
 
             body: JSON.stringify({
+
               title,
+
               category,
             }),
           }
@@ -222,9 +282,12 @@ export default function CreatePage() {
     } finally {
 
       setDescriptionLoading(false);
-
     }
   }
+
+  /*
+    IMAGES
+  */
 
   const handleImages =
     (
@@ -237,6 +300,7 @@ export default function CreatePage() {
         );
 
       setImages(
+
         (prev) =>
 
           [
@@ -252,6 +316,7 @@ export default function CreatePage() {
     ) => {
 
       setImages(
+
         (prev) =>
 
           prev.filter(
@@ -260,6 +325,10 @@ export default function CreatePage() {
           )
       );
     };
+
+  /*
+    IMAGE UPLOAD
+  */
 
   const uploadImages =
     async () => {
@@ -344,6 +413,10 @@ export default function CreatePage() {
       return uploaded;
     };
 
+  /*
+    CREATE LISTING
+  */
+
   const createListing =
     async () => {
 
@@ -359,26 +432,57 @@ export default function CreatePage() {
         return;
       }
 
+      /*
+        VALIDATION
+      */
+
       if (
+
         !title ||
+
         !description ||
+
         !price ||
+
         !location ||
+
         !category
       ) {
 
-        alert(
+        toast.error(
           "Bitte alle Felder ausfüllen"
         );
 
         return;
       }
 
+      /*
+        PRICE LIMITS
+      */
+
+      if (
+
+        Number(price) <= 0 ||
+
+        Number(price) > 100000
+      ) {
+
+        toast.error(
+          "Ungültiger Preis"
+        );
+
+        return;
+      }
+
+      /*
+        IMAGES
+      */
+
       if (
         images.length === 0
       ) {
 
-        alert(
+        toast.error(
           "Bitte mindestens ein Bild hochladen"
         );
 
@@ -389,10 +493,15 @@ export default function CreatePage() {
 
       try {
 
+        /*
+          AI MODERATION
+        */
+
         const moderationRes =
           await fetch(
             "/api/ai/moderate",
             {
+
               method: "POST",
 
               headers: {
@@ -401,8 +510,12 @@ export default function CreatePage() {
               },
 
               body: JSON.stringify({
+
                 title,
+
                 description,
+
+                price,
               }),
             }
           );
@@ -410,14 +523,33 @@ export default function CreatePage() {
         const moderationData =
           await moderationRes.json();
 
+        /*
+          AI STATUS
+        */
+
+        setAiRisk(
+          moderationData
+            ?.moderation?.risk || ""
+        );
+
+        setAiReason(
+          moderationData
+            ?.moderation?.reason || ""
+        );
+
+        /*
+          BLOCK HIGH RISK
+        */
+
         if (
+
           moderationData
             ?.moderation?.risk ===
           "high"
         ) {
 
-          alert(
-            "Dieses Listing wurde aus Sicherheitsgründen blockiert."
+          toast.error(
+            "Listing wurde blockiert"
           );
 
           setLoading(false);
@@ -425,7 +557,12 @@ export default function CreatePage() {
           return;
         }
 
+        /*
+          WARNING
+        */
+
         if (
+
           moderationData
             ?.moderation?.risk ===
           "medium"
@@ -433,7 +570,8 @@ export default function CreatePage() {
 
           const confirmed =
             confirm(
-              "Dieses Listing wirkt möglicherweise verdächtig. Trotzdem veröffentlichen?"
+
+              "Dieses Listing wirkt verdächtig. Trotzdem veröffentlichen?"
             );
 
           if (!confirmed) {
@@ -444,13 +582,22 @@ export default function CreatePage() {
           }
         }
 
+        /*
+          IMAGE UPLOAD
+        */
+
         const imageUrls =
           await uploadImages();
+
+        /*
+          TRUST SCORE
+        */
 
         const trustRes =
           await fetch(
             "/api/ai/trust-score",
             {
+
               method: "POST",
 
               headers: {
@@ -459,8 +606,11 @@ export default function CreatePage() {
               },
 
               body: JSON.stringify({
+
                 title,
+
                 description,
+
                 imageCount:
                   imageUrls.length,
               }),
@@ -475,6 +625,10 @@ export default function CreatePage() {
 
         const aiVerified =
           (trust?.score || 0) >= 80;
+
+        /*
+          INSERT
+        */
 
         const { error } =
           await supabase
@@ -491,14 +645,16 @@ export default function CreatePage() {
               price:
                 Number(price),
 
-              price_unit:
-                priceUnit,
+              rental_type:
+                rentalType,
 
               location,
 
-              latitude: lat,
+              latitude:
+                lat,
 
-              longitude: lng,
+              longitude:
+                lng,
 
               category,
 
@@ -506,6 +662,10 @@ export default function CreatePage() {
                 imageUrls,
 
               active: true,
+
+              /*
+                AI
+              */
 
               trust_score:
                 trust?.score || 0,
@@ -518,18 +678,33 @@ export default function CreatePage() {
 
               ai_verified:
                 aiVerified,
+
+              flagged:
+
+                moderationData
+                  ?.moderation?.risk ===
+                "medium",
+
+              risk_score:
+
+                moderationData
+                  ?.moderation?.score || 0,
             });
 
         if (error) {
 
           console.log(error);
 
-          alert(
+          toast.error(
             error.message
           );
 
           return;
         }
+
+        toast.success(
+          "Listing erstellt"
+        );
 
         router.push(
           "/dashboard"
@@ -539,7 +714,7 @@ export default function CreatePage() {
 
         console.log(error);
 
-        alert(
+        toast.error(
           "Fehler beim Erstellen"
         );
 
@@ -559,6 +734,8 @@ export default function CreatePage() {
 
         <div className="bg-white rounded-[42px] p-5 md:p-10 shadow-sm border border-gray-100">
 
+          {/* HEADER */}
+
           <div className="mb-12">
 
             <div className="flex items-center gap-5 mb-5">
@@ -577,6 +754,12 @@ export default function CreatePage() {
 
                 </h1>
 
+                <p className="text-gray-500 text-lg mt-3">
+
+                  AI-gesicherte Marketplace Anzeige
+
+                </p>
+
               </div>
 
             </div>
@@ -584,6 +767,8 @@ export default function CreatePage() {
           </div>
 
           <div className="space-y-10">
+
+            {/* TITLE */}
 
             <div className="space-y-3">
 
@@ -599,7 +784,6 @@ export default function CreatePage() {
                   detectCategory(
                     e.target.value
                   );
-
                 }}
                 placeholder="Titel"
                 className="w-full h-16 rounded-2xl border border-gray-200 px-5"
@@ -616,6 +800,8 @@ export default function CreatePage() {
               )}
 
             </div>
+
+            {/* DESCRIPTION */}
 
             <div className="space-y-4">
 
@@ -639,7 +825,9 @@ export default function CreatePage() {
                 >
 
                   {descriptionLoading
+
                     ? "AI generiert..."
+
                     : "AI Beschreibung"}
 
                 </button>
@@ -659,17 +847,60 @@ export default function CreatePage() {
 
             </div>
 
-            <input
-              type="number"
-              value={price}
-              onChange={(e) =>
-                setPrice(
-                  e.target.value
-                )
-              }
-              placeholder="Preis"
-              className="w-full h-16 rounded-2xl border border-gray-200 px-5"
-            />
+            {/* PRICE */}
+
+            <div className="grid md:grid-cols-2 gap-5">
+
+              <input
+                type="number"
+                value={price}
+                onChange={(e) =>
+                  setPrice(
+                    e.target.value
+                  )
+                }
+                placeholder="Preis"
+                className="w-full h-16 rounded-2xl border border-gray-200 px-5"
+              />
+
+              <select
+                value={rentalType}
+                onChange={(e) =>
+                  setRentalType(
+                    e.target.value
+                  )
+                }
+                className="w-full h-16 rounded-2xl border border-gray-200 px-5"
+              >
+
+                {rentalUnits.map(
+                  (unit) => (
+
+                    <option
+                      key={unit}
+                      value={unit}
+                    >
+
+                      {unit === "hour"
+
+                        ? "Pro Stunde"
+
+                        : unit === "week"
+
+                        ? "Pro Woche"
+
+                        : "Pro Tag"}
+
+                    </option>
+
+                  )
+                )}
+
+              </select>
+
+            </div>
+
+            {/* LOCATION */}
 
             <LocationPicker
               location={location}
@@ -677,6 +908,8 @@ export default function CreatePage() {
               setLat={setLat}
               setLng={setLng}
             />
+
+            {/* CATEGORY */}
 
             <select
               value={category}
@@ -704,9 +937,17 @@ export default function CreatePage() {
 
             </select>
 
+            {/* UPLOAD */}
+
             <label className="border-2 border-dashed border-gray-300 rounded-[40px] p-10 flex flex-col items-center justify-center cursor-pointer">
 
               <Upload size={50} />
+
+              <p className="mt-5 font-bold">
+
+                Bilder hochladen
+
+              </p>
 
               <input
                 type="file"
@@ -717,6 +958,8 @@ export default function CreatePage() {
               />
 
             </label>
+
+            {/* IMAGES */}
 
             {images.length > 0 && (
 
@@ -760,14 +1003,83 @@ export default function CreatePage() {
 
             )}
 
+            {/* AI WARNING */}
+
+            {aiRisk && (
+
+              <div
+                className={`
+                  rounded-[32px]
+                  p-6
+                  border
+
+                  ${aiRisk === "high"
+
+                    ? "bg-red-500/10 border-red-500/20"
+
+                    : aiRisk === "medium"
+
+                    ? "bg-yellow-500/10 border-yellow-500/20"
+
+                    : "bg-[#16d64d]/10 border-[#16d64d]/20"
+                  }
+                `}
+              >
+
+                <div className="flex items-start gap-4">
+
+                  <ShieldAlert
+                    className={`
+
+                      ${aiRisk === "high"
+
+                        ? "text-red-500"
+
+                        : aiRisk === "medium"
+
+                        ? "text-yellow-500"
+
+                        : "text-[#16d64d]"
+                      }
+                    `}
+                    size={32}
+                  />
+
+                  <div>
+
+                    <h3 className="text-2xl font-black mb-2">
+
+                      AI Sicherheitsprüfung
+
+                    </h3>
+
+                    <p className="text-gray-700 leading-7">
+
+                      {aiReason || "Keine Risiken erkannt"}
+                    </p>
+
+                  </div>
+
+                </div>
+
+              </div>
+
+            )}
+
+            {/* SUBMIT */}
+
             <button
               onClick={createListing}
               disabled={loading}
-              className="w-full h-20 rounded-[30px] bg-[#16d64d] text-white text-2xl font-black"
+              className="w-full h-20 rounded-[30px] bg-[#16d64d] text-white text-2xl font-black flex items-center justify-center gap-4"
             >
 
+              <Clock3 size={28} />
+
               {loading
+
                 ? "Listing wird erstellt..."
+
                 : "Anzeige veröffentlichen"}
 
             </button>

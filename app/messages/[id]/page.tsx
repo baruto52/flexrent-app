@@ -31,6 +31,9 @@ import {
 import imageCompression
 from "browser-image-compression";
 
+import MessageBubble
+from "@/components/MessageBubble";
+
 import { supabase }
 from "@/lib/supabase";
 
@@ -404,7 +407,7 @@ export default function ChatPage() {
 
     setNewMessage("");
 
-    const optimisticMessage = {
+    const optimisticMessage: Message = {
 
       id:
         Math.random().toString(),
@@ -419,10 +422,12 @@ export default function ChatPage() {
 
       created_at:
         new Date().toISOString(),
+
+      seen: false,
     };
 
     setMessages(
-      (prev: any) => [
+      (prev) => [
 
         ...prev,
 
@@ -718,100 +723,14 @@ export default function ChatPage() {
 
             return (
 
-              <div
+              <MessageBubble
                 key={msg.id}
-                className={`flex ${
-                  isMine
-                    ? "justify-end"
-                    : "justify-start"
-                }`}
-              >
-
-                <div
-                  className={`
-                    max-w-[85%]
-                    md:max-w-[500px]
-                    rounded-[30px]
-                    px-5
-                    py-4
-                    shadow-sm
-                    ${
-                      isMine
-                        ? "bg-[#16d64d] text-white"
-                        : "bg-white text-black"
-                    }
-                  `}
-                >
-
-                  {msg.image_url && (
-
-                    <Image
-                      src={
-                        msg.image_url
-                      }
-                      alt=""
-                      width={500}
-                      height={500}
-                      loading="lazy"
-                      quality={75}
-                      className="rounded-2xl mb-3 max-h-[320px] w-full object-cover"
-                    />
-
-                  )}
-
-                  {msg.message && (
-
-                    <div className="break-words text-[16px] leading-7">
-
-                      {msg.message}
-
-                    </div>
-
-                  )}
-
-                  <div className={`
-                    text-[11px]
-                    mt-3
-                    flex
-                    items-center
-                    gap-2
-                    ${
-                      isMine
-                        ? "text-green-100"
-                        : "text-gray-400"
-                    }
-                  `}>
-
-                    {new Date(
-                      msg.created_at
-                    ).toLocaleTimeString(
-                      [],
-                      {
-                        hour:
-                          "2-digit",
-
-                        minute:
-                          "2-digit",
-                      }
-                    )}
-
-                    {isMine && (
-
-                      <span>
-
-                        {msg.seen
-                          ? "✓✓"
-                          : "✓"}
-
-                      </span>
-
-                    )}
-
-                  </div>
-
-                </div>
-
-              </div>
+                own={isMine}
+                message={msg.message}
+                image_url={msg.image_url}
+                createdAt={msg.created_at}
+                seen={msg.seen}
+              />
 
             );
           }

@@ -28,15 +28,11 @@ import {
 
   MapPin,
 
-  ShieldCheck,
-
   Star,
 
   Clock3,
 
   Flag,
-
-  X,
 
   BadgeCheck,
 
@@ -113,55 +109,134 @@ export default function ListingPage() {
     useState(false);
 
   /*
-    DAYS
+    RENTAL TYPE
   */
 
-  const totalDays =
+  const rentalType =
+    listing?.rental_type ||
+    "day";
 
+  /*
+    TOTAL TIME
+  */
+
+  let totalUnits = 0;
+
+  if (
     startDate &&
     endDate
+  ) {
 
-      ? Math.max(
+    const diffMs =
+      endDate.getTime() -
+      startDate.getTime();
+
+    if (
+      rentalType === "hour"
+    ) {
+
+      totalUnits =
+        Math.max(
 
           1,
 
           Math.ceil(
-            (
-              endDate.getTime() -
-              startDate.getTime()
-            ) /
-              (
-                1000 *
-                60 *
-                60 *
-                24
-              )
-          ) + 1
-        )
 
-      : 0;
+            diffMs /
+
+            (
+              1000 *
+              60 *
+              60
+            )
+          )
+        );
+
+    } else if (
+      rentalType === "week"
+    ) {
+
+      totalUnits =
+        Math.max(
+
+          1,
+
+          Math.ceil(
+
+            diffMs /
+
+            (
+              1000 *
+              60 *
+              60 *
+              24 *
+              7
+            )
+          )
+        );
+
+    } else {
+
+      totalUnits =
+        Math.max(
+
+          1,
+
+          Math.ceil(
+
+            diffMs /
+
+            (
+              1000 *
+              60 *
+              60 *
+              24
+            )
+          ) + 1
+        );
+    }
+  }
 
   /*
-    PRICES
+    PRICE
   */
 
   const subtotal =
-    totalDays *
+    totalUnits *
     (listing?.price || 0);
 
   const serviceFee =
     Math.round(
-      subtotal * 0.12
+      subtotal * 0.1
     );
 
-  const cleaningFee =
-    25;
-
   const totalPrice =
-
     subtotal +
-    serviceFee +
-    cleaningFee;
+    serviceFee;
+
+  /*
+    LABEL
+  */
+
+  function getRentalLabel() {
+
+    switch (
+      rentalType
+    ) {
+
+      case "hour":
+
+        return "Stunden";
+
+      case "week":
+
+        return "Wochen";
+
+      default:
+
+        return "Tage";
+    }
+  }
 
   useEffect(() => {
 
@@ -485,8 +560,6 @@ export default function ListingPage() {
 
               serviceFee,
 
-              cleaningFee,
-
               totalPrice,
 
               listingId:
@@ -687,9 +760,14 @@ export default function ListingPage() {
             </div>
 
             <button
-              onClick={() =>
-                setReportOpen(true)
-              }
+              onClick={() => {
+
+                toast.success(
+                  "Melde-System aktiviert"
+                );
+
+                setReportOpen(true);
+              }}
               className="h-14 px-6 rounded-2xl bg-red-500 text-white flex items-center justify-center gap-3 font-black"
             >
 
@@ -739,90 +817,6 @@ export default function ListingPage() {
 
             </div>
 
-            {/* OWNER */}
-
-            <div className="bg-white rounded-[40px] p-8 shadow-sm">
-
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-8">
-
-                <div className="flex items-center gap-5">
-
-                  <Image
-                    src={
-                      owner?.avatar_url ||
-
-                      "https://placehold.co/200x200/png"
-                    }
-                    alt=""
-                    width={200}
-                    height={200}
-                    className="
-                      w-24
-                      h-24
-                      rounded-full
-                      object-cover
-                    "
-                  />
-
-                  <div>
-
-                    <Link
-                      href={`/user/${listing.user_id}`}
-                    >
-
-                      <h3 className="text-3xl font-black mb-2 hover:underline">
-
-                        {owner?.full_name || "Gastgeber"}
-
-                      </h3>
-
-                    </Link>
-
-                    <div className="flex flex-wrap items-center gap-4 text-gray-500">
-
-                      <div className="flex items-center gap-2">
-
-                        <Clock3 size={18} />
-
-                        Antwortet schnell
-
-                      </div>
-
-                      {owner?.verified_identity && (
-
-                        <div className="flex items-center gap-2 text-[#16d64d] font-bold">
-
-                          <BadgeCheck
-                            size={18}
-                          />
-
-                          Verifiziert
-
-                        </div>
-
-                      )}
-
-                    </div>
-
-                  </div>
-
-                </div>
-
-                <button
-                  onClick={handleMessage}
-                  className="h-16 px-8 rounded-2xl bg-black text-white flex items-center justify-center gap-3 font-black text-lg"
-                >
-
-                  <MessageCircle size={22} />
-
-                  Nachricht senden
-
-                </button>
-
-              </div>
-
-            </div>
-
           </div>
 
           {/* RIGHT */}
@@ -842,7 +836,18 @@ export default function ListingPage() {
 
                 <span className="text-gray-500 text-xl mb-2">
 
-                  / {listing.rental_type}
+                  / {
+
+                    listing.rental_type === "hour"
+
+                      ? "Stunde"
+
+                      : listing.rental_type === "week"
+
+                      ? "Woche"
+
+                      : "Tag"
+                  }
 
                 </span>
 
@@ -856,7 +861,7 @@ export default function ListingPage() {
                 excludedDates={excludedDates}
               />
 
-              {totalDays > 0 && (
+              {totalUnits > 0 && (
 
                 <div className="mt-8 space-y-5">
 
@@ -869,9 +874,10 @@ export default function ListingPage() {
                       {" "}
                       ×
                       {" "}
-                      {totalDays}
+                      {totalUnits}
                       {" "}
-                      Tage
+
+                      {getRentalLabel()}
 
                     </span>
 
@@ -896,23 +902,6 @@ export default function ListingPage() {
 
                       €
                       {serviceFee}
-
-                    </span>
-
-                  </div>
-
-                  <div className="flex items-center justify-between">
-
-                    <span className="text-gray-500">
-
-                      Reinigung
-
-                    </span>
-
-                    <span className="font-black">
-
-                      €
-                      {cleaningFee}
 
                     </span>
 
@@ -956,75 +945,6 @@ export default function ListingPage() {
             </div>
 
           </div>
-
-        </div>
-
-      </div>
-
-      {/* MOBILE CTA */}
-
-      <div
-        className="
-          xl:hidden
-          fixed
-          bottom-[110px]
-          pb-safe
-          left-4
-          right-4
-          z-40
-        "
-      >
-
-        <div
-          className="
-            bg-white/95
-            backdrop-blur-2xl
-            border
-            border-white/40
-            shadow-[0_20px_60px_rgba(0,0,0,0.18)]
-            rounded-[32px]
-            p-5
-            flex
-            items-center
-            justify-between
-          "
-        >
-
-          <div>
-
-            <p className="text-gray-500 text-sm">
-
-              Gesamtpreis
-
-            </p>
-
-            <h3 className="text-3xl font-black text-[#16d64d]">
-
-              €
-              {totalPrice}
-
-            </h3>
-
-          </div>
-
-          <button
-            onClick={handleCheckout}
-            className="
-              h-14
-              px-7
-              rounded-2xl
-              bg-[#16d64d]
-              text-white
-              flex
-              items-center
-              justify-center
-              font-black
-            "
-          >
-
-            Buchen
-
-          </button>
 
         </div>
 

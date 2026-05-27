@@ -65,24 +65,82 @@ export default function BookingCard({
       : null;
 
   /*
-    DAYS
+    RENTAL TYPE
   */
 
-  const totalDays =
+  const rentalType =
+    listing?.rental_type ||
+    "day";
 
+  /*
+    TOTAL TIME
+  */
+
+  let totalUnits = 1;
+
+  if (
     startDate &&
     endDate
+  ) {
 
-      ? Math.max(
+    const diffMs =
+      endDate.getTime() -
+      startDate.getTime();
+
+    if (
+      rentalType === "hour"
+    ) {
+
+      totalUnits =
+        Math.max(
 
           1,
 
           Math.ceil(
 
+            diffMs /
+
             (
-              endDate.getTime() -
-              startDate.getTime()
-            ) /
+              1000 *
+              60 *
+              60
+            )
+          )
+        );
+
+    } else if (
+      rentalType === "week"
+    ) {
+
+      totalUnits =
+        Math.max(
+
+          1,
+
+          Math.ceil(
+
+            diffMs /
+
+            (
+              1000 *
+              60 *
+              60 *
+              24 *
+              7
+            )
+          )
+        );
+
+    } else {
+
+      totalUnits =
+        Math.max(
+
+          1,
+
+          Math.ceil(
+
+            diffMs /
 
             (
               1000 *
@@ -91,35 +149,55 @@ export default function BookingCard({
               24
             )
           )
-        )
-
-      : 1;
+        );
+    }
+  }
 
   /*
     PRICES
   */
 
-  const dayPrice =
+  const basePrice =
     Number(
       listing?.price || 0
     );
 
   const subtotal =
-    dayPrice *
-    totalDays;
+    basePrice *
+    totalUnits;
 
   const serviceFee =
     Math.round(
-      subtotal * 0.12
+      subtotal * 0.1
     );
-
-  const cleaningFee =
-    25;
 
   const total =
     subtotal +
-    serviceFee +
-    cleaningFee;
+    serviceFee;
+
+  /*
+    LABEL
+  */
+
+  function getRentalLabel() {
+
+    switch (
+      rentalType
+    ) {
+
+      case "hour":
+
+        return "Stunden";
+
+      case "week":
+
+        return "Wochen";
+
+      default:
+
+        return "Tage";
+    }
+  }
 
   /*
     STATUS
@@ -415,13 +493,13 @@ export default function BookingCard({
                       <span>
 
                         €
-                        {dayPrice}
+                        {basePrice}
                         {" "}
                         ×
                         {" "}
-                        {totalDays}
+                        {totalUnits}
                         {" "}
-                        Tage
+                        {getRentalLabel()}
 
                       </span>
 
@@ -461,34 +539,6 @@ export default function BookingCard({
 
                         €
                         {serviceFee}
-
-                      </span>
-
-                    </div>
-
-                    <div
-                      className="
-                        flex
-                        items-center
-                        justify-between
-                        text-gray-600
-                      "
-                    >
-
-                      <span>
-
-                        Reinigung
-
-                      </span>
-
-                      <span
-                        className="
-                          font-bold
-                        "
-                      >
-
-                        €
-                        {cleaningFee}
 
                       </span>
 
@@ -623,7 +673,7 @@ export default function BookingCard({
                         "
                       >
 
-                        Check-In
+                        Start
 
                       </p>
 
@@ -695,7 +745,7 @@ export default function BookingCard({
                         "
                       >
 
-                        Check-Out
+                        Ende
 
                       </p>
 
@@ -769,7 +819,9 @@ export default function BookingCard({
                 <div>
 
                   <p className="text-gray-500">
+
                     Gebucht am
+
                   </p>
 
                   <h4
@@ -870,8 +922,9 @@ export default function BookingCard({
         className="
           xl:hidden
           fixed
-bottom-[110px]
-pb-safe          left-4
+          bottom-[110px]
+          pb-safe
+          left-4
           right-4
           z-40
         "

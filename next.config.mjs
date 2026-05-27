@@ -1,19 +1,25 @@
 /** @type {import('next').NextConfig} */
 
-import withPWAInit
-from "next-pwa";
+import withPWAInit from "next-pwa";
 
-const withPWA =
-  withPWAInit({
+const withPWA = withPWAInit({
 
-    dest: "public",
+  dest: "public",
 
-    register: true,
+  register: true,
 
-    skipWaiting: true,
+  skipWaiting: true,
 
-    disable: true,
-  });
+  sw: "sw.js",
+
+  disable:
+    process.env.NODE_ENV ===
+    "development",
+
+  buildExcludes: [
+    /middleware-manifest\.json$/,
+  ],
+});
 
 const nextConfig = {
 

@@ -1,18 +1,17 @@
-import { NextResponse }
-from "next/server";
+import { NextResponse } from "next/server";
 
-import OpenAI
-from "openai";
+import OpenAI from "openai";
 
-export const runtime =
-  "nodejs";
+export const runtime = "nodejs";
 
-const openai =
-  new OpenAI({
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
-    apiKey:
-      process.env.OPENAI_API_KEY,
-  });
+type ChatMessage = {
+  role: "user" | "assistant";
+  content: string;
+};
 
 export async function POST(
   req: Request
@@ -26,15 +25,16 @@ export async function POST(
     const message =
       body.message;
 
+    const history =
+      body.history || [];
+
     if (!message) {
 
       return NextResponse.json(
-
         {
           error:
             "Keine Nachricht",
         },
-
         {
           status: 400,
         }
@@ -42,22 +42,15 @@ export async function POST(
     }
 
     /*
-      OPENAI
+      HISTORY AUFBAUEN
     */
 
-    const completion =
-      await openai.chat.completions.create({
+    const messages = [
 
-        model:
-          "gpt-4o-mini",
+      {
+        role: "system",
 
-        messages: [
-
-          {
-
-            role: "system",
-
-            content: `
+        content: `
 
 Du bist der intelligente AI-Assistent von LOQARO.
 
@@ -71,18 +64,36 @@ Du hilfst Nutzern bei:
 - Zahlungen
 - Support
 
-Antworte modern, freundlich und hilfreich auf Deutsch.
-            `,
-          },
+WICHTIG:
 
-          {
+- Merke dir den bisherigen Chatverlauf
+- Antworte immer passend zum Kontext
+- Vergiss vorherige Nachrichten nicht
+- Stelle Rückfragen passend zum Verlauf
+- Sei modern, hilfreich und natürlich
+- Antworte nur auf Deutsch
+        `,
+      },
 
-            role: "user",
+      ...history,
 
-            content:
-              message,
-          },
-        ],
+      {
+        role: "user",
+
+        content: message,
+      },
+    ];
+
+    /*
+      OPENAI
+    */
+
+    const completion =
+      await openai.chat.completions.create({
+
+        model: "gpt-4o-mini",
+
+        messages,
 
         temperature: 0.7,
 
@@ -110,14 +121,11 @@ Antworte modern, freundlich und hilfreich auf Deutsch.
     );
 
     return NextResponse.json(
-
       {
-
         error:
           error.message ||
           "AI Fehler",
       },
-
       {
         status: 500,
       }

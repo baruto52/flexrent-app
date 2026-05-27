@@ -115,6 +115,7 @@ Dann musst du den vorherigen Kontext weiter benutzen.
 Du darfst NICHT den Chat vergessen.
 
 BEISPIEL:
+
 User:
 "Bohrmaschine"
 
@@ -155,16 +156,6 @@ Wenn Betrug erkannt wird:
           */
 
           ...history,
-
-          /*
-            CURRENT MESSAGE
-          */
-
-          {
-            role: "user",
-
-            content: message,
-          },
         ],
 
         temperature: 0.7,

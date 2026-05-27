@@ -59,14 +59,20 @@ export default function AISupportModal({
 
       setLoading(true);
 
+      /*
+        API REQUEST
+      */
+
       const res = await fetch(
         "/api/ai/support",
         {
           method: "POST",
+
           headers: {
             "Content-Type":
               "application/json",
           },
+
           body: JSON.stringify({
             message:
               userMessage.content,
@@ -74,47 +80,65 @@ export default function AISupportModal({
         }
       );
 
-     const data =
-  await res.json();
+      /*
+        RESPONSE
+      */
 
-console.log(
-  "AI RESPONSE:",
-  data
-);
+      const data =
+        await res.json();
 
-if (!res.ok) {
+      console.log(
+        "AI RESPONSE:",
+        data
+      );
 
-  setMessages((prev) => [
-    ...prev,
-    {
-      role: "assistant",
-      content:
-        data.error ||
-        "Server Fehler.",
-    },
-  ]);
+      /*
+        ERROR HANDLING
+      */
 
-  return;
-}
+      if (!res.ok) {
 
-setMessages((prev) => [
-  ...prev,
-  {
-    role: "assistant",
-    content:
-      data.answer ||
-      "Keine AI Antwort.",
-  },
-]);
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: "assistant",
 
-    } catch (error) {
+            content:
+              data.error ||
+              "Server Fehler.",
+          },
+        ]);
 
-      console.error(error);
+        return;
+      }
+
+      /*
+        SUCCESS
+      */
 
       setMessages((prev) => [
         ...prev,
         {
           role: "assistant",
+
+          content:
+            data.answer ||
+            "Keine AI Antwort.",
+        },
+      ]);
+
+    } catch (error) {
+
+      console.error(
+        "AI SUPPORT ERROR:",
+        error
+      );
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+
           content:
             "AI Fehler aufgetreten.",
         },
@@ -287,6 +311,8 @@ setMessages((prev) => [
                     py-4
                     text-[15px]
                     leading-7
+                    whitespace-pre-wrap
+                    break-words
                     shadow-sm
                     ${
                       msg.role ===
@@ -353,11 +379,13 @@ setMessages((prev) => [
 
             <textarea
               value={message}
+
               onChange={(e) =>
                 setMessage(
                   e.target.value
                 )
               }
+
               onKeyDown={(e) => {
 
                 if (
@@ -371,7 +399,9 @@ setMessages((prev) => [
                 }
 
               }}
+
               placeholder="Schreibe eine Nachricht..."
+
               className="
                 flex-1
                 h-16
@@ -388,7 +418,9 @@ setMessages((prev) => [
 
             <button
               onClick={askAI}
+
               disabled={loading}
+
               className="
                 w-40
                 rounded-3xl
@@ -401,7 +433,9 @@ setMessages((prev) => [
               "
             >
 
-              Senden
+              {loading
+                ? "..."
+                : "Senden"}
 
             </button>
 

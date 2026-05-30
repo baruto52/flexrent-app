@@ -10,48 +10,49 @@ export async function POST(
 
   try {
 
-    const subscription =
+    const {
+      userId,
+      subscription,
+    } =
       await request.json();
 
-    /*
-      USER
-    */
-
-    const {
-      data: { user },
-    } =
-      await supabase.auth.getUser();
-
-    if (!user) {
+    if (
+      !userId ||
+      !subscription
+    ) {
 
       return NextResponse.json(
 
         {
           error:
-            "Nicht eingeloggt",
+            "Fehlende Daten",
         },
 
         {
-          status: 401,
+          status: 400,
         }
       );
     }
 
-    /*
-      SAVE SUB
-    */
+    const {
+      error,
+    } =
+      await supabase
+        .from(
+          "push_subscriptions"
+        )
+        .upsert({
 
-    await supabase
-      .from(
-        "push_subscriptions"
-      )
-      .upsert({
+          user_id:
+            userId,
 
-        user_id:
-          user.id,
+          subscription,
+        });
 
-        subscription,
-      });
+    if (error) {
+
+      throw error;
+    }
 
     return NextResponse.json({
 

@@ -4,6 +4,10 @@ import {
   useEffect,
 } from "react";
 
+import {
+  supabase,
+} from "@/lib/supabase";
+
 export default function PushNotifications() {
 
   useEffect(() => {
@@ -16,29 +20,37 @@ export default function PushNotifications() {
 
     try {
 
-      /*
-        SUPPORT CHECK
-      */
-
       if (
         typeof window ===
         "undefined"
       ) {
-
         return;
       }
 
       if (
         !("serviceWorker" in navigator)
       ) {
-
         return;
       }
 
       if (
         !("PushManager" in window)
       ) {
+        return;
+      }
 
+      /*
+        CURRENT USER
+      */
+
+      const {
+        data: { user },
+      } =
+        await supabase
+          .auth
+          .getUser();
+
+      if (!user) {
         return;
       }
 
@@ -49,10 +61,6 @@ export default function PushNotifications() {
       await navigator
         .serviceWorker
         .register("/sw.js");
-
-      /*
-        WAIT FOR ACTIVE SW
-      */
 
       const registration =
         await navigator
@@ -71,7 +79,6 @@ export default function PushNotifications() {
         permission !==
         "granted"
       ) {
-
         return;
       }
 
@@ -123,9 +130,13 @@ export default function PushNotifications() {
               "application/json",
           },
 
-          body: JSON.stringify(
-            subscription
-          ),
+          body: JSON.stringify({
+
+            userId:
+              user.id,
+
+            subscription,
+          }),
         }
       );
 
@@ -147,12 +158,10 @@ export default function PushNotifications() {
 
         (
           4 -
-
           (
             base64String.length %
             4
           )
-
         ) % 4
       );
 

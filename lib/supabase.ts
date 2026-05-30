@@ -1,19 +1,34 @@
-import { createClient } from "@supabase/supabase-js";
+import {
+  createClient,
+} from "@supabase/supabase-js";
 
 const supabaseUrl =
-  "https://pobizaxvmxxgqfxwmhvq.supabase.co";
+  process.env
+    .NEXT_PUBLIC_SUPABASE_URL!;
 
 const supabaseAnonKey =
-  "sb_publishable_NInGVZcZ95cwVBzJZKjEmQ_S-sG4Vuz";
+  process.env
+    .NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
-export const supabase = createClient(
-  supabaseUrl,
-  supabaseAnonKey,
-  {
-    auth: {
-      persistSession: true,
-      autoRefreshToken: true,
-      detectSessionInUrl: true,
-    },
-  }
-);
+export const supabase =
+  createClient(
+
+    supabaseUrl,
+
+    supabaseAnonKey,
+
+    {
+
+      auth: {
+
+        persistSession:
+          true,
+
+        autoRefreshToken:
+          true,
+
+        detectSessionInUrl:
+          true,
+      },
+    }
+  );

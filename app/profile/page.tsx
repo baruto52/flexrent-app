@@ -220,7 +220,7 @@ export default function ProfilePage() {
           alert(
             "Maximal 5MB erlaubt"
           );
-
+  console.log("AVATAR URL:", avatar);
           return;
         }
 

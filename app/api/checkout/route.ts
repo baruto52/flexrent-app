@@ -312,55 +312,41 @@ export async function POST(
     }
 
     /*
-      PRICES
-    */
+  PRICES
+*/
 
-    const listingPrice =
-      Number(
-        listing.price || 0
-      );
+const listingPrice =
+  Number(
+    listing.price || 0
+  );
 
-    const subtotal =
-      listingPrice *
-      totalUnits;
+const subtotal =
+  listingPrice *
+  totalUnits;
 
-    const serviceFee =
-      Math.round(
-        subtotal * 0.12
-      );
+const calculatedTotal =
+  subtotal;
 
-    const cleaningFee =
-      25;
+/*
+  MANIPULATION CHECK
+*/
 
-    const calculatedTotal =
+if (
+  Number(
+    body.totalPrice
+  ) !== calculatedTotal
+) {
 
-      subtotal +
-      serviceFee +
-      cleaningFee;
-
-    /*
-      MANIPULATION CHECK
-    */
-
-    if (
-
-      Number(
-        body.totalPrice
-      ) !== calculatedTotal
-    ) {
-
-      return NextResponse.json(
-
-        {
-          error:
-            "Preis Manipulation erkannt",
-        },
-
-        {
-          status: 400,
-        }
-      );
+  return NextResponse.json(
+    {
+      error:
+        "Preis Manipulation erkannt",
+    },
+    {
+      status: 400,
     }
+  );
+}
 
     /*
       OWNER PROFILE
@@ -552,17 +538,7 @@ export async function POST(
               subtotal
             ),
 
-          serviceFee:
-            String(
-              serviceFee
-            ),
-
-          cleaningFee:
-            String(
-              cleaningFee
-            ),
-
-          totalPrice:
+                   totalPrice:
             String(
               calculatedTotal
             ),

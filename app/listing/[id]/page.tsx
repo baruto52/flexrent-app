@@ -927,6 +927,34 @@ export default function ListingPage() {
                 </div>
 
               )}
+              
+<button
+  onClick={handleMessage}
+  className="
+    w-full
+    h-16
+    rounded-2xl
+    border-2
+    border-[#16d64d]
+    text-[#16d64d]
+    text-lg
+    font-black
+    flex
+    items-center
+    justify-center
+    gap-3
+    mb-4
+    hover:bg-[#16d64d]
+    hover:text-white
+    transition-all
+  "
+>
+
+  <MessageCircle size={22} />
+
+  Nachricht senden
+
+</button>
 
               <button
                 onClick={handleCheckout}

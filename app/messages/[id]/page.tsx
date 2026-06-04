@@ -85,6 +85,9 @@ export default function ChatPage() {
   const [previewImage, setPreviewImage] =
     useState<string | null>(null);
 
+    const [selectedImage, setSelectedImage] =
+  useState<File | null>(null);
+
   const [currentUserId, setCurrentUserId] =
     useState("");
 
@@ -439,11 +442,24 @@ export default function ChatPage() {
 
   async function sendMessage() {
 
-    if (
-      !newMessage.trim() ||
-      uploading
-    )
-      return;
+if (uploading)
+  return;
+
+if (selectedImage) {
+
+  await uploadImage(
+    selectedImage
+  );
+
+  setSelectedImage(null);
+
+  setPreviewImage(null);
+
+  return;
+}
+
+if (!newMessage.trim())
+  return;
 
     /*
       AI MODERATION
@@ -706,30 +722,6 @@ if (messageError) {
   return;
 }
 
-setMessages((prev) => [
-
-  ...prev,
-
-  {
-    id: crypto.randomUUID(),
-
-    sender_id:
-      currentUserId,
-
-    receiver_id:
-      otherUserId,
-
-    message: "",
-
-    image_url:
-      publicUrlData.publicUrl,
-
-    created_at:
-      new Date().toISOString(),
-
-    seen: false,
-  },
-]);
 
 setPreviewImage(null);
 
@@ -964,20 +956,24 @@ setPreviewImage(null);
             <ImageIcon size={22} />
 
             <input
-              type="file"
-              accept="image/*"
-              hidden
-              onChange={(e) => {
+  type="file"
+  accept="image/*"
+  hidden
+  onChange={(e) => {
 
-                const file =
-                  e.target.files?.[0];
+    const file =
+      e.target.files?.[0];
 
-                if (file) {
+    if (file) {
 
-                  uploadImage(file);
-                }
-              }}
-            />
+      setSelectedImage(file);
+
+      setPreviewImage(
+        URL.createObjectURL(file)
+      );
+    }
+  }}
+/>
 
           </label>
 

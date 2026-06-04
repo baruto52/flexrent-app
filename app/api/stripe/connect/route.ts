@@ -29,10 +29,20 @@ const {
 } = body;
 
     const account =
-      await stripe.accounts.create({
+  await stripe.accounts.create({
+    type: "express",
+    country: "DE",
 
-        type: "express",
-      });
+    capabilities: {
+      transfers: {
+        requested: true,
+      },
+
+      card_payments: {
+        requested: true,
+      },
+    },
+  });
 
       const { data, error } =
   await supabase

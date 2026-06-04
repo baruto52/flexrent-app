@@ -322,56 +322,69 @@ export default function ChatPage() {
   */
 
   function listenMessages(
-    userId: string
-  ) {
+  userId: string
+) {
 
-    const channel =
-      supabase.channel(
-        `chat-${userId}-${otherUserId}`
-      );
+  const channel =
+    supabase.channel(
+      `chat-${userId}-${otherUserId}`
+    );
 
-    channel
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "messages",
-          filter:
-            `receiver_id=eq.${userId}`,
-        },
-        async (payload) => {
+  channel
+    .on(
+      "postgres_changes",
+      {
+        event: "INSERT",
+        schema: "public",
+        table: "messages",
+      },
+      async (payload) => {
 
-          const newMsg =
-            payload.new as Message;
+        const newMsg =
+          payload.new as Message;
 
-          setMessages(
-            (prev) => {
+        const belongsToChat =
 
-              const exists =
-                prev.some(
-                  (m) =>
-                    m.id ===
-                    newMsg.id
-                );
+          (
+            newMsg.sender_id === userId &&
+            newMsg.receiver_id === otherUserId
+          ) ||
 
-              if (exists)
-                return prev;
-
-              return [
-                ...prev,
-                newMsg,
-              ];
-            }
+          (
+            newMsg.sender_id === otherUserId &&
+            newMsg.receiver_id === userId
           );
 
-          scrollToBottom();
-        }
-      )
-      .subscribe();
+        if (!belongsToChat)
+          return;
 
-    return channel;
-  }
+        setMessages(
+          (prev) => {
+
+            const exists =
+              prev.some(
+                (m) =>
+                  m.id ===
+                  newMsg.id
+              );
+
+            if (exists)
+              return prev;
+
+            return [
+              ...prev,
+              newMsg,
+            ];
+          }
+        );
+
+        scrollToBottom();
+      }
+    )
+    .subscribe();
+
+  return channel;
+}
 
   /*
     TYPING
@@ -517,37 +530,47 @@ export default function ChatPage() {
 
     scrollToBottom();
 
-    const {
-      error,
-    } =
-      await supabase
-        .from("messages")
-        .insert({
+const {
+  error,
+} =
+  await supabase
+    .from("messages")
+    .insert({
 
-          sender_id:
-            currentUserId,
+      sender_id:
+        currentUserId,
 
-          receiver_id:
-            otherUserId,
+      receiver_id:
+        otherUserId,
 
-          message,
+      message,
 
-          seen: false,
+      seen: false,
 
-          is_read: false,
-        });
+      is_read: false,
+    });
 
-    if (error) {
+if (error) {
 
-      console.log(error);
-    }
-  }
+  console.log(
+    "MESSAGE ERROR:",
+    error
+  );
 
-  /*
-    IMAGE UPLOAD
-  */
+  alert(
+    JSON.stringify(error)
+  );
 
-  async function uploadImage(
+  return;
+}
+
+} // <-- HIER FEHLT DIE KLAMMER
+
+/*
+  IMAGE UPLOAD
+*/
+
+async function uploadImage(
     file: File
   ) {
 
@@ -679,11 +702,36 @@ if (messageError) {
       messageError
     )
   );
+
+  return;
 }
 
-      setPreviewImage(
-        null
-      );
+setMessages((prev) => [
+
+  ...prev,
+
+  {
+    id: crypto.randomUUID(),
+
+    sender_id:
+      currentUserId,
+
+    receiver_id:
+      otherUserId,
+
+    message: "",
+
+    image_url:
+      publicUrlData.publicUrl,
+
+    created_at:
+      new Date().toISOString(),
+
+    seen: false,
+  },
+]);
+
+setPreviewImage(null);
 
     } catch (error) {
 

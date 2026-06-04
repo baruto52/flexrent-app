@@ -128,17 +128,38 @@ export async function POST(
         SAVE ACCOUNT ID
       */
 
-      await supabase
-        .from("profiles")
-        .update({
+      const { data, error } =
+  await supabase
+    .from("profiles")
+    .update({
+      stripe_account_id:
+        stripeAccountId,
+    })
+    .eq(
+      "id",
+      userId
+    )
+    .select();
 
-          stripe_account_id:
-            stripeAccountId,
-        })
-        .eq(
-          "id",
-          userId
-        );
+console.log(
+  "USER ID:",
+  userId
+);
+
+console.log(
+  "STRIPE ACCOUNT:",
+  stripeAccountId
+);
+
+console.log(
+  "UPDATE DATA:",
+  data
+);
+
+console.log(
+  "UPDATE ERROR:",
+  error
+);
     }
 
     /*

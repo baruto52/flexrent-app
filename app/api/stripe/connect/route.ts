@@ -13,7 +13,9 @@ const stripe =
       .STRIPE_SECRET_KEY!
   );
 
-export async function GET() {
+export async function POST(
+  request: Request
+) {
 
   try {
 

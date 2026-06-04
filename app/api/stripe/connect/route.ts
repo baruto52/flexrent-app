@@ -1,3 +1,6 @@
+import { supabase }
+from "@/lib/supabase";
+
 import { NextResponse }
 from "next/server";
 
@@ -18,12 +21,51 @@ export async function POST(
 ) {
 
   try {
+    const body =
+  await request.json();
+
+const {
+  userId,
+} = body;
 
     const account =
       await stripe.accounts.create({
 
         type: "express",
       });
+
+      const { data, error } =
+  await supabase
+    .from("profiles")
+    .update({
+      stripe_account_id:
+        account.id,
+    })
+    .eq(
+      "id",
+      userId
+    )
+    .select();
+
+console.log(
+  "USER ID:",
+  userId
+);
+
+console.log(
+  "ACCOUNT ID:",
+  account.id
+);
+
+console.log(
+  "UPDATE DATA:",
+  data
+);
+
+console.log(
+  "UPDATE ERROR:",
+  error
+);
 
     const accountLink =
       await stripe.accountLinks.create({

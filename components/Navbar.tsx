@@ -461,29 +461,54 @@ export default function Navbar() {
             "
           >
 
-            {/* FAVORITES */}
+           {/* FAVORITES */}
 
-            <Link
-              href="/favorites"
-              className="
-                relative
-                w-12
-                h-12
-                rounded-2xl
-                bg-gray-100
-                flex
-                items-center
-                justify-center
-                hover:bg-gray-200
-                transition-all
-              "
-            >
+<Link
+  href="/favorites"
+  className="
+    relative
+    w-12
+    h-12
+    rounded-2xl
+    bg-gray-100
+    flex
+    items-center
+    justify-center
+    hover:bg-gray-200
+    transition-all
+  "
+>
 
-              <Heart size={20} />
+  <Heart size={20} />
 
-            </Link>
+</Link>
 
-            {/* NOTIFICATIONS */}
+{!user && (
+
+  <Link
+    href="/login"
+    className="
+      h-12
+      px-5
+      rounded-2xl
+      bg-[#16d64d]
+      text-white
+      flex
+      items-center
+      justify-center
+      font-black
+      hover:opacity-90
+      transition-all
+    "
+  >
+
+    Anmelden
+
+  </Link>
+
+)}
+
+{/* NOTIFICATIONS */}
 
             <Link
               href="/notifications"

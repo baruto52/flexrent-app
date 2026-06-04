@@ -635,12 +635,16 @@ export default function ChatPage() {
             }
           );
 
-      if (uploadError) {
+     if (uploadError) {
 
-        console.log(uploadError);
+  console.log("UPLOAD ERROR:", uploadError);
 
-        return;
-      }
+  alert(
+    JSON.stringify(uploadError)
+  );
+
+  return;
+}
 
       const {
         data: publicUrlData,
@@ -651,26 +655,31 @@ export default function ChatPage() {
             fileName
           );
 
-      await supabase
-        .from("messages")
-        .insert({
+    const { error: messageError } =
+  await supabase
+    .from("messages")
+    .insert({
+      sender_id: currentUserId,
+      receiver_id: otherUserId,
+      message: "",
+      image_url: publicUrlData.publicUrl,
+      seen: false,
+      is_read: false,
+    });
 
-          sender_id:
-            currentUserId,
+if (messageError) {
 
-          receiver_id:
-            otherUserId,
+  console.log(
+    "MESSAGE ERROR:",
+    messageError
+  );
 
-          message:
-            "",
-
-          image_url:
-            publicUrlData.publicUrl,
-
-          seen: false,
-
-          is_read: false,
-        });
+  alert(
+    JSON.stringify(
+      messageError
+    )
+  );
+}
 
       setPreviewImage(
         null

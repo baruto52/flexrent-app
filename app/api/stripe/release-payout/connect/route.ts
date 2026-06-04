@@ -39,9 +39,9 @@ export async function GET() {
           "account_onboarding",
       });
 
-    return NextResponse.redirect(
-      accountLink.url
-    );
+   return NextResponse.json({
+  url: accountLink.url,
+});
 
   } catch (error) {
 

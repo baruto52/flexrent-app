@@ -213,37 +213,62 @@ export default function DashboardClient() {
 
   async function connectStripe() {
 
-    try {
+  try {
 
-      const response =
-        await fetch(
-          "/api/stripe/connect"
-        );
+    const {
+      data: { session },
+    } =
+      await supabase.auth.getSession();
 
-      const data =
-        await response.json();
+    if (!session) {
 
-      if (!data.url) {
+      alert("Bitte anmelden");
+      return;
+    }
 
-        alert(
-          "Stripe Fehler"
-        );
+    const response =
+      await fetch(
+        "/api/stripe/connect",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type":
+              "application/json",
+          },
+          body: JSON.stringify({
+            userId:
+              session.user.id,
+            email:
+              session.user.email,
+          }),
+        }
+      );
 
-        return;
-      }
+    const data =
+      await response.json();
 
-      window.location.href =
-        data.url;
-
-    } catch (error) {
-
-      console.log(error);
+    if (!data.url) {
 
       alert(
-        "Stripe Connect Fehler"
+        data.error ||
+        "Stripe Fehler"
       );
+
+      return;
     }
+
+    window.location.href =
+      data.url;
+
+  } catch (error) {
+
+    console.log(error);
+
+    alert(
+      "Stripe Connect Fehler"
+    );
   }
+}
 
   /*
     DELETE LISTING

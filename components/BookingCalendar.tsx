@@ -1,5 +1,10 @@
 "use client";
 
+import {
+  useEffect,
+  useState,
+} from "react";
+
 import DatePicker
 from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -49,6 +54,83 @@ export default function BookingCalendar({
 
   const isHourly =
     rentalType === "hour";
+
+    const [selectedDate, setSelectedDate] =
+  useState<Date | null>(
+    startDate
+  );
+
+const [startTime, setStartTime] =
+  useState("09:00");
+
+const [endTime, setEndTime] =
+  useState("10:00");
+
+const hours =
+  Array.from(
+    { length: 24 },
+    (_, i) =>
+      `${String(i).padStart(
+        2,
+        "0"
+      )}:00`
+  );
+
+useEffect(() => {
+
+  if (
+    !isHourly ||
+    !selectedDate
+  )
+    return;
+
+  const start =
+    new Date(
+      selectedDate
+    );
+
+  const end =
+    new Date(
+      selectedDate
+    );
+
+  start.setHours(
+    Number(
+      startTime.split(":")[0]
+    ),
+    0,
+    0,
+    0
+  );
+
+  end.setHours(
+    Number(
+      endTime.split(":")[0]
+    ),
+    0,
+    0,
+    0
+  );
+
+  setStartDate(start);
+
+  setEndDate(end);
+
+}, [
+
+  selectedDate,
+
+  startTime,
+
+  endTime,
+
+  isHourly,
+
+  setStartDate,
+
+  setEndDate,
+
+]);
 
   return (
 
@@ -195,262 +277,204 @@ export default function BookingCalendar({
 
       </div>
 
-      {/* CALENDAR */}
+<div className="grid gap-6">
 
-      <div
-        className="
-          grid
-          md:grid-cols-2
-          gap-6
-        "
-      >
+  {isHourly ? (
 
-        {/* START */}
+    <div className="bg-white rounded-[32px] p-6 shadow-sm border border-gray-100">
 
-        <div
-          className="
-            bg-white
-            rounded-[32px]
-            p-6
-            shadow-sm
-            border
-            border-gray-100
-          "
-        >
+      <h3 className="text-2xl font-black mb-6">
 
-          <div
-            className="
-              flex
-              items-center
-              gap-3
-              mb-5
-            "
-          >
+        Stundenbuchung
 
-            <div
-              className="
-                w-12
-                h-12
-                rounded-2xl
-                bg-[#16d64d]
-                text-white
-                flex
-                items-center
-                justify-center
-              "
-            >
+      </h3>
 
-              {isHourly ? (
+      <div className="grid md:grid-cols-3 gap-5">
 
-                <Clock3
-                  size={20}
-                />
+        <div>
 
-              ) : (
+          <label className="font-bold mb-2 block">
 
-                <CalendarDays
-                  size={20}
-                />
+            Datum
 
-              )}
-
-            </div>
-
-            <div>
-
-              <p
-                className="
-                  text-gray-400
-                  text-sm
-                  mb-1
-                "
-              >
-
-                Start
-
-              </p>
-
-              <h3
-                className="
-                  text-2xl
-                  font-black
-                "
-              >
-
-                {isHourly
-
-                  ? "Startzeit"
-
-                  : "Startdatum"
-                }
-
-              </h3>
-
-            </div>
-
-          </div>
+          </label>
 
           <DatePicker
-            selected={startDate}
-
+            selected={selectedDate}
             onChange={(date) =>
-              setStartDate(date)
+              setSelectedDate(date)
             }
-
             minDate={new Date()}
-
-            excludeDates={
-              excludedDates
-            }
-
-            showTimeSelect={
-              isHourly
-            }
-
-            timeIntervals={60}
-
-            dateFormat={
-              isHourly
-                ? "dd.MM.yyyy HH:mm"
-                : "dd.MM.yyyy"
-            }
-
-            monthsShown={1}
-
-            inline
-
-            calendarClassName="
-              premium-calendar
+            excludeDates={excludedDates}
+            dateFormat="dd.MM.yyyy"
+            className="
+              w-full
+              h-14
+              rounded-2xl
+              border
+              border-gray-200
+              px-4
             "
           />
 
         </div>
 
-        {/* END */}
+        <div>
 
-        <div
-          className="
-            bg-white
-            rounded-[32px]
-            p-6
-            shadow-sm
-            border
-            border-gray-100
-          "
-        >
+          <label className="font-bold mb-2 block">
 
-          <div
+            Von
+
+          </label>
+
+          <select
+            value={startTime}
+            onChange={(e) =>
+              setStartTime(
+                e.target.value
+              )
+            }
             className="
-              flex
-              items-center
-              gap-3
-              mb-5
+              w-full
+              h-14
+              rounded-2xl
+              border
+              border-gray-200
+              px-4
             "
           >
 
-            <div
-              className="
-                w-12
-                h-12
-                rounded-2xl
-                bg-black
-                text-white
-                flex
-                items-center
-                justify-center
-              "
-            >
+            {hours.map((hour) => (
 
-              {isHourly ? (
-
-                <Clock3
-                  size={20}
-                />
-
-              ) : (
-
-                <CalendarDays
-                  size={20}
-                />
-
-              )}
-
-            </div>
-
-            <div>
-
-              <p
-                className="
-                  text-gray-400
-                  text-sm
-                  mb-1
-                "
+              <option
+                key={hour}
+                value={hour}
               >
 
-                Ende
+                {hour}
 
-              </p>
+              </option>
 
-              <h3
-                className="
-                  text-2xl
-                  font-black
-                "
-              >
+            ))}
 
-                {isHourly
+          </select>
 
-                  ? "Endzeit"
+        </div>
 
-                  : "Enddatum"
-                }
+        <div>
 
-              </h3>
+          <label className="font-bold mb-2 block">
 
-            </div>
+            Bis
 
-          </div>
+          </label>
 
-          <DatePicker
-            selected={endDate}
-
-            onChange={(date) =>
-              setEndDate(date)
+          <select
+            value={endTime}
+            onChange={(e) =>
+              setEndTime(
+                e.target.value
+              )
             }
-
-            minDate={
-              startDate ||
-              new Date()
-            }
-
-            excludeDates={
-              excludedDates
-            }
-
-            showTimeSelect={
-              isHourly
-            }
-
-            timeIntervals={60}
-
-            dateFormat={
-              isHourly
-                ? "dd.MM.yyyy HH:mm"
-                : "dd.MM.yyyy"
-            }
-
-            monthsShown={1}
-
-            inline
-
-            calendarClassName="
-              premium-calendar
+            className="
+              w-full
+              h-14
+              rounded-2xl
+              border
+              border-gray-200
+              px-4
             "
-          />
+          >
+
+            {hours.map((hour) => (
+
+              <option
+                key={hour}
+                value={hour}
+              >
+
+                {hour}
+
+              </option>
+
+            ))}
+
+          </select>
 
         </div>
 
       </div>
+
+    </div>
+
+  ) : (
+
+    <div className="grid md:grid-cols-2 gap-6">
+
+      <div className="bg-white rounded-[32px] p-6 shadow-sm border border-gray-100">
+
+        <label className="font-black block mb-3">
+
+          Startdatum
+
+        </label>
+
+        <DatePicker
+          selected={startDate}
+          onChange={(date) =>
+            setStartDate(date)
+          }
+          minDate={new Date()}
+          excludeDates={excludedDates}
+          dateFormat="dd.MM.yyyy"
+          className="
+            w-full
+            h-14
+            rounded-2xl
+            border
+            border-gray-200
+            px-4
+          "
+        />
+
+      </div>
+
+      <div className="bg-white rounded-[32px] p-6 shadow-sm border border-gray-100">
+
+        <label className="font-black block mb-3">
+
+          Enddatum
+
+        </label>
+
+        <DatePicker
+          selected={endDate}
+          onChange={(date) =>
+            setEndDate(date)
+          }
+          minDate={
+            startDate ||
+            new Date()
+          }
+          excludeDates={excludedDates}
+          dateFormat="dd.MM.yyyy"
+          className="
+            w-full
+            h-14
+            rounded-2xl
+            border
+            border-gray-200
+            px-4
+          "
+        />
+
+      </div>
+
+    </div>
+
+  )}
+
+</div>
 
       {/* BLOCKED */}
 

@@ -205,14 +205,8 @@ export default function ListingPage() {
     totalUnits *
     (listing?.price || 0);
 
-  const serviceFee =
-    Math.round(
-      subtotal * 0.1
-    );
-
   const totalPrice =
-    subtotal +
-    serviceFee;
+  subtotal;
 
   /*
     LABEL
@@ -558,8 +552,6 @@ export default function ListingPage() {
 
               subtotal,
 
-              serviceFee,
-
               totalPrice,
 
               listingId:
@@ -854,12 +846,13 @@ export default function ListingPage() {
               </div>
 
               <BookingCalendar
-                startDate={startDate}
-                endDate={endDate}
-                setStartDate={setStartDate}
-                setEndDate={setEndDate}
-                excludedDates={excludedDates}
-              />
+  startDate={startDate}
+  endDate={endDate}
+  setStartDate={setStartDate}
+  setEndDate={setEndDate}
+  excludedDates={excludedDates}
+  rentalType={listing.rental_type}
+/>
 
               {totalUnits > 0 && (
 
@@ -885,23 +878,6 @@ export default function ListingPage() {
 
                       €
                       {subtotal}
-
-                    </span>
-
-                  </div>
-
-                  <div className="flex items-center justify-between">
-
-                    <span className="text-gray-500">
-
-                      Servicegebühr
-
-                    </span>
-
-                    <span className="font-black">
-
-                      €
-                      {serviceFee}
 
                     </span>
 

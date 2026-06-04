@@ -643,12 +643,15 @@ export default function CreatePage() {
               description,
 
               price:
-                Number(price),
+  Number(price),
 
-              rental_type:
-                rentalType,
+price_unit:
+  rentalType,
 
-              location,
+rental_type:
+  rentalType,
+
+location,
 
               latitude:
                 lat,

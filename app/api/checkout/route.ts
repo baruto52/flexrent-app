@@ -452,6 +452,19 @@ if (
     /*
       CHECKOUT SESSION
     */
+   console.log(
+  "OWNER STRIPE ACCOUNT:",
+  ownerProfile.stripe_account_id
+);
+const stripeAccount =
+  await stripe.accounts.retrieve(
+    ownerProfile.stripe_account_id
+  );
+
+console.log(
+  "ACCOUNT DETAILS:",
+  stripeAccount
+);
 
     const session =
       await stripe.checkout.sessions.create({

@@ -460,6 +460,20 @@ const stripeAccount =
   await stripe.accounts.retrieve(
     ownerProfile.stripe_account_id
   );
+  console.log(
+  "CAPABILITIES:",
+  stripeAccount.capabilities
+);
+
+console.log(
+  "CHARGES ENABLED:",
+  stripeAccount.charges_enabled
+);
+
+console.log(
+  "PAYOUTS ENABLED:",
+  stripeAccount.payouts_enabled
+);
 
 console.log(
   "ACCOUNT DETAILS:",

@@ -107,21 +107,30 @@ export async function POST(
     */
 
     if (
-      event.type ===
-      "checkout.session.completed"
-    ) {
+  event.type ===
+  "checkout.session.completed"
+) {
 
-      const session =
-        event.data
-          .object as Stripe.Checkout.Session;
+  console.log(
+    "WEBHOOK TRIGGERED"
+  );
 
-      console.log(
-        "CHECKOUT COMPLETED:",
-        session.id
-      );
+  const session =
+    event.data
+      .object as Stripe.Checkout.Session;
 
-      const metadata =
-        session.metadata;
+  console.log(
+    "CHECKOUT COMPLETED:",
+    session.id
+  );
+
+  console.log(
+    "METADATA:",
+    session.metadata
+  );
+
+  const metadata =
+    session.metadata;
 
       if (!metadata) {
 

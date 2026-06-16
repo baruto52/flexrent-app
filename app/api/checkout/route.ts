@@ -461,10 +461,22 @@ const stripeAccount =
     ownerProfile.stripe_account_id
   );
   console.log(
-  "CAPABILITIES:",
-  stripeAccount.capabilities
+  "CAPABILITIES JSON:",
+  JSON.stringify(
+    stripeAccount.capabilities,
+    null,
+    2
+  )
 );
 
+console.log(
+  "REQUIREMENTS JSON:",
+  JSON.stringify(
+    stripeAccount.requirements,
+    null,
+    2
+  )
+);
 console.log(
   "CHARGES ENABLED:",
   stripeAccount.charges_enabled

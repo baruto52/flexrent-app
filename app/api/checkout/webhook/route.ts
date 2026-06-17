@@ -296,37 +296,39 @@ console.log(
         OWNER NOTIFICATION
       */
 
-      await supabase
-        .from("notifications")
-        .insert({
+      const { error: ownerNotifError } =
+  await supabase
+    .from("notifications")
+    .insert({
+      user_id: metadata.ownerId,
+      title: "Neue Buchung",
+      message: "Du hast eine neue bezahlte Buchung erhalten.",
+      read: false,
+    });
 
-          user_id:
-            metadata.ownerId,
-
-          title:
-            "Neue Buchung",
-
-          description:
-            "Du hast eine neue bezahlte Buchung erhalten.",
-        });
+console.log(
+  "OWNER NOTIFICATION ERROR:",
+  ownerNotifError
+);
 
       /*
         RENTER NOTIFICATION
       */
 
-      await supabase
-        .from("notifications")
-        .insert({
+      const { error: renterNotifError } =
+  await supabase
+    .from("notifications")
+    .insert({
+      user_id: metadata.renterId,
+      title: "Buchung bestätigt",
+      message: "Deine Zahlung war erfolgreich.",
+      read: false,
+    });
 
-          user_id:
-            metadata.renterId,
-
-          title:
-            "Buchung bestätigt",
-
-          description:
-            "Deine Zahlung war erfolgreich.",
-        });
+console.log(
+  "RENTER NOTIFICATION ERROR:",
+  renterNotifError
+);
 
       console.log(
         "BOOKING CREATED:",

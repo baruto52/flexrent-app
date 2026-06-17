@@ -70,7 +70,10 @@ export async function POST(
       Stripe.Event;
 
     try {
-
+console.log(
+  "WEBHOOK SECRET:",
+  process.env.STRIPE_WEBHOOK_SECRET
+);
       event =
         stripe.webhooks.constructEvent(
 

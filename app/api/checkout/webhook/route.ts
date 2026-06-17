@@ -245,6 +245,9 @@ console.log(
             owner_id:
               metadata.ownerId,
 
+            provider_id:
+              metadata.ownerId,
+
             start_date:
               metadata.startDate,
 

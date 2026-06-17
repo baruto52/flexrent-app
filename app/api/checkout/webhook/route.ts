@@ -272,27 +272,22 @@ console.log(
           .select()
           .single();
 
-      if (
-        bookingError
-      ) {
+      if (bookingError) {
+  console.log(
+    "BOOKING CREATE ERROR:",
+    bookingError
+  );
 
-        console.log(
-          "BOOKING CREATE ERROR:",
-          bookingError
-        );
-
-        return NextResponse.json(
-
-          {
-            error:
-              "Booking Create Fehler",
-          },
-
-          {
-            status: 500,
-          }
-        );
-      }
+  return NextResponse.json(
+    {
+      error: bookingError.message,
+      details: bookingError,
+    },
+    {
+      status: 500,
+    }
+  );
+}
 
       /*
         OWNER NOTIFICATION

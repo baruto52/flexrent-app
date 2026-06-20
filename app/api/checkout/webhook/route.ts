@@ -254,6 +254,12 @@ console.log(
             end_date:
               metadata.endDate,
 
+            start_time:
+              metadata.startTime || null,
+
+            end_time:
+              metadata.endTime || null,
+
             total_price:
               Number(
                 metadata.totalPrice
